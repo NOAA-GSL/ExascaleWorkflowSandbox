@@ -1,7 +1,10 @@
-#!/bin/env bash                                                                                                                                                                      
-# These can be customized to suit individual needs                                        
+#!/bin/env bash
+
+# These can be customized to suit individual needs
+DEFAULT_GCC_VERSION=$(gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{print $2}')  # Verison of system defauilt gcc
+DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"                      # Default system compiler used to build newer gcc
+
 SPACK_ENV_NAME="exaworkssdk"     # Name of spack environment for ExaWorks SDK
-DEFAULT_COMPILER="gcc@4.8.5"     # Default system compiler used to build newer gcc
 SPACK_ENV_COMPILER="gcc@9.4.0"   # Compiler to use to build ExaWorks  SDK
 TARGET_ARCH_OPT="target=x86_64"  # Compiler architecture build target
 
@@ -68,14 +71,14 @@ spack install
 chmod -fR 02770 ${SPACK_DIR} || true
 
 # Create source mirror
-rm -rf ${EXAWORKS_DIR}/exaworks-mirror
-spack mirror create -d ${EXAWORKS_DIR}/exaworks-mirror --all
+rm -rf ${EXAWORKS_DIR}
+spack mirror create -d ${EXAWORKS_DIR} --all
 
 # Create GPG keys
 spack gpg create "Christopher Harrop" "<christopher.w.harrop@noaa.gov>"
-cp ${SPACK_DIR}/opt/spack/gpg/pubring.* ${EXAWORKS_DIR}/exaworks-mirror
+cp ${SPACK_DIR}/opt/spack/gpg/pubring.* ${EXAWORKS_DIR}
 
 # Create build cache
-spack buildcache create --allow-root --force -d ${EXAWORKS_DIR}/exaworks-mirror $(spack find --format /{hash})
+spack buildcache create --allow-root --force -d ${EXAWORKS_DIR} $(spack find --format /{hash})
 
 exit 0

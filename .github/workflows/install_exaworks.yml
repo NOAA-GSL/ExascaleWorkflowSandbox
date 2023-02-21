@@ -20,15 +20,10 @@ jobs:
       
       - name: Install Spack
         run: |
-          ExaWorks/scripts/install_spack.sh /opt
+          ExaWorks/scripts/install_spack.sh $HOME/opt
 
-  install_exaworks:
-    needs: install_spack
-    name: Install ExaWorks SDK
-    runs-on: ubuntu-latest
-
-    steps:
       - name: Install ExaWorks SDK
         run: |
-          . /opt/spack/share/spack/setup-env.sh
-          ExaWorks/scripts/install_exaworks /opt
+          . $HOME/opt/spack/share/spack/setup-env.sh
+          gcc --version
+          ExaWorks/scripts/install_exaworks.sh $HOME/opt/exaworks-mirror
