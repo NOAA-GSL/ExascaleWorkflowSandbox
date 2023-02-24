@@ -2,7 +2,7 @@
 
 # These can be customized to suit individual needs
 DEFAULT_GCC_VERSION=$(gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{print $2}')  # Verison of system defauilt gcc
-DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"                      # Default system compiler used to build newer gcc
+DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"  # Default system compiler used to build newer gcc
 
 SPACK_ENV_NAME="exaworkssdk"     # Name of spack environment for ExaWorks SDK
 SPACK_ENV_COMPILER="gcc@9.4.0"   # Compiler to use to build ExaWorks  SDK
