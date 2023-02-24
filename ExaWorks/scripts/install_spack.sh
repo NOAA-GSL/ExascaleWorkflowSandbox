@@ -8,16 +8,17 @@ help()
    # Display help
    echo "Installs Spack"
    echo
-   echo "Usage: install_spack.sh <install path>"
+   echo "Usage: install_spack.sh <install path> <tag>"
    echo
 }
 
 # Get install path
-if [[ $# -ne 1 ]]; then
+if [[ $# -ne 2 ]]; then
   help
   exit 1
 else
   SPACK_DIR=$1
+  SPACK_VERSION=$2
 fi
 
 # Check for existing Spack configuration
@@ -40,8 +41,11 @@ fi
 [[ -d ${SPACK_DIR} ]] || mkdir -p ${SPACK_DIR}
 
 # Install Spack via repository clone
-git clone https://github.com/spack/spack.git ${SPACK_DIR}
-chmod -fR 02770 ${SPACK_DIR}/spack || true
+git clone -c feature.manyFiles=true -c core.sharedRepository=true https://github.com/spack/spack.git ${SPACK_DIR}
+pushd ${SPACK_DIR}
+git checkout ${SPACK_VERSION}
+popd
+chmod -fR 02770 ${SPACK_DIR} || true
 . ${SPACK_DIR}/share/spack/setup-env.sh
 
 exit 0
