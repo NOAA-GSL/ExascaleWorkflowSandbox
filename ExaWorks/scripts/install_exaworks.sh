@@ -65,11 +65,13 @@ spack compiler add $(spack location -i ${SPACK_ENV_COMPILER})
 chmod -fR 02770 ${SPACK_DIR}
 
 # Install exaworks
-spack add exaworks%${SPACK_ENV_COMPILER} ^python@3.9 py-pytest%${SPACK_ENV_COMPILER}
+#spack add exaworks%${SPACK_ENV_COMPILER} ^python@3.9 py-pytest%${SPACK_ENV_COMPILER}
+spack add rust@1.60.0%gcc@9.4.0+analysis+clippy~rls+rustfmt+src build_system=generic extra_targets=none arch=linux-ubuntu22.04-x86_64
 spack concretize -f
 spack install
 chmod -fR 02770 ${SPACK_DIR} || true
 
+exit 
 # Create source mirror
 rm -rf ${EXAWORKS_DIR}
 spack mirror create -d ${EXAWORKS_DIR} --all
