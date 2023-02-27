@@ -22,7 +22,7 @@ jobs:
       
       - name: Install Spack
         run: |
-          ExaWorks/scripts/install_spack.sh $HOME/opt/spack-$spack_version
+          ExaWorks/scripts/install_spack.sh $HOME/opt/spack-$spack_version $spack_version
 
       - name: Install ExaWorks SDK
         run: |
