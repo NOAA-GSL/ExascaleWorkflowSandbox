@@ -1,4 +1,4 @@
-name: Exaworks Examples
+name: Parsl Examples
 # triggered events (push, pull_request) for the develop branch
 on:
   push:
@@ -9,9 +9,9 @@ on:
 
 jobs:
 
-  exaworks_ubuntu_examples:
+  parsl_ubuntu_examples:
 
-    name: Run Exaworks Ubuntu Examples
+    name: Run Parsl Ubuntu Examples
     runs-on: ubuntu-latest
 
     steps:
@@ -27,9 +27,9 @@ jobs:
       - name: Test examples
         run: docker exec exaworks-ubuntu20 bash -c ". /opt/spack-0.19.1/share/spack/setup-env.sh; spack env activate exaworkssdk; cd /opt/test; ./parsl_hello.py"
 
-  exaworks_centos_examples:
+  parsl_centos_examples:
 
-    name: Run Exaworks CentOS Examples
+    name: Run Parsl CentOS Examples
     runs-on: ubuntu-latest
 
     steps:
