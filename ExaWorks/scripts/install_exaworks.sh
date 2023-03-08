@@ -65,7 +65,7 @@ spack compiler add $(spack location -i ${SPACK_ENV_COMPILER})
 chmod -fR 02770 ${SPACK_DIR}
 
 # Install exaworks
-spack add exaworks%${SPACK_ENV_COMPILER} ^python@3.9 py-pytest%${SPACK_ENV_COMPILER}
+spack add exaworks%${SPACK_ENV_COMPILER} ^python@3.9 py-pytest%${SPACK_ENV_COMPILER} py-pylint%${SPACK_ENV_COMPILER}
 spack concretize -f
 spack install
 chmod -fR 02770 ${SPACK_DIR} || true
