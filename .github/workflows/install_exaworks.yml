@@ -1,4 +1,4 @@
-name: Install ExaWorks
+name: Exaworks Examples
 # triggered events (push, pull_request) for the develop branch
 on:
   push:
@@ -9,26 +9,38 @@ on:
 
 jobs:
 
-  install_spack:
-    name: Install Spack
+  exaworks_ubuntu_examples:
+
+    name: Run Exaworks Ubuntu Examples
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository (and LFS objects)
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      
-      - name: Install Spack
-        run: |
-          ExaWorks/scripts/install_spack.sh /opt
+      - name: Get the exaworks-ubuntu20 container
+        run: docker pull noaagsl/exaworks-ubuntu20
 
-  install_exaworks:
-    needs: install_spack
-    name: Install ExaWorks SDK
+      - name: Start the exaworks-ubuntu20 container
+        run: docker run -d -t --name exaworks-ubuntu20 noaagsl/exaworks-ubuntu20
+
+      - name: Test examples
+        run: docker exec exaworks-ubuntu20 bash -c ". /opt/spack-0.19.1/share/spack/setup-env.sh; spack env activate exaworkssdk; cd /opt/test; ./parsl_hello.py"
+
+  exaworks_centos_examples:
+
+    name: Run Exaworks CentOS Examples
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install ExaWorks SDK
-        run: |
-          . /opt/spack/share/spack/setup-env.sh
-          ExaWorks/scripts/install_exaworks /opt
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Get the exaworks-centos7 container
+        run: docker pull noaagsl/exaworks-centos7
+
+      - name: Start the exaworks-centos7 container
+        run: docker run -d -t --name exaworks-centos7 noaagsl/exaworks-centos7
+
+      - name: Test examples
+        run: docker exec exaworks-centos7 bash -c ". /opt/spack-0.19.1/share/spack/setup-env.sh; spack env activate exaworkssdk; cd /opt/test; ./parsl_hello.py"

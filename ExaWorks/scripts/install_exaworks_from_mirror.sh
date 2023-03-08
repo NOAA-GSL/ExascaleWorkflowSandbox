@@ -1,10 +1,7 @@
-#!/bin/env bash
-
-# These can be customized to suit individual needs
-DEFAULT_GCC_VERSION=$(gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{print $2}')  # Verison of system defauilt gcc
-DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"  # Default system compiler used to build newer gcc
-
+#!/bin/env bash                                                                                                                                                                      
+# These can be customized to suit individual needs                                        
 SPACK_ENV_NAME="exaworkssdk"     # Name of spack environment for ExaWorks SDK
+DEFAULT_COMPILER="gcc@4.8.5"     # Default system compiler used to build newer gcc
 SPACK_ENV_COMPILER="gcc@9.4.0"   # Compiler to use to build ExaWorks  SDK
 TARGET_ARCH_OPT="target=x86_64"  # Compiler architecture build target
 
@@ -15,12 +12,13 @@ help()
 {
    # Display help
    echo "Installs the exaworks Spack package into exaworkssdk Spack environment"
+   echo "using a Spack source mirror or build-cache"
    echo
-   echo "Usage: install_exaworks.sh <exaworks mirror path>"
+   echo "Usage: install_exaworks_from_mirror.sh <exaworks mirror path>"
    echo
 }
 
-# Get install path
+# Get mirror path
 if [[ $# -ne 1 ]]; then
   help
   exit 1
@@ -29,10 +27,10 @@ else
 fi
 
 # Check for existing exaworks mirror
-if [[ -d ${EXAWORKS_DIR} ]]; then
-  echo "An exaworks mirror already exists at ${EXAWORKS_DIR}."
+if [[ ! -d ${EXAWORKS_DIR} ]]; then
+  echo "An exaworks mirror does not exist at ${EXAWORKS_DIR}."
   echo
-  echo "Please choose another location or remove ${EXAWORKS_DIR} and try again."
+  echo "Please choose another location or copy the mirror to ${EXAWORKS_DIR} and try again."
   exit 1
 fi
 
@@ -58,6 +56,16 @@ spack config add config:db_lock_timeout:300
 spack config add config:install_tree:padded_length:128
 spack compiler find
 
+# Add mirror
+spack mirror add exaworks-mirror file://${EXAWORKS_DIR}
+
+# Trust GPG key
+spack gpg trust ${EXAWORKS_DIR}/pubring.gpg
+spack buildcache keys --install --trust
+
+# Index build cache
+spack buildcache update-index --mirror-url file://${EXAWORKS_DIR}
+
 # Install $COMPILER in Spack environment
 spack add ${SPACK_ENV_COMPILER} %${DEFAULT_COMPILER} ${TARGET_ARCH_OPT}
 spack install
@@ -69,16 +77,5 @@ spack add exaworks%${SPACK_ENV_COMPILER} ^python@3.9 py-pytest%${SPACK_ENV_COMPI
 spack concretize -f
 spack install
 chmod -fR 02770 ${SPACK_DIR} || true
-
-# Create source mirror
-rm -rf ${EXAWORKS_DIR}
-spack mirror create -d ${EXAWORKS_DIR} --all
-
-# Create GPG keys
-spack gpg create "Christopher Harrop" "<christopher.w.harrop@noaa.gov>"
-cp ${SPACK_DIR}/opt/spack/gpg/pubring.* ${EXAWORKS_DIR}
-
-# Create build cache
-spack buildcache create --allow-root --force -d ${EXAWORKS_DIR} $(spack find --format /{hash})
 
 exit 0
