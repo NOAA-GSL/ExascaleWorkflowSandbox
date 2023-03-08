@@ -1,0 +1,55 @@
+FROM ubuntu:20.04
+
+ENV PATH "/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin"
+
+SHELL ["/bin/bash", "-c"]
+
+RUN set -ex \
+    && apt-get update \
+    && apt-get --no-install-recommends -y install \
+         build-essential \
+         ca-certificates \
+	 curl \
+         file \
+	 gfortran \
+	 git \
+	 libbz2-dev \
+	 libffi-dev \
+	 libgdbm-dev \
+	 libncurses5-dev \
+	 libnss3-dev \
+	 libreadline-dev \
+	 libsqlite3-dev \
+	 libssl-dev \
+	 unzip \
+	 vim \
+	 wget \
+	 zlib1g-dev
+
+RUN set -ex \
+    && cd /tmp \
+    && wget https://www.python.org/ftp/python/3.7.11/Python-3.7.11.tgz \
+    && tar xzf Python-3.7.11.tgz \
+    && pushd Python-3.7.11 \
+    && ./configure --enable-optimizations \
+    && make install \
+    && popd \
+    && rm -rf Python-3.7.11.tgz Python-3.7.11
+
+COPY scripts/* /tmp
+
+RUN set -ex \
+    && cd /tmp \
+    && ./install_spack.sh /opt/spack-0.19.1 v0.19.1
+
+RUN set -ex \
+    && cd /tmp \
+    && . /opt/spack-0.19.1/share/spack/setup-env.sh \
+    && ./install_exaworks.sh /opt/exaworks-mirror \
+    && rm -rf /opt/exaworks-mirror /opt/spack-0.19.1/var/spack/cache/_source-cache
+
+RUN mkdir -p /opt/test
+
+COPY test/* /opt/test
+
+CMD ["/bin/bash"]
