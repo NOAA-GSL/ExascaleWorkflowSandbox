@@ -4,8 +4,8 @@
 DEFAULT_GCC_VERSION=$(gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{print $2}')  # Verison of system defauilt gcc
 DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"  # Default system compiler used to build newer gcc
 
-SPACK_ENV_NAME="exaworkssdk"     # Name of spack environment for ExaWorks SDK
-SPACK_ENV_COMPILER="gcc@9.4.0"   # Compiler to use to build ExaWorks  SDK
+SPACK_ENV_NAME="base"            # Name of spack environment to create
+SPACK_ENV_COMPILER="gcc@9.4.0"   # Compiler to use to build the spack environment
 TARGET_ARCH_OPT="target=x86_64"  # Compiler architecture build target
 
 ################################################################################
@@ -13,11 +13,12 @@ TARGET_ARCH_OPT="target=x86_64"  # Compiler architecture build target
 ################################################################################
 help()
 {
-   # Display help
-   echo "Installs exaworks into exaworkssdk Spack environment"
-   echo
-   echo "Usage: install_exaworks.sh"
-   echo
+  # Display help
+  echo "Installs a base Spack environment to use for building exaworks packages." 
+  echo "This includes: gcc, python, pytest, pylint, flake8, mypy, and black."
+  echo
+  echo "Usage: install_base.sh"
+  echo
 }
 
 # Get the location of Spack so we can update permissions
@@ -54,11 +55,6 @@ spack add py-pylint%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-flake8%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-mypy%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-black%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack concretize -f
-spack install
-
-# Install exaworks
-spack add exaworks%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
 spack concretize -f
 spack install
 

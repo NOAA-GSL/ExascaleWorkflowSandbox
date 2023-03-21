@@ -1,0 +1,48 @@
+FROM ubuntu:20.04
+
+ENV PATH "/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin"
+
+SHELL ["/bin/bash", "-c"]
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=US/Mountain
+RUN set -ex \
+    && apt-get update \
+    && apt-get --no-install-recommends -y install \
+         build-essential \
+	 bzip2 \
+         ca-certificates \
+	 coreutils \
+	 curl \
+         file \
+	 gfortran \
+	 git \
+	 gnupg2 \
+	 libbz2-dev \
+	 libffi-dev \
+	 libgdbm-dev \
+	 libncurses5-dev \
+	 libnss3-dev \
+	 libreadline-dev \
+	 libsqlite3-dev \
+	 libssl-dev \
+         python3 \
+         python3-distutils \
+         python3-venv \
+	 unzip \
+	 vim \
+	 wget \
+	 zlib1g-dev
+
+# Copy install scripts
+COPY scripts/* /tmp
+
+# Install Spack and base Spack environment
+RUN set -ex \
+    && cd /tmp \
+    && ./install_spack.sh /opt/spack releases/latest \
+    && . /opt/spack/share/spack/setup-env.sh \
+    && ./install_base.sh \
+    && rm -rf /opt/spack/var/spack/cache/_source-cache
+
+CMD ["/bin/bash"]
