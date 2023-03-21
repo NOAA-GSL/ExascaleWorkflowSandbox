@@ -111,7 +111,7 @@ jobs:
           tags: noaagsl/spack-stc-ubuntu20:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-  docker-parsl
+  docker-parsl:
     needs: docker-base
     runs-on: ubuntu-latest
     steps:
