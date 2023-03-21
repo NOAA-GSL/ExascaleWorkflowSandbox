@@ -137,7 +137,7 @@ jobs:
           tags: noaagsl/spack-parsl-ubuntu20:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-  docker-exaworks
+  docker-exaworks:
     needs:
       - docker-flux
       - docker-radical
