@@ -1,7 +1,7 @@
 #!/bin/env bash
 
 # These can be customized to suit individual needs
-DEFAULT_GCC_VERSION=$(gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{print $2}')  # Verison of system defauilt gcc
+DEFAULT_GCC_VERSION=$(gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{print $2}')  # Verison of system default gcc
 DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"  # Default system compiler used to build newer gcc
 
 SPACK_ENV_NAME="base"            # Name of spack environment to create
@@ -34,19 +34,35 @@ fi
 
 set -eu
 
-# Configure spack environment
-spack env create ${SPACK_ENV_NAME} || true
-spack env activate ${SPACK_ENV_NAME}
+# Configure spack
 spack config add concretizer:unify:true
-spack config add concretizer:reuse:false
+spack config add concretizer:reuse:true
 spack config add config:db_lock_timeout:300
 spack config add config:install_tree:padded_length:128
+
+# Create a compiler bootstrap environment
+spack env create bootstrap || true
+spack env activate bootstrap
 spack compiler find
 
-# Install $COMPILER in Spack environment
+# Install bootstrap $COMPILER in bootstrap environment
 spack add ${SPACK_ENV_COMPILER} %${DEFAULT_COMPILER} ${TARGET_ARCH_OPT}
 spack install
-spack compiler add $(spack location -i ${SPACK_ENV_COMPILER})
+
+# Get the location of the bootstrap compiler
+BOOTSTRAP_COMPILER=$(spack location -i ${SPACK_ENV_COMPILER})
+
+# Create the base environment
+spack env create ${SPACK_ENV_NAME} || true
+spack env activate ${SPACK_ENV_NAME}
+spack compiler add ${BOOTSTRAP_COMPILER}
+
+# Use the boostrap compiler to install the compiler in the base environment
+spack add ${SPACK_ENV_COMPILER}%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack concretize
+spack install
+spack compiler remove ${SPACK_ENV_COMPILER}%${DEFAULT_COMPILER}
+spack compiler add $(spack location -i ${SPACK_ENV_COMPILER}%${SPACK_ENV_COMPILER})
 
 # Install python tools
 spack add python@3.9%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
@@ -55,7 +71,17 @@ spack add py-pylint%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-flake8%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-mypy%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-black%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack concretize -f
+spack concretize
 spack install
+
+# Remove bootstrap environment
+spack env deactivate
+if [ "${SPACK_ENV_COMPILER}" != "${DEFAULT_COMPILER}" ]; then
+  spack env activate bootstrap
+  spack uninstall -y ${SPACK_ENV_COMPILER}%${DEFAULT_COMPILER}
+  spack gc -y
+  spack env deactivate
+fi
+spack env remove -y bootstrap
 
 exit 0

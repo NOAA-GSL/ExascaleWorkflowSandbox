@@ -1,19 +1,12 @@
 FROM noaagsl/spack-base-ubuntu20:latest
 
-COPY scripts/* /tmp
+COPY scripts/* /opt/scripts/
 
 # Install radical Spack packages
 RUN set -ex \
-    && cd /tmp \
+    && cd /opt/scripts \
     && . /opt/spack/share/spack/setup-env.sh \
-    && spack env activate base \
-    && ./make_buildcache.sh /tmp/mirrors bootstrap \
-    && ./make_buildcache.sh /tmp/mirrors base \
-    && ./activate_buildcache.sh /tmp/mirrors bootstrap \
-    && ./activate_buildcache.sh /tmp/mirrors base \
     && ./install_radical.sh \
-    && rm -rf /opt/spack/opt/spack/gpg \
-    && rm -rf /opt/spack/var/spack/cache/_source-cache \
-    && rm -rf /tmp/mirrors
+    && rm -rf /opt/spack/var/spack/cache/_source-cache
 
 CMD ["/bin/bash"]

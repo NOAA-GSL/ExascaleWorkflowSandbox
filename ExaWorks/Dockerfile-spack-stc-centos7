@@ -1,4 +1,4 @@
-FROM noaagsl/spack-base-ubuntu20:latest
+FROM noaagsl/spack-base-centos7:latest
 
 COPY scripts/* /opt/scripts/
 

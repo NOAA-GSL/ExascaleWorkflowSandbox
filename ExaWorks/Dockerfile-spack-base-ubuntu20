@@ -35,11 +35,11 @@ RUN set -ex \
 	 zlib1g-dev
 
 # Copy install scripts
-COPY scripts/* /tmp
+COPY scripts/* /opt/scripts/
 
 # Install Spack and base Spack environment
 RUN set -ex \
-    && cd /tmp \
+    && cd /opt/scripts \
     && ./install_spack.sh /opt/spack releases/latest \
     && . /opt/spack/share/spack/setup-env.sh \
     && ./install_base.sh \

@@ -1,0 +1,53 @@
+FROM centos:7.7.1908
+
+ENV PATH "/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin"
+
+RUN set -ex \
+    && yum makecache fast \
+    && yum update -y \
+    && yum install -y epel-release \
+    && yum update -y \
+    && yum --enablerepo epel groupinstall -y "Development Tools" \
+    && yum --enablerepo epel install -y \
+         autoconf \
+         bash-completion \
+         bzip2 \
+         bzip2-devel \
+         curl \
+         file \
+         findutils \
+         gcc \
+         gcc-c++ \
+         gcc-gfortran \
+         git \
+         gnupg2 \
+         hostname \
+         iproute \
+         libffi-devel \
+         make \
+         openssl-devel \
+         patch \
+         python3 \
+         python3-pip \
+         python3-setuptools \
+         redhat-lsb-core \
+         unzip \
+         vim \
+         wget \
+         which \
+         xz-devel \
+         zlib-devel \
+    && python3 -m pip install boto3
+
+# Copy install scripts
+COPY scripts/* /opt/scripts/
+
+# Install Spack and base Spack environment
+RUN set -ex \
+    && cd /opt/scripts \
+    && ./install_spack.sh /opt/spack releases/latest \
+    && . /opt/spack/share/spack/setup-env.sh \
+    && ./install_base.sh \
+    && rm -rf /opt/spack/var/spack/cache/_source-cache
+
+CMD ["/bin/bash"]

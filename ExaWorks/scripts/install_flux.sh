@@ -1,7 +1,7 @@
 #!/bin/env bash
 
 # These can be customized to suit individual needs
-DEFAULT_GCC_VERSION=$(gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{print $2}')  # Verison of system defauilt gcc
+DEFAULT_GCC_VERSION=$(/usr/bin/gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{print $2}')  # Verison of system default gcc
 DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"  # Default system compiler used to build newer gcc
 
 SPACK_ENV_NAME="flux"            # Name of spack environment to create
@@ -33,19 +33,22 @@ fi
 
 set -eu
 
+# Configure spack
+spack config add concretizer:unify:true
+spack config add concretizer:reuse:true
+spack config add config:db_lock_timeout:300
+spack config add config:install_tree:padded_length:128
+
+# Load the base compiler (this assumes ./install_base.sh has already been run)
+spack compiler add $(spack location -i ${SPACK_ENV_COMPILER}%${SPACK_ENV_COMPILER})
+
 # Configure spack environment
 spack env create ${SPACK_ENV_NAME} || true
 spack env activate ${SPACK_ENV_NAME}
-spack config add concretizer:unify:true
-spack config add concretizer:reuse:false
-spack config add config:db_lock_timeout:300
-spack config add config:install_tree:padded_length:128
-spack compiler find
 
 # Install $COMPILER in Spack environment
-spack add ${SPACK_ENV_COMPILER} %${DEFAULT_COMPILER} ${TARGET_ARCH_OPT}
+spack add ${SPACK_ENV_COMPILER} %${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack install
-spack compiler add $(spack location -i ${SPACK_ENV_COMPILER})
 
 # Install python tools
 spack add python@3.9%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
@@ -54,7 +57,6 @@ spack add py-pylint%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-flake8%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-mypy%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-black%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack concretize -f
 spack install
 
 # Install flux components
