@@ -1,7 +1,7 @@
 #!/bin/env bash
 
 # These can be customized to suit individual needs
-DEFAULT_GCC_VERSION=$(/usr/bin/gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{print $2}')  # Verison of system default gcc
+DEFAULT_GCC_VERSION=$(/usr/bin/gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{print $2}')  # Version of system default gcc
 DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"  # Default system compiler used to build newer gcc
 
 SPACK_ENV_NAME="flux"            # Name of spack environment to create
