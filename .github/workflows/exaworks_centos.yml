@@ -54,7 +54,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-flux-centos7
+          file: ./ExaWorks/Dockerfile-spack-flux
+          build-args: centos7
           push: true
           tags: noaagsl/spack-flux-centos7:latest
           cache-from: type=gha
@@ -80,7 +81,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-radical-centos7
+          file: ./ExaWorks/Dockerfile-spack-radical
+          build-args: centos7
           push: true
           tags: noaagsl/spack-radical-centos7:latest
           cache-from: type=gha
@@ -106,7 +108,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-stc-centos7
+          file: ./ExaWorks/Dockerfile-spack-stc
+          build-args: centos7
           push: true
           tags: noaagsl/spack-stc-centos7:latest
           cache-from: type=gha
@@ -132,7 +135,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-parsl-centos7
+          file: ./ExaWorks/Dockerfile-spack-parsl
+          build-args: centos7
           push: true
           tags: noaagsl/spack-parsl-centos7:latest
           cache-from: type=gha
@@ -162,7 +166,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-exaworks-centos7
+          file: ./ExaWorks/Dockerfile-spack-exaworks
+          build-args: centos7
           push: true
           tags: noaagsl/spack-exaworks-centos7:latest
           cache-from: type=gha

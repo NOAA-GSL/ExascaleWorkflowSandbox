@@ -54,7 +54,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-flux-ubuntu20
+          file: ./ExaWorks/Dockerfile-spack-flux
+          build-args: OS=ubuntu20
           push: true
           tags: noaagsl/spack-flux-ubuntu20:latest
           cache-from: type=gha
@@ -80,7 +81,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-radical-ubuntu20
+          file: ./ExaWorks/Dockerfile-spack-radical
+          build-args: OS=ubuntu20
           push: true
           tags: noaagsl/spack-radical-ubuntu20:latest
           cache-from: type=gha
@@ -106,7 +108,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-stc-ubuntu20
+          file: ./ExaWorks/Dockerfile-spack-stc
+          build-args: OS=ubuntu20
           push: true
           tags: noaagsl/spack-stc-ubuntu20:latest
           cache-from: type=gha
@@ -132,7 +135,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-parsl-ubuntu20
+          file: ./ExaWorks/Dockerfile-spack-parsl
+          build-args: OS=ubuntu20
           push: true
           tags: noaagsl/spack-parsl-ubuntu20:latest
           cache-from: type=gha
@@ -162,7 +166,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-exaworks-ubuntu20
+          file: ./ExaWorks/Dockerfile-spack-exaworks
+          build-args: OS=ubuntu20
           push: true
           tags: noaagsl/spack-exaworks-ubuntu20:latest
           cache-from: type=gha
