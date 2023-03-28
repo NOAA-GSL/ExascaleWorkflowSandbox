@@ -1,0 +1,12 @@
+FROM noaagsl/spack-base-centos7:latest
+
+COPY scripts/* /opt/scripts/
+
+# Install radical Spack packages
+RUN set -ex \
+    && cd /opt/scripts \
+    && . /opt/spack/share/spack/setup-env.sh \
+    && ./install_radical.sh \
+    && rm -rf /opt/spack/var/spack/cache/_source-cache
+
+CMD ["/bin/bash"]

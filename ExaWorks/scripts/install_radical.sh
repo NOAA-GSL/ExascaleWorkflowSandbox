@@ -4,8 +4,8 @@
 DEFAULT_GCC_VERSION=$(gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{print $2}')  # Version of system default gcc
 DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"  # Default system compiler used to build newer gcc
 
-SPACK_ENV_NAME="exaworkssdk"     # Name of spack environment for ExaWorks SDK
-SPACK_ENV_COMPILER="gcc@9.4.0"   # Compiler to use to build ExaWorks  SDK
+SPACK_ENV_NAME="radical"         # Name of spack environment to create
+SPACK_ENV_COMPILER="gcc@9.4.0"   # Compiler to use to build the spack environment
 TARGET_ARCH_OPT="target=x86_64"  # Compiler architecture build target
 
 ################################################################################
@@ -14,9 +14,9 @@ TARGET_ARCH_OPT="target=x86_64"  # Compiler architecture build target
 help()
 {
    # Display help
-   echo "Installs exaworks into exaworkssdk Spack environment"
+   echo "Installs radical into radical Spack environment"
    echo
-   echo "Usage: install_exaworks.sh"
+   echo "Usage: install_radical.sh"
    echo
 }
 
@@ -59,8 +59,12 @@ spack add py-mypy%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-black%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack install
 
-# Install exaworks
-spack add exaworks@0.1.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
+# Install radical components
+spack add py-radical-entk@1.16.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
+spack add py-radical-gtod@1.16.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
+spack add py-radical-pilot@1.16.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
+spack add py-radical-saga@1.16.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
+spack add py-radical-utils@1.16.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
 spack concretize -f
 spack install
 
