@@ -172,3 +172,19 @@ jobs:
           tags: noaagsl/spack-exaworks-ubuntu20:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+  parsl_examples:
+    needs: docker-exaworks
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v3
+      -
+        name: Get the spack-exaworks-ubuntu20 container
+        run: docker pull noaagsl/spack-exaworks-ubuntu20:latest
+      -
+        name: Start the spack-exaworks-ubuntu20 container
+        run: docker run -d -t --name exaworks-ubuntu20 -v ${PWD}/.ExaWorks/test:/opt/test noaagsl/spack-exaworks-ubuntu20:latest
+      -
+        name: Test examples
+        run: docker exec exaworks-ubuntu20 bash -c ". /opt/spack/share/spack/setup-env.sh; spack env activate exaworkssdk; cd /opt/test; ./parsl_hello.py"
