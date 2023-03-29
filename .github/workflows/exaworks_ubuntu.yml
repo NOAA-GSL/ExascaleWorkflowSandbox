@@ -31,9 +31,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-base-${containerOS}
+          file: ./ExaWorks/Dockerfile-spack-base-${{ env.containerOS }}
           push: true
-          tags: noaagsl/spack-base-${containerOS}:latest
+          tags: noaagsl/spack-base-${{ env.containerOS }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
   docker-flux:
@@ -58,9 +58,9 @@ jobs:
         with:
           context: ./ExaWorks
           file: ./ExaWorks/Dockerfile-spack-flux
-          build-args: OS=${containerOS}
+          build-args: OS=${{ env.containerOS }}
           push: true
-          tags: noaagsl/spack-flux-${containerOS}:latest
+          tags: noaagsl/spack-flux-${{ env.containerOS }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
   docker-radical:
@@ -85,9 +85,9 @@ jobs:
         with:
           context: ./ExaWorks
           file: ./ExaWorks/Dockerfile-spack-radical
-          build-args: OS=${containerOS}
+          build-args: OS=${{ env.containerOS }}
           push: true
-          tags: noaagsl/spack-radical-${containerOS}:latest
+          tags: noaagsl/spack-radical-${{ env.containerOS }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
   docker-stc:
@@ -112,9 +112,9 @@ jobs:
         with:
           context: ./ExaWorks
           file: ./ExaWorks/Dockerfile-spack-stc
-          build-args: OS=${containerOS}
+          build-args: OS=${{ env.containerOS }}
           push: true
-          tags: noaagsl/spack-stc-${containerOS}:latest
+          tags: noaagsl/spack-stc-${{ env.containerOS }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
   docker-parsl:
@@ -139,9 +139,9 @@ jobs:
         with:
           context: ./ExaWorks
           file: ./ExaWorks/Dockerfile-spack-parsl
-          build-args: OS=${containerOS}
+          build-args: OS=${{ env.containerOS }}
           push: true
-          tags: noaagsl/spack-parsl-${containerOS}:latest
+          tags: noaagsl/spack-parsl-${{ env.containerOS }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
   docker-exaworks:
@@ -170,8 +170,8 @@ jobs:
         with:
           context: ./ExaWorks
           file: ./ExaWorks/Dockerfile-spack-exaworks
-          build-args: OS=${containerOS}
+          build-args: OS=${{ env.containerOS }}
           push: true
-          tags: noaagsl/spack-exaworks-${containerOS}:latest
+          tags: noaagsl/spack-exaworks-${{ env.containerOS }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
