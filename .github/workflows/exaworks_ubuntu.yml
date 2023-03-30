@@ -7,6 +7,9 @@ on:
     branches: [ develop, main ]
   workflow_dispatch:
 
+env:
+  containerOS: ubuntu20
+
 jobs:
   docker-base:
     runs-on: ubuntu-latest
@@ -28,9 +31,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-base-ubuntu20
+          file: ./ExaWorks/Dockerfile-spack-base-${{ env.containerOS }}
           push: true
-          tags: noaagsl/spack-base-ubuntu20:latest
+          tags: noaagsl/spack-base-${{ env.containerOS }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
   docker-flux:
@@ -54,9 +57,10 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-flux-ubuntu20
+          file: ./ExaWorks/Dockerfile-spack-flux
+          build-args: OS=${{ env.containerOS }}
           push: true
-          tags: noaagsl/spack-flux-ubuntu20:latest
+          tags: noaagsl/spack-flux-${{ env.containerOS }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
   docker-radical:
@@ -80,9 +84,10 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-radical-ubuntu20
+          file: ./ExaWorks/Dockerfile-spack-radical
+          build-args: OS=${{ env.containerOS }}
           push: true
-          tags: noaagsl/spack-radical-ubuntu20:latest
+          tags: noaagsl/spack-radical-${{ env.containerOS }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
   docker-stc:
@@ -106,9 +111,10 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-stc-ubuntu20
+          file: ./ExaWorks/Dockerfile-spack-stc
+          build-args: OS=${{ env.containerOS }}
           push: true
-          tags: noaagsl/spack-stc-ubuntu20:latest
+          tags: noaagsl/spack-stc-${{ env.containerOS }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
   docker-parsl:
@@ -132,9 +138,10 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-parsl-ubuntu20
+          file: ./ExaWorks/Dockerfile-spack-parsl
+          build-args: OS=${{ env.containerOS }}
           push: true
-          tags: noaagsl/spack-parsl-ubuntu20:latest
+          tags: noaagsl/spack-parsl-${{ env.containerOS }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
   docker-exaworks:
@@ -162,8 +169,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./ExaWorks
-          file: ./ExaWorks/Dockerfile-spack-exaworks-ubuntu20
+          file: ./ExaWorks/Dockerfile-spack-exaworks
+          build-args: OS=${{ env.containerOS }}
           push: true
-          tags: noaagsl/spack-exaworks-ubuntu20:latest
+          tags: noaagsl/spack-exaworks-${{ env.containerOS }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max

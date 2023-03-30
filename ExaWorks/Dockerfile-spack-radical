@@ -1,4 +1,5 @@
-FROM noaagsl/spack-base-centos7:latest
+ARG OS=ubuntu20
+FROM noaagsl/spack-base-${OS}:latest
 
 COPY scripts/* /opt/scripts/
 
