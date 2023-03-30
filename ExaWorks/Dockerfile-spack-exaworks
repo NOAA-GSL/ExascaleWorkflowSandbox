@@ -1,5 +1,7 @@
+ARG OS=ubuntu20
+
 # Create a build-cache of flux
-FROM noaagsl/spack-flux-centos7:latest AS flux
+FROM noaagsl/spack-flux-${OS}:latest AS flux
 RUN set -ex \
     && cd /opt/scripts \
     && . /opt/spack/share/spack/setup-env.sh \
@@ -8,11 +10,11 @@ RUN set -ex \
     && ./make_buildcache.sh /opt/mirrors flux
 
 # Add the flux mirror
-FROM noaagsl/spack-base-centos7:latest AS exaworks-flux
+FROM noaagsl/spack-base-${OS}:latest AS exaworks-flux
 COPY --from=flux /opt/mirrors/flux_mirror /opt/mirrors/flux_mirror
 
 # Create a build-cache of radical
-FROM noaagsl/spack-radical-centos7:latest AS radical
+FROM noaagsl/spack-radical-${OS}:latest AS radical
 RUN set -ex \
     && cd /opt/scripts \
     && . /opt/spack/share/spack/setup-env.sh \
@@ -25,7 +27,7 @@ FROM exaworks-flux AS exaworks-radical
 COPY --from=radical /opt/mirrors/radical_mirror /opt/mirrors/radical_mirror
 
 # Create a build-cache of stc
-FROM noaagsl/spack-stc-centos7:latest AS stc
+FROM noaagsl/spack-stc-${OS}:latest AS stc
 RUN set -ex \
     && cd /opt/scripts \
     && . /opt/spack/share/spack/setup-env.sh \
@@ -38,7 +40,7 @@ FROM exaworks-radical AS exaworks-stc
 COPY --from=stc /opt/mirrors/stc_mirror /opt/mirrors/stc_mirror
 
 # Create a build-cache of parsl
-FROM noaagsl/spack-parsl-centos7:latest AS parsl
+FROM noaagsl/spack-parsl-${OS}:latest AS parsl
 RUN set -ex \
     && cd /opt/scripts \
     && . /opt/spack/share/spack/setup-env.sh \
