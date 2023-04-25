@@ -50,7 +50,7 @@ case ${MIRROR_NAME} in
 
   bootstrap | Bootstrap | BOOTSTRAP)
 	
-    # Create a boostrap build cache
+    # Create a bootstrap build cache
     spack bootstrap mirror --binary-packages ${MIRROR_DIR}/${MIRROR_NAME}_mirror
     ;;
 

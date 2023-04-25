@@ -14,8 +14,8 @@ TARGET_ARCH_OPT="target=x86_64"  # Compiler architecture build target
 help()
 {
   # Display help
-  echo "Installs a bootstrap compiler built by the default system compiler into a boostrap environment."
-  echo "This boostrap compiler can then be used to build other packages without incurring"
+  echo "Installs a bootstrap compiler built by the default system compiler into a bootstrap environment."
+  echo "This bootstrap compiler can then be used to build other packages without incurring"
   echo "dependencies on the system default compiler."
   echo
   echo "Usage: install_bootstrap.sh"

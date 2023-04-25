@@ -48,7 +48,7 @@ spack env create ${SPACK_ENV_NAME} || true
 spack env activate ${SPACK_ENV_NAME}
 spack compiler add ${BOOTSTRAP_COMPILER}
 
-# Use the boostrap compiler to install the compiler in the base environment
+# Use the bootstrap compiler to install the compiler in the base environment
 spack add ${SPACK_ENV_COMPILER}%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack concretize
 spack install
