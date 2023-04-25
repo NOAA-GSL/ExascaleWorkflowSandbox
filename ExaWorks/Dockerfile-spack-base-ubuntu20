@@ -43,6 +43,7 @@ RUN set -ex \
     && ./install_spack.sh /opt/spack releases/latest \
     && . /opt/spack/share/spack/setup-env.sh \
     && ./install_base.sh \
+    && ./install_bootstrap.sh \
     && rm -rf /opt/spack/var/spack/cache/_source-cache
 
 CMD ["/bin/bash"]
