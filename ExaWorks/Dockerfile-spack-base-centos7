@@ -47,6 +47,7 @@ RUN set -ex \
     && cd /opt/scripts \
     && ./install_spack.sh /opt/spack releases/latest \
     && . /opt/spack/share/spack/setup-env.sh \
+    && ./install_bootstrap.sh \
     && ./install_base.sh \
     && rm -rf /opt/spack/var/spack/cache/_source-cache
 
