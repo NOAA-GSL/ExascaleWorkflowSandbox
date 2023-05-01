@@ -5,7 +5,7 @@ DEFAULT_GCC_VERSION=$(/usr/bin/gcc --version | head -1 | sed -e 's/([^()]*)//g' 
 DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"  # Default system compiler used to build newer gcc
 
 SPACK_ENV_NAME="flux"            # Name of spack environment to create
-SPACK_ENV_COMPILER="gcc@9.4.0"   # Compiler to use to build the spack environment
+SPACK_ENV_COMPILER="gcc@11.2.0"  # Compiler to use to build the spack environment
 TARGET_ARCH_OPT="target=x86_64"  # Compiler architecture build target
 
 ################################################################################
@@ -57,11 +57,13 @@ spack add py-pylint%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-flake8%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-mypy%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-black%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack add py-ply%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack add miniconda3%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack install
 
 # Install flux components
-spack add flux-core@0.44.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
-spack add flux-sched@0.25.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
+spack add flux-core@0.49.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
+spack add flux-sched@0.27.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
 spack concretize -f
 spack install
 

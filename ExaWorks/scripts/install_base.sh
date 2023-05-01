@@ -5,7 +5,7 @@ DEFAULT_GCC_VERSION=$(gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{p
 DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"  # Default system compiler used to build newer gcc
 
 SPACK_ENV_NAME="base"            # Name of spack environment to create
-SPACK_ENV_COMPILER="gcc@9.4.0"   # Compiler to use to build the spack environment
+SPACK_ENV_COMPILER="gcc@11.2.0"  # Compiler to use to build the spack environment
 TARGET_ARCH_OPT="target=x86_64"  # Compiler architecture build target
 
 ################################################################################
@@ -54,13 +54,15 @@ spack concretize
 spack install
 spack compiler add $(spack location -i ${SPACK_ENV_COMPILER}%${SPACK_ENV_COMPILER})
 
-# Install python tools
+# Install python tools and miniconda3
 spack add python@3.9%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-pytest%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-pylint%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-flake8%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-mypy%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-black%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack add py-ply%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack add miniconda3%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack concretize
 spack install
 
