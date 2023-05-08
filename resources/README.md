@@ -1,7 +1,7 @@
 # Workflow Research Resources
 
 * [ExaWorks SDK](https://exaworkssdk.readthedocs.io/en/latest/components.html)
-* ([Parsl Documentation](https://parsl.readthedocs.io/en/latest/index.html)
+* [Parsl Documentation](https://parsl.readthedocs.io/en/latest/index.html)
 * [Globus Compute Documentation](https://funcx.readthedocs.io/en/latest/quickstart.html)
 * [Flux Documentation](https://flux-framework.readthedocs.io/en/latest/quickstart.html)
 * [Flux-core Documentation](https://flux-framework.readthedocs.io/projects/flux-core/en/latest/index.html)
