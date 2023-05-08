@@ -57,10 +57,14 @@ spack add py-pylint%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-flake8%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-mypy%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-black%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack add py-ply%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack add miniconda3%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack install
 
 # Install parsl components
-spack add py-parsl@1.2.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
-spack install
+pip install parsl
+
+# Patch the Dill Python package to work around a bug
+pip install 'dill @ git+https://github.com/uqfoundation/dill'
 
 exit 0
