@@ -5,7 +5,7 @@ DEFAULT_GCC_VERSION=$(gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{p
 DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"  # Default system compiler used to build newer gcc
 
 SPACK_ENV_NAME="exaworkssdk"     # Name of spack environment for ExaWorks SDK
-SPACK_ENV_COMPILER="gcc@9.4.0"   # Compiler to use to build ExaWorks  SDK
+SPACK_ENV_COMPILER="gcc@11.2.0"   # Compiler to use to build ExaWorks  SDK
 TARGET_ARCH_OPT="target=x86_64"  # Compiler architecture build target
 
 ################################################################################
@@ -57,11 +57,24 @@ spack add py-pylint%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-flake8%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-mypy%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-black%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack add py-ply%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack add miniconda3%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack install
 spack install
 
 # Install exaworks
-spack add exaworks@0.1.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
-spack concretize -f
+spack add flux-core@0.49.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
+spack add flux-sched@0.27.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
+spack add stc@0.9.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
 spack install
+
+# Install radical components
+pip install radical.entk radical.gtod radical.pilot radical.saga radical.utils
+
+# Install parsl components
+pip install parsl
+
+# Patch the Dill Python package to work around a bug
+pip install 'dill @ git+https://github.com/uqfoundation/dill'
 
 exit 0
