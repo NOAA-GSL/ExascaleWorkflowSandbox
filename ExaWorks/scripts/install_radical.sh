@@ -5,7 +5,7 @@ DEFAULT_GCC_VERSION=$(gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{p
 DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"  # Default system compiler used to build newer gcc
 
 SPACK_ENV_NAME="radical"         # Name of spack environment to create
-SPACK_ENV_COMPILER="gcc@9.4.0"   # Compiler to use to build the spack environment
+SPACK_ENV_COMPILER="gcc@11.2.0"   # Compiler to use to build the spack environment
 TARGET_ARCH_OPT="target=x86_64"  # Compiler architecture build target
 
 ################################################################################
@@ -57,15 +57,11 @@ spack add py-pylint%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-flake8%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-mypy%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add py-black%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack add py-ply%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack add miniconda3%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack install
 
 # Install radical components
-spack add py-radical-entk@1.16.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
-spack add py-radical-gtod@1.16.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
-spack add py-radical-pilot@1.16.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
-spack add py-radical-saga@1.16.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
-spack add py-radical-utils@1.16.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
-spack concretize -f
-spack install
+pip install radical.entk radical.gtod radical.pilot radical.saga radical.utils
 
 exit 0
