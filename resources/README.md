@@ -18,7 +18,7 @@
 * [Flux Core](https://github.com/flux-framework/flux-core)
 * [Flux Docs](https://github.com/flux-framework/flux-docs)
 * [SmartSim](https://github.com/CrayLabs/SmartSim)
-* [Swift/T](https://github.com/swift-lang/swift-k)
+* [Swift/T](https://github.com/swift-lang/swift-t)
 
 ---
 
