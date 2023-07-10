@@ -1,10 +1,9 @@
 FROM noaagsl/slurm-node:latest
 
-RUN apt update -y \
- && apt install -y \
-        curl \
-        libpmi2-0-dev \
-        python3 \
-	python3-pip \
-        python3-distutils \
-        python3-venv
+RUN apt update -y && apt install -y \
+    libpmi2-0-dev
+
+# Set up user shell init
+RUN echo ". /opt/spack/share/spack/setup-env.sh" >> /home/admin/.bash_profile \
+ && echo "source /opt/intel/oneapi/setvars.sh" >> /home/admin/.bash_profile \
+ && chown admin:admin /home/admin/.bash_profile
