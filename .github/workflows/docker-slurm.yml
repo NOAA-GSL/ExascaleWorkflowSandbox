@@ -1,0 +1,106 @@
+name: ExascaleSandboxTests
+
+on:
+  push:
+    branches: [ develop, main ]
+  pull_request:
+    branches: [ develop, main ]
+  workflow_dispatch:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Build without pushing frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/frontend/Dockerfile
+          push: false
+          tags: noaagsl/exaworkflow-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      -
+        name: Build without pushing master
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/master/Dockerfile
+          push: false
+          tags: noaagsl/exaworkflow-master:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      -
+        name: Build without pushing node
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/node/Dockerfile
+          push: false
+          tags: noaagsl/slurm-node:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      -
+        name: Start Slurm cluster containers
+        run: |
+          cd docker
+	  docker-compose -f docker-compose.yml up --build -d
+      -
+        name: Create ssh keys in cluster
+        run: |
+          docker exec -it exaworkflow-frontend ssh-keygen -t rsa -f /home/admin/.ssh/id_rsa -N ""
+          docker exec -it exaworkflow-frontend cp /home/admin/.ssh/id_rsa.pub /home/admin/.ssh/authorized_keys
+      -
+        name: Parsl hello test
+        run: |
+          docker exec -it exaworkflow-frontend bash -l -c "spack env activate flux; cd test ; ./parsl_hello.py"
+      -
+        name: Parsl/Flux hello MPI test
+        run: |
+          docker exec -it exaworkflow-frontend bash -l -c "spack env activate flux; cd test ; ./parsl_mpi_flux_hello.py"
+      -
+        name: Shut down Slurm cluster containers
+        run: docker-compose -f docker-compose.yml down
+      -
+        name: Build (from cache) and push frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/frontend/Dockerfile
+          push: true
+          tags: noaagsl/exaworkflow-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      -
+        name: Build (from cache) and push master
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/master/Dockerfile
+          push: true
+          tags: noaagsl/exaworkflow-master:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      -
+        name: Build (from cache) and push node
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/node/Dockerfile
+          push: true
+          tags: noaagsl/slurm-node:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
