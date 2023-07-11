@@ -5,7 +5,7 @@ DEFAULT_GCC_VERSION=$(gcc --version | head -1 | sed -e 's/([^()]*)//g' | awk '{p
 DEFAULT_COMPILER="gcc@${DEFAULT_GCC_VERSION}"  # Default system compiler used to build newer gcc
 
 SPACK_ENV_NAME="base"            # Name of spack environment to create
-SPACK_ENV_COMPILER="gcc@9.4.0"   # Compiler to use to build the spack environment
+SPACK_ENV_COMPILER="gcc@11.2.0"  # Compiler to use to build the spack environment
 TARGET_ARCH_OPT="target=x86_64"  # Compiler architecture build target
 
 ################################################################################
