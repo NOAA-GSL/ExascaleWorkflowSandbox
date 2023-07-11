@@ -1,8 +1,8 @@
 services:
   slurmfrontend:
         build:
-          context: ./frontend
-          dockerfile: Dockerfile
+          context: ./
+          dockerfile: ./frontend/Dockerfile
         image: noaagsl/exaworkflow-frontend:latest
         container_name: exaworkflow-frontend
         shm_size: '4g'
@@ -11,13 +11,13 @@ services:
         volumes:
                 - shared-vol:/home/admin
                 - opt-vol:/opt
-                - ./src:/home/admin/src
+                - ./test:/home/admin/test
         ports:
                 - 8888:8888
   slurmmaster:
         build:
-          context: ./master
-          dockerfile: Dockerfile
+          context: ./
+          dockerfile: ./master/Dockerfile
         image: noaagsl/exaworkflow-master:latest
         container_name: exaworkflow-master
         shm_size: '4g'
@@ -26,7 +26,7 @@ services:
         volumes:
                 - shared-vol:/home/admin
                 - opt-vol:/opt:ro
-                - ./src:/home/admin/src
+                - ./test:/home/admin/test
         environment:
                 - SLURM_CPUS_ON_NODE=8
         ports:
@@ -35,8 +35,8 @@ services:
                 - 6819:6819
   slurmnode1:
         build:
-          context: ./node
-          dockerfile: Dockerfile
+          context: ./
+          dockerfile: ./node/Dockerfile
         image: noaagsl/exaworkflow-node:latest
         container_name: exaworkflow-node1
         shm_size: '4g'
@@ -45,7 +45,7 @@ services:
         volumes:
                 - shared-vol:/home/admin
                 - opt-vol:/opt:ro
-                - ./src:/home/admin/src
+                - ./test:/home/admin/test
         environment:
                 - SLURM_NODENAME=slurmnode1
                 - SLURM_CPUS_ON_NODE=8
@@ -53,8 +53,8 @@ services:
                 - slurmmaster
   slurmnode2:
         build:
-          context: ./node
-          dockerfile: Dockerfile
+          context: ./
+          dockerfile: ./node/Dockerfile
         image: noaagsl/exaworkflow-node:latest
         container_name: exaworkflow-node2
         shm_size: '4g'
@@ -63,7 +63,7 @@ services:
         volumes:
                 - shared-vol:/home/admin
                 - opt-vol:/opt:ro
-                - ./src:/home/admin/src
+                - ./test:/home/admin/test
         environment:
                 - SLURM_NODENAME=slurmnode2
                 - SLURM_CPUS_ON_NODE=8
@@ -71,8 +71,8 @@ services:
                 - slurmmaster
   slurmnode3:
         build:
-          context: ./node
-          dockerfile: Dockerfile
+          context: ./
+          dockerfile: ./node/Dockerfile
         image: noaagsl/exaworkflow-node:latest
         container_name: exaworkflow-node3
         shm_size: '4g'
@@ -81,7 +81,7 @@ services:
         volumes:
                 - shared-vol:/home/admin
                 - opt-vol:/opt:ro
-                - ./src:/home/admin/src
+                - ./test:/home/admin/test
         environment:
                 - SLURM_NODENAME=slurmnode3
                 - SLURM_CPUS_ON_NODE=8

@@ -34,16 +34,14 @@ RUN git clone -c feature.manyFiles=true -c core.sharedRepository=true https://gi
  && chmod -R g+rw /opt/spack
 
 # Copy the install scripts
-COPY install_base.sh /tmp/install_base.sh
-COPY install_flux.sh /tmp/install_flux.sh
-COPY install_parsl.sh /tmp/install_parsl.sh
+COPY ./install /tmp/install
 
 USER admin
 SHELL ["/bin/bash", "-c"]
 
 # Install the Spack workflow environment
 RUN . /opt/spack/share/spack/setup-env.sh \
- && cd /tmp \
+ && cd /tmp/install \
  && ./install_base.sh \
  && ./install_flux.sh \
  && ./install_parsl.sh
