@@ -24,7 +24,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build without pushing frontend
+        name: Build frontend without pushing
         uses: docker/build-push-action@v4
         with:
           context: ./docker
@@ -32,9 +32,8 @@ jobs:
           push: false
           tags: noaagsl/exaworkflow-frontend:latest
           cache-from: type=gha
-          cache-to: type=gha,mode=max
       -
-        name: Build without pushing master
+        name: Build master without pushing
         uses: docker/build-push-action@v4
         with:
           context: ./docker
@@ -42,9 +41,8 @@ jobs:
           push: false
           tags: noaagsl/exaworkflow-master:latest
           cache-from: type=gha
-          cache-to: type=gha,mode=max
       -
-        name: Build without pushing node
+        name: Build node without pushing
         uses: docker/build-push-action@v4
         with:
           context: ./docker
@@ -52,7 +50,6 @@ jobs:
           push: false
           tags: noaagsl/slurm-node:latest
           cache-from: type=gha
-          cache-to: type=gha,mode=max
       -
         name: Start Slurm cluster containers
         run: |
@@ -82,7 +79,6 @@ jobs:
           file: ./docker/frontend/Dockerfile
           push: true
           tags: noaagsl/exaworkflow-frontend:latest
-          cache-from: type=gha
           cache-to: type=gha,mode=max
       -
         name: Build (from cache) and push master
@@ -92,7 +88,6 @@ jobs:
           file: ./docker/master/Dockerfile
           push: true
           tags: noaagsl/exaworkflow-master:latest
-          cache-from: type=gha
           cache-to: type=gha,mode=max
       -
         name: Build (from cache) and push node
@@ -102,5 +97,4 @@ jobs:
           file: ./docker/node/Dockerfile
           push: true
           tags: noaagsl/slurm-node:latest
-          cache-from: type=gha
           cache-to: type=gha,mode=max
