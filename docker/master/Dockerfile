@@ -1,6 +1,6 @@
 FROM noaagsl/slurm-master:latest
 
-RUN apt-get update -y && apt install -y \
+RUN apt-get update -y && apt-get install -y \
     libpmi2-0-dev
 
 # Set up user shell init

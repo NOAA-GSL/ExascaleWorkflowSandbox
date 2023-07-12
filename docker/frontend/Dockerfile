@@ -1,6 +1,6 @@
 FROM noaagsl/slurm-frontend:latest
 
-RUN apt-get update -y && apt install -y \
+RUN apt-get update -y && apt-get install -y \
     curl \
     libpmi2-0-dev \
     python3 \
