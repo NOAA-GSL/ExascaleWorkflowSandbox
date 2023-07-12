@@ -30,6 +30,7 @@ jobs:
           context: ./docker
           file: ./docker/frontend/Dockerfile
           push: false
+	  load: true
           tags: noaagsl/exaworkflow-frontend:latest
           cache-from: type=gha
       -
@@ -39,6 +40,7 @@ jobs:
           context: ./docker
           file: ./docker/master/Dockerfile
           push: false
+	  load: true
           tags: noaagsl/exaworkflow-master:latest
           cache-from: type=gha
       -
@@ -48,6 +50,7 @@ jobs:
           context: ./docker
           file: ./docker/node/Dockerfile
           push: false
+	  load: true
           tags: noaagsl/slurm-node:latest
           cache-from: type=gha
       -
