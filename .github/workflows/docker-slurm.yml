@@ -22,60 +22,62 @@ jobs:
           export COMPOSE_HTTP_TIMEOUT=600
           ls -al
           ls -al test
-          docker-compose -f docker-compose.yml up --build -d
-      -
-        name: Create ssh keys in cluster
-        run: |
-          docker exec exaworkflow-frontend ssh-keygen -t rsa -f /home/admin/.ssh/id_rsa -N ""
-          docker exec exaworkflow-frontend cp /home/admin/.ssh/id_rsa.pub /home/admin/.ssh/authorized_keys
-      -
-        name: Parsl hello test
-        run: |
-          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; cd test ; ./parsl_hello.py"
-      -
-        name: Parsl/Flux hello MPI test
-        run: |
-          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; cd test ; ./parsl_mpi_flux_hello.py"
-      -
-        name: Shut down Slurm cluster containers
-        run: |
-          cd docker
-          export DOCKER_CLIENT_TIMEOUT=600
-          export COMPOSE_HTTP_TIMEOUT=600
-          docker-compose -f docker-compose.yml down
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      -
-        name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build (from cache) and push frontend
-        uses: docker/build-push-action@v4
-        with:
-          context: ./docker
-          file: ./docker/frontend/Dockerfile
-          push: true
-          tags: noaagsl/exaworkflow-frontend:latest
-          cache-to: type=gha,mode=max
-      -
-        name: Build (from cache) and push master
-        uses: docker/build-push-action@v4
-        with:
-          context: ./docker
-          file: ./docker/master/Dockerfile
-          push: true
-          tags: noaagsl/exaworkflow-master:latest
-          cache-to: type=gha,mode=max
-      -
-        name: Build (from cache) and push node
-        uses: docker/build-push-action@v4
-        with:
-          context: ./docker
-          file: ./docker/node/Dockerfile
-          push: true
-          tags: noaagsl/slurm-node:latest
-          cache-to: type=gha,mode=max
+          cd test
+          mkdir runinfo
+#          docker-compose -f docker-compose.yml up --build -d
+#      -
+#        name: Create ssh keys in cluster
+#        run: |
+#          docker exec exaworkflow-frontend ssh-keygen -t rsa -f /home/admin/.ssh/id_rsa -N ""
+#          docker exec exaworkflow-frontend cp /home/admin/.ssh/id_rsa.pub /home/admin/.ssh/authorized_keys
+#      -
+#        name: Parsl hello test
+#        run: |
+#          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; cd test ; ./parsl_hello.py"
+#      -
+#        name: Parsl/Flux hello MPI test
+#        run: |
+#          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; cd test ; ./parsl_mpi_flux_hello.py"
+#      -
+#        name: Shut down Slurm cluster containers
+#        run: |
+#          cd docker
+#          export DOCKER_CLIENT_TIMEOUT=600
+#          export COMPOSE_HTTP_TIMEOUT=600
+#          docker-compose -f docker-compose.yml down
+#      -
+#        name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v2
+#      -
+#        name: Login to Docker Hub
+#        uses: docker/login-action@v2
+#        with:
+#          username: ${{ secrets.DOCKERHUB_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#      -
+#        name: Build (from cache) and push frontend
+#        uses: docker/build-push-action@v4
+#        with:
+#          context: ./docker
+#          file: ./docker/frontend/Dockerfile
+#          push: true
+#          tags: noaagsl/exaworkflow-frontend:latest
+#          cache-to: type=gha,mode=max
+#      -
+#        name: Build (from cache) and push master
+#        uses: docker/build-push-action@v4
+#        with:
+#          context: ./docker
+#          file: ./docker/master/Dockerfile
+#          push: true
+#          tags: noaagsl/exaworkflow-master:latest
+#          cache-to: type=gha,mode=max
+#      -
+#        name: Build (from cache) and push node
+#        uses: docker/build-push-action@v4
+#        with:
+#          context: ./docker
+#          file: ./docker/node/Dockerfile
+#          push: true
+#          tags: noaagsl/slurm-node:latest
+#          cache-to: type=gha,mode=max
