@@ -5,7 +5,6 @@ services:
           dockerfile: ./frontend/Dockerfile
         image: noaagsl/exaworkflow-frontend:latest
         container_name: exaworkflow-frontend
-        shm_size: '4g'
         hostname: slurmfrontend
         user: admin
         volumes:
@@ -20,7 +19,6 @@ services:
           dockerfile: ./master/Dockerfile
         image: noaagsl/exaworkflow-master:latest
         container_name: exaworkflow-master
-        shm_size: '4g'
         hostname: slurmmaster
         user: admin
         volumes:
@@ -39,7 +37,6 @@ services:
           dockerfile: ./node/Dockerfile
         image: noaagsl/exaworkflow-node:latest
         container_name: exaworkflow-node1
-        shm_size: '4g'
         hostname: slurmnode1
         user: admin
         volumes:
@@ -57,7 +54,6 @@ services:
           dockerfile: ./node/Dockerfile
         image: noaagsl/exaworkflow-node:latest
         container_name: exaworkflow-node2
-        shm_size: '4g'
         hostname: slurmnode2
         user: admin
         volumes:
@@ -75,7 +71,6 @@ services:
           dockerfile: ./node/Dockerfile
         image: noaagsl/exaworkflow-node:latest
         container_name: exaworkflow-node3
-        shm_size: '4g'
         hostname: slurmnode3
         user: admin
         volumes:
