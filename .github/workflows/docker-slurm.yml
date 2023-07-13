@@ -24,19 +24,23 @@ jobs:
       -
         name: Create ssh keys in cluster
         run: |
-          docker exec -it exaworkflow-frontend ssh-keygen -t rsa -f /home/admin/.ssh/id_rsa -N ""
-          docker exec -it exaworkflow-frontend cp /home/admin/.ssh/id_rsa.pub /home/admin/.ssh/authorized_keys
+          docker exec exaworkflow-frontend ssh-keygen -t rsa -f /home/admin/.ssh/id_rsa -N ""
+          docker exec exaworkflow-frontend cp /home/admin/.ssh/id_rsa.pub /home/admin/.ssh/authorized_keys
       -
         name: Parsl hello test
         run: |
-          docker exec -it exaworkflow-frontend bash -l -c "spack env activate flux; cd test ; ./parsl_hello.py"
+          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; cd test ; ./parsl_hello.py"
       -
         name: Parsl/Flux hello MPI test
         run: |
-          docker exec -it exaworkflow-frontend bash -l -c "spack env activate flux; cd test ; ./parsl_mpi_flux_hello.py"
+          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; cd test ; ./parsl_mpi_flux_hello.py"
       -
         name: Shut down Slurm cluster containers
-        run: docker-compose -f docker-compose.yml down
+        run: |
+          cd docker
+          export DOCKER_CLIENT_TIMEOUT=600
+          export COMPOSE_HTTP_TIMEOUT=600
+          docker-compose -f docker-compose.yml down
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
