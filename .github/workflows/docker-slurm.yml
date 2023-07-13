@@ -20,16 +20,12 @@ jobs:
           cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          ls -al
-          ls -al test
-          cd test
-          mkdir runinfo
-          ls -al
-          whoami
-          touch runinfo/x
-          ls -al runinfo
-
-#          docker-compose -f docker-compose.yml up --build -d
+          docker-compose -f docker-compose.yml up -d
+          docker exec exaworkflow-frontend bash -l -c "ls -al"
+          docker exec exaworkflow-frontend bash -l -c "cd test; ls -al"
+          docker exec exaworkflow-frontend bash -l -c "whoami"
+          docker exec exaworkflow-frontend bash -l -c "cd test; mkdir runinfo; ls -al"
+          docker exec exaworkflow-frontend bash -l -c "cd test; touch runinfo/x; ls -al runinfo"
 #      -
 #        name: Create ssh keys in cluster
 #        run: |
