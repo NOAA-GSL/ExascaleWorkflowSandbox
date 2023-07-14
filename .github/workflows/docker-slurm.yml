@@ -34,8 +34,8 @@ jobs:
         name: Parsl/Flux hello MPI test
         run: |
           docker exec exaworkflow-frontend bash -l -c "spack env activate flux; mkdir -p work; cd work ; ../test/parsl_mpi_flux_hello.py"
-	  docker exec exaworkflow-frontend bash -l -c "cat work/resource_list.txt"
-	  docker exec exaworkflow-frontend bash -l -c "cat work/mpi_apps.hello.out"
+          docker exec exaworkflow-frontend bash -l -c "cat work/resource_list.txt"
+          docker exec exaworkflow-frontend bash -l -c "cat work/mpi_apps.hello.out"
       -
         name: Shut down Slurm cluster containers
         run: |
