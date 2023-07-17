@@ -30,13 +30,17 @@ jobs:
           docker exec exaworkflow-frontend ssh-keygen -t rsa -f /home/admin/.ssh/id_rsa -N ""
           docker exec exaworkflow-frontend cp /home/admin/.ssh/id_rsa.pub /home/admin/.ssh/authorized_keys
       -
+        name: Copy test scripts to work directory
+        run: |
+          docker exec exaworkflow-frontend bash -l -c "mkdir -p work; cd work ; cp ../test/*.py . ; cp ../test/*.f90 ."
+      -
         name: Parsl hello test
         run: |
-          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; mkdir -p work; cd work ; ../test/parsl_hello.py"
+          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; cd work ; ./parsl_hello.py"
       -
         name: Parsl/Flux hello MPI test
         run: |
-          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; mkdir -p work; cd work ; ../test/parsl_mpi_flux_hello.py"
+          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; cd work ; ./parsl_mpi_flux_hello.py"
           docker exec exaworkflow-frontend bash -l -c "cat work/resource_list.txt"
           docker exec exaworkflow-frontend bash -l -c "cat work/mpi_apps.hello.out"
       -
