@@ -20,6 +20,9 @@ jobs:
           cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
+          docker pull noaagsl/exaworkflow-frontend:latest
+          docker pull noaagsl/exaworkflow-master:latest
+          docker pull noaagsl/exaworkflow-node:latest
           docker-compose -f docker-compose.yml up -d
       -
         name: Create ssh keys in cluster
