@@ -16,7 +16,7 @@ config = Config(
         FluxExecutor(
             label="flux",
             # Start Flux with srun and tell it there are 40 cores per node
-            launch_cmd='srun --mpi=pmi2 --tasks-per-node=1 -c8 ' + FluxExecutor.DEFAULT_LAUNCH_CMD,
+            launch_cmd='srun --mpi=pmi2 --tasks-per-node=1 -c2 ' + FluxExecutor.DEFAULT_LAUNCH_CMD,
             provider=SlurmProvider(
                 channel=LocalChannel(),
                 nodes_per_block=3,
@@ -79,7 +79,7 @@ compile_app(dirpath=shared_dir,
 hello = mpi_hello(dirpath=shared_dir,
                   stdout=os.path.join(shared_dir, "mpi_apps.hello.out"),
                   stderr=os.path.join(shared_dir, "mpi_apps.hello.err",),
-                  parsl_resource_specification={"num_tasks": 24, "num_nodes": 3})
+                  parsl_resource_specification={"num_tasks": 6, "num_nodes": 3})
 
 # Wait for the MPI app to finish
 hello.result()
