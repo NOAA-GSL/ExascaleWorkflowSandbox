@@ -11,7 +11,7 @@
         "type=docker"
       ]
     }
-  }
+  },
   "target": {
     "slurmmaster": {
       "cache-from": [
@@ -24,7 +24,7 @@
         "type=docker"
       ]
     }
-  }
+  },
   "target": {
     "slurmnode1": {
       "cache-from": [
@@ -37,7 +37,7 @@
         "type=docker"
       ]
     }
-  }
+  },
   "target": {
     "slurmnode2": {
       "cache-from": [
@@ -50,7 +50,7 @@
         "type=docker"
       ]
     }
-  }
+  },
   "target": {
     "slurmnode3": {
       "cache-from": [
