@@ -52,17 +52,17 @@ jobs:
           tags: exaworkflow-master:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
-#      -
-#        name: Build (from cache) and push node
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: ./docker
-#          file: ./docker/node/Dockerfile
-#          push: false
-#          load: true
-#          tags: noaagsl/slurm-node:latest
-#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
-#          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+      -
+        name: Build (from cache) and push node
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/node/Dockerfile
+          push: false
+          load: true
+          tags: exaworkflow-node:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
 #      -
 #        name: Start Slurm cluster containers
 #        run: |
