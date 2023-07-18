@@ -30,19 +30,20 @@ jobs:
 #        with:
 #          username: ${{ secrets.DOCKERHUB_USERNAME }}
 #          password: ${{ secrets.DOCKERHUB_TOKEN }}
-#      -
-#        name: Build (from cache) and push frontend
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: ./docker
-#          file: ./docker/frontend/Dockerfile
-#          push: false
-#          load: true
-#          tags: exaworkflow-frontend:latest
-#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
+      -
+        name: Build and push frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/frontend/Dockerfile
+          push: false
+          load: true
+          tags: exaworkflow-frontend:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
 #          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
       -
-        name: Build (from cache) and push master
+        name: Build and push master
         uses: docker/build-push-action@v4
         with:
           context: ./docker
@@ -53,7 +54,7 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
       -
-        name: Build (from cache) and push node
+        name: Build and push node
         uses: docker/build-push-action@v4
         with:
           context: ./docker
