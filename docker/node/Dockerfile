@@ -7,5 +7,3 @@ RUN apt-get update -y && apt-get install -y \
 RUN echo ". /opt/spack/share/spack/setup-env.sh" >> /home/admin/.bash_profile \
  && echo "source /opt/intel/oneapi/setvars.sh" >> /home/admin/.bash_profile \
  && chown admin:admin /home/admin/.bash_profile
-
-RUN echo "hello debug test" >> /home/admin/foobar
