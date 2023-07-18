@@ -3,7 +3,7 @@ services:
         build:
           context: ./
           dockerfile: ./frontend/Dockerfile
-        image: noaagsl/exaworkflow-frontend:latest
+        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmfrontend:latest
         container_name: exaworkflow-frontend
         hostname: slurmfrontend
         user: admin
@@ -17,7 +17,7 @@ services:
         build:
           context: ./
           dockerfile: ./master/Dockerfile
-        image: noaagsl/exaworkflow-master:latest
+        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmmaster:latest
         container_name: exaworkflow-master
         hostname: slurmmaster
         user: admin
@@ -35,7 +35,7 @@ services:
         build:
           context: ./
           dockerfile: ./node/Dockerfile
-        image: noaagsl/exaworkflow-node:latest
+        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmnode:latest
         container_name: exaworkflow-node1
         hostname: slurmnode1
         user: admin
@@ -52,7 +52,7 @@ services:
         build:
           context: ./
           dockerfile: ./node/Dockerfile
-        image: noaagsl/exaworkflow-node:latest
+        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmnode:latest
         container_name: exaworkflow-node2
         hostname: slurmnode2
         user: admin
@@ -69,7 +69,7 @@ services:
         build:
           context: ./
           dockerfile: ./node/Dockerfile
-        image: noaagsl/exaworkflow-node:latest
+        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmnode:latest
         container_name: exaworkflow-node3
         hostname: slurmnode3
         user: admin

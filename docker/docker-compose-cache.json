@@ -1,0 +1,67 @@
+{
+  "target": {
+    "slurmfrontend": {
+      "cache-from": [
+        "type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmfrontend:cache"
+      ],
+      "cache-to": [
+        "type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmfrontend:cache"
+      ],
+      "output": [
+        "type=docker"
+      ]
+    }
+  }
+  "target": {
+    "slurmmaster": {
+      "cache-from": [
+        "type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmmaster:cache"
+      ],
+      "cache-to": [
+        "type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmmaster:cache"
+      ],
+      "output": [
+        "type=docker"
+      ]
+    }
+  }
+  "target": {
+    "slurmnode1": {
+      "cache-from": [
+        "type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmnode:cache"
+      ],
+      "cache-to": [
+        "type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmnode:cache"
+      ],
+      "output": [
+        "type=docker"
+      ]
+    }
+  }
+  "target": {
+    "slurmnode2": {
+      "cache-from": [
+        "type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmnode:cache"
+      ],
+      "cache-to": [
+        "type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmnode:cache"
+      ],
+      "output": [
+        "type=docker"
+      ]
+    }
+  }
+  "target": {
+    "slurmnode3": {
+      "cache-from": [
+        "type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmnode:cache"
+      ],
+      "cache-to": [
+        "type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmnode:cache"
+      ],
+      "output": [
+        "type=docker"
+      ]
+    }
+  }
+}
