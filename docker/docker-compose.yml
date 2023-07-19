@@ -1,24 +1,24 @@
 services:
-  slurmfrontend:
-        build:
-          context: ./
-          dockerfile: ./frontend/Dockerfile
-        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmfrontend:latest
-        container_name: exaworkflow-frontend
-        hostname: slurmfrontend
-        user: admin
-        volumes:
-                - shared-vol:/home/admin
-                - opt-vol:/opt
-                - ./test:/home/admin/test
-        ports:
-                - 8888:8888
+#  slurmfrontend:
+#        build:
+#          context: ./
+#          dockerfile: ./frontend/Dockerfile
+#        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmfrontend:latest
+#        container_name: exaworkflow-frontend
+#        hostname: slurmfrontend
+#        user: admin
+#        volumes:
+#                - shared-vol:/home/admin
+#                - opt-vol:/opt
+#                - ./test:/home/admin/test
+#        ports:
+#                - 8888:8888
   slurmmaster:
         build:
           context: ./
           dockerfile: ./master/Dockerfile
-        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmmaster:latest
-        container_name: exaworkflow-master
+        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
+        container_name: master
         hostname: slurmmaster
         user: admin
         volumes:
@@ -35,8 +35,8 @@ services:
         build:
           context: ./
           dockerfile: ./node/Dockerfile
-        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmnode:latest
-        container_name: exaworkflow-node1
+        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
+        container_name: node1
         hostname: slurmnode1
         user: admin
         volumes:
@@ -52,8 +52,8 @@ services:
         build:
           context: ./
           dockerfile: ./node/Dockerfile
-        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmnode:latest
-        container_name: exaworkflow-node2
+        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
+        container_name: node2
         hostname: slurmnode2
         user: admin
         volumes:
@@ -69,8 +69,8 @@ services:
         build:
           context: ./
           dockerfile: ./node/Dockerfile
-        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/slurmnode:latest
-        container_name: exaworkflow-node3
+        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
+        container_name: node3
         hostname: slurmnode3
         user: admin
         volumes:

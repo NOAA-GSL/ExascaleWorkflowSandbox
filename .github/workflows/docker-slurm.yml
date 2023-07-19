@@ -38,72 +38,72 @@ jobs:
 #          file: ./docker/frontend/Dockerfile
 #          push: false
 #          load: true
-#          tags: exaworkflow-frontend:latest
-#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
-#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
+#          tags: frontend:latest
+#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest,mode=max
+#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest,mode=max
 ##          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
-#      -
-#        name: Build and push master
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: ./docker
-#          file: ./docker/master/Dockerfile
-#          push: false
-#          load: true
-#          tags: exaworkflow-master:latest
-#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
-#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
-#      -
-#        name: Build and push node
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: ./docker
-#          file: ./docker/node/Dockerfile
-#          push: false
-#          load: true
-#          tags: exaworkflow-node:latest
-#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
-#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox,mode=max
       -
-        name: Build the images
-        run: |
-          cd docker
-          export DOCKER_CLIENT_TIMEOUT=600
-          export COMPOSE_HTTP_TIMEOUT=600
-          docker buildx bake --file docker-compose.yml --file docker-compose-cache.json
+        name: Build and push master
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/master/Dockerfile
+          push: false
+          load: true
+          tags: master:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest,mode=max
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest,mode=max
+      -
+        name: Build and push node
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/node/Dockerfile
+          push: false
+          load: true
+          tags: node:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest,mode=max
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest,mode=max
+#      -
+#        name: Build the images
+#        run: |
+#          cd docker
+#          export DOCKER_CLIENT_TIMEOUT=600
+#          export COMPOSE_HTTP_TIMEOUT=600
+#          docker buildx bake --file docker-compose.yml --file docker-compose-cache.json
       -
         name: Start Slurm cluster containers
         run: |
           cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          docker-compose -f docker-compose.yml up -d --build
-      -
-        name: Create ssh keys in cluster
-        run: |
-          docker exec exaworkflow-frontend ssh-keygen -t rsa -f /home/admin/.ssh/id_rsa -N ""
-          docker exec exaworkflow-frontend cp /home/admin/.ssh/id_rsa.pub /home/admin/.ssh/authorized_keys
-      -
-        name: Copy test scripts to work directory
-        run: |
-          docker exec exaworkflow-frontend bash -l -c "mkdir -p work; cd work ; cp ../test/*.py . ; cp ../test/*.f90 ."
-      -
-        name: Parsl hello test
-        run: |
-          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; cd work ; ./parsl_hello.py"
-      -
-        name: Parsl/Flux hello MPI test
-        run: |
-          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; cd work ; ./parsl_mpi_flux_hello.py"
-          docker exec exaworkflow-frontend bash -l -c "cat work/resource_list.txt"
-          docker exec exaworkflow-frontend bash -l -c "cat work/mpi_apps.hello.out"
-      -
-        name: Debug session
-        if: ${{ failure() }}
-        uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 60
-        with:
-          limit-access-to-actor: true
+          docker-compose -f docker-compose.yml up -d
+#      -
+#        name: Create ssh keys in cluster
+#        run: |
+#          docker exec exaworkflow-frontend ssh-keygen -t rsa -f /home/admin/.ssh/id_rsa -N ""
+#          docker exec exaworkflow-frontend cp /home/admin/.ssh/id_rsa.pub /home/admin/.ssh/authorized_keys
+#      -
+#        name: Copy test scripts to work directory
+#        run: |
+#          docker exec exaworkflow-frontend bash -l -c "mkdir -p work; cd work ; cp ../test/*.py . ; cp ../test/*.f90 ."
+#      -
+#        name: Parsl hello test
+#        run: |
+#          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; cd work ; ./parsl_hello.py"
+#      -
+#        name: Parsl/Flux hello MPI test
+#        run: |
+#          docker exec exaworkflow-frontend bash -l -c "spack env activate flux; cd work ; ./parsl_mpi_flux_hello.py"
+#          docker exec exaworkflow-frontend bash -l -c "cat work/resource_list.txt"
+#          docker exec exaworkflow-frontend bash -l -c "cat work/mpi_apps.hello.out"
+#      -
+#        name: Debug session
+#        if: ${{ failure() }}
+#        uses: mxschmitt/action-tmate@v3
+#        timeout-minutes: 60
+#        with:
+#          limit-access-to-actor: true
       -
         name: Shut down Slurm cluster containers
         run: |
