@@ -70,13 +70,13 @@ jobs:
 #          export DOCKER_CLIENT_TIMEOUT=600
 #          export COMPOSE_HTTP_TIMEOUT=600
 #          docker buildx bake --file docker-compose.yml --file docker-compose-cache.json
-#      -
-#        name: Start Slurm cluster containers
-#        run: |
-#          cd docker
-#          export DOCKER_CLIENT_TIMEOUT=600
-#          export COMPOSE_HTTP_TIMEOUT=600
-#          docker-compose -f docker-compose.yml up -d --no-build
+      -
+        name: Start Slurm cluster containers
+        run: |
+          cd docker
+          export DOCKER_CLIENT_TIMEOUT=600
+          export COMPOSE_HTTP_TIMEOUT=600
+          docker-compose -f docker-compose.yml up -d --no-build
 #      -
 #        name: Create ssh keys in cluster
 #        run: |

@@ -1,18 +1,18 @@
 services:
-  slurmfrontend:
-        build:
-          context: ./
-          dockerfile: ./frontend/Dockerfile
-        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
-        container_name: frontend
-        hostname: slurmfrontend
-        user: admin
-        volumes:
-                - shared-vol:/home/admin
-                - opt-vol:/opt
-                - ./test:/home/admin/test
-        ports:
-                - 8888:8888
+#  slurmfrontend:
+#        build:
+#          context: ./
+#          dockerfile: ./frontend/Dockerfile
+#        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
+#        container_name: frontend
+#        hostname: slurmfrontend
+#        user: admin
+#        volumes:
+#                - shared-vol:/home/admin
+#                - opt-vol:/opt
+#                - ./test:/home/admin/test
+#        ports:
+#                - 8888:8888
   slurmmaster:
         build:
           context: ./
