@@ -50,7 +50,7 @@ jobs:
           file: ./docker/master/Dockerfile
           push: false
           load: true
-          tags: master:latest
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest,mode=max
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest,mode=max
       -
