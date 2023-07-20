@@ -90,12 +90,12 @@ jobs:
         name: Parsl hello test
         run: |
           docker exec frontend bash -l -c "spack env activate flux; cd work ; ./parsl_hello.py"
-#      -
-#        name: Parsl/Flux hello MPI test
-#        run: |
-#          docker exec frontend bash -l -c "spack env activate flux; cd work ; ./parsl_mpi_flux_hello.py"
-#          docker exec frontend bash -l -c "cat work/resource_list.txt"
-#          docker exec frontend bash -l -c "cat work/mpi_apps.hello.out"
+      -
+        name: Parsl/Flux hello MPI test
+        run: |
+          docker exec frontend bash -l -c "spack env activate flux; cd work ; ./parsl_mpi_flux_hello.py"
+          docker exec frontend bash -l -c "cat work/resource_list.txt"
+          docker exec frontend bash -l -c "cat work/mpi_apps.hello.out"
 #      -
 #        name: Debug session
 #        if: ${{ failure() }}
