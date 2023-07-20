@@ -77,19 +77,19 @@ jobs:
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
           docker-compose -f docker-compose.yml up -d --no-build
-#      -
-#        name: Create ssh keys in cluster
-#        run: |
-#          docker exec frontend ssh-keygen -t rsa -f /home/admin/.ssh/id_rsa -N ""
-#          docker exec frontend cp /home/admin/.ssh/id_rsa.pub /home/admin/.ssh/authorized_keys
-#      -
-#        name: Copy test scripts to work directory
-#        run: |
-#          docker exec frontend bash -l -c "mkdir -p work; cd work ; cp ../test/*.py . ; cp ../test/*.f90 ."
-#      -
-#        name: Parsl hello test
-#        run: |
-#          docker exec frontend bash -l -c "spack env activate flux; cd work ; ./parsl_hello.py"
+      -
+        name: Create ssh keys in cluster
+        run: |
+          docker exec frontend ssh-keygen -t rsa -f /home/admin/.ssh/id_rsa -N ""
+          docker exec frontend cp /home/admin/.ssh/id_rsa.pub /home/admin/.ssh/authorized_keys
+      -
+        name: Copy test scripts to work directory
+        run: |
+          docker exec frontend bash -l -c "mkdir -p work; cd work ; cp ../test/*.py . ; cp ../test/*.f90 ."
+      -
+        name: Parsl hello test
+        run: |
+          docker exec frontend bash -l -c "spack env activate flux; cd work ; ./parsl_hello.py"
 #      -
 #        name: Parsl/Flux hello MPI test
 #        run: |
@@ -103,13 +103,13 @@ jobs:
 #        timeout-minutes: 60
 #        with:
 #          limit-access-to-actor: true
-#      -
-#        name: Shut down Slurm cluster containers
-#        run: |
-#          cd docker
-#          export DOCKER_CLIENT_TIMEOUT=600
-#          export COMPOSE_HTTP_TIMEOUT=600
-#          docker-compose -f docker-compose.yml down
+      -
+        name: Shut down Slurm cluster containers
+        run: |
+          cd docker
+          export DOCKER_CLIENT_TIMEOUT=600
+          export COMPOSE_HTTP_TIMEOUT=600
+          docker-compose -f docker-compose.yml down
       -
         name: Push frontend
         uses: docker/build-push-action@v4
