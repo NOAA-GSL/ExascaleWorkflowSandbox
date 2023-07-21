@@ -98,15 +98,15 @@ jobs:
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
           docker-compose -f docker-compose.yml down
-      -
-        name: Push frontend
-        uses: docker/build-push-action@v4
-        with:
-          context: ./docker
-          file: ./docker/frontend/Dockerfile
-          push: true
-          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
-#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
+#      -
+#        name: Push frontend
+#        uses: docker/build-push-action@v4
+#        with:
+#          context: ./docker
+#          file: ./docker/frontend/Dockerfile
+#          push: true
+#          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
+##          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
       -
         name: Push master
         uses: docker/build-push-action@v4
