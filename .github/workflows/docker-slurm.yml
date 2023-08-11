@@ -27,9 +27,9 @@ jobs:
       -
         name: Pull caches
         run: |
-          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache || true
-          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache || true
-          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache || true
+          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest || true
+          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest || true
+          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest || true
       -
         name: Build frontend
         uses: docker/build-push-action@v4
@@ -39,8 +39,8 @@ jobs:
           push: false
           load: true
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
+#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
+#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
       -
         name: Build master
         uses: docker/build-push-action@v4
@@ -50,8 +50,8 @@ jobs:
           push: false
           load: true
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
+#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
+#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
       -
         name: Build node
         uses: docker/build-push-action@v4
@@ -61,8 +61,8 @@ jobs:
           push: false
           load: true
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
+#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
+#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
       -
         name: Start Slurm cluster containers
         run: |
