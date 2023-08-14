@@ -55,8 +55,8 @@ spack add miniconda3%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack install
 
 # Install flux components
-spack add flux-core@0.49.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
-spack add flux-sched@0.27.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
+spack add flux-core@0.53.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
+spack add flux-sched@0.28.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
 spack concretize -f
 spack install --no-checksum
 
