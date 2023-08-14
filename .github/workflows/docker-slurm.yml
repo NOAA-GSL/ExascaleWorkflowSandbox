@@ -69,7 +69,7 @@ jobs:
           cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          docker-compose -f docker-compose.yml up -d --no-build
+          docker-compose -f docker-compose.yml up -d
       -
         name: Create ssh keys in cluster
         run: |
