@@ -46,15 +46,17 @@ spack env activate ${SPACK_ENV_NAME}
 spack compiler find
 
 # Install python tools and miniconda3
-spack add python@3.9%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add py-pytest%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add py-pylint%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add py-flake8%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add py-mypy%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add py-black%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add py-ply%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add miniconda3%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack add python@3.9.15%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add py-pytest%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add py-pylint%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add py-flake8%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add py-mypy%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add py-black%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add py-ply%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+spack add miniconda3%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
+spack add flux-core@0.53.0%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
+spack add flux-sched@0.28.0%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
 spack concretize
-spack install
+spack install --no-checksum
 
 exit 0

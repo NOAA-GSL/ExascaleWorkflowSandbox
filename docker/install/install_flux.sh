@@ -44,19 +44,20 @@ spack env create ${SPACK_ENV_NAME} || true
 spack env activate ${SPACK_ENV_NAME}
 
 # Install python tools
-spack add python@3.9%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add py-pytest%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add py-pylint%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add py-flake8%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add py-mypy%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add py-black%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add py-ply%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack add miniconda3%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
-spack install
+#spack add python@3.9.15%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add py-pip%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add py-pytest%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add py-pylint%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add py-flake8%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add py-mypy%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add py-black%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add py-ply%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
+#spack add miniconda3%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT} 
+#spack install
 
 # Install flux components
-spack add flux-core@0.53.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
-spack add flux-sched@0.28.0%${SPACK_ENV_COMPILER} ^python@3.9 ${TARGET_ARCH_OPT}
+spack add flux-core@0.53.0%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
+spack add flux-sched@0.28.0%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
 spack concretize -f
 spack install --no-checksum
 

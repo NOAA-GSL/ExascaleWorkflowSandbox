@@ -40,10 +40,18 @@ USER admin
 SHELL ["/bin/bash", "-c"]
 
 # Install the Spack workflow environment
+#RUN . /opt/spack/share/spack/setup-env.sh \
+# && cd /tmp/install \
+# && ./install_base.sh
+
+# Install the Spack workflow environment
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
- && ./install_base.sh \
- && ./install_flux.sh \
+ && ./install_flux.sh
+
+# Install the Spack workflow environment
+RUN . /opt/spack/share/spack/setup-env.sh \
+ && cd /tmp/install \
  && ./install_parsl.sh
 
 # Set up user shell init
