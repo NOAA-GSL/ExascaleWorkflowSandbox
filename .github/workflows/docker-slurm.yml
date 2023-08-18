@@ -30,39 +30,39 @@ jobs:
 #          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache || true
 #          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache || true
 #          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache || true
-#      -
-#        name: Build frontend
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: ./docker
-#          file: ./docker/frontend/Dockerfile
-#          push: false
-#          load: true
-#          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
-#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
-#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
-#      -
-#        name: Build master
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: ./docker
-#          file: ./docker/master/Dockerfile
-#          push: false
-#          load: true
-#          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
-#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
-#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
-#      -
-#        name: Build node
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: ./docker
-#          file: ./docker/node/Dockerfile
-#          push: false
-#          load: true
-#          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
-#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
-#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
+      -
+        name: Build frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/frontend/Dockerfile
+          push: false
+          load: true
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
+      -
+        name: Build master
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/master/Dockerfile
+          push: false
+          load: true
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
+      -
+        name: Build node
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/node/Dockerfile
+          push: false
+          load: true
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
       -
         name: Start Slurm cluster containers
         run: |
@@ -90,13 +90,13 @@ jobs:
           docker exec frontend bash -l -c "cat work/resource_list.txt"
           docker exec frontend bash -l -c "cat work/mpi_apps.hello.out"
 # Uncomment this step to enable interactive debugging
-#      -
-#        name: Debug session
-#        if: ${{ failure() }}
-#        uses: mxschmitt/action-tmate@v3
-#        timeout-minutes: 60
-#        with:
-#          limit-access-to-actor: true
+      -
+        name: Debug session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 60
+        with:
+          limit-access-to-actor: true
       -
         name: Shut down Slurm cluster containers
         run: |
@@ -112,7 +112,7 @@ jobs:
           file: ./docker/frontend/Dockerfile
           push: true
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
-#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
       -
         name: Push master
         uses: docker/build-push-action@v4
@@ -121,7 +121,7 @@ jobs:
           file: ./docker/master/Dockerfile
           push: true
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
-#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
       -
         name: Push node
         uses: docker/build-push-action@v4
@@ -130,4 +130,4 @@ jobs:
           file: ./docker/node/Dockerfile
           push: true
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
-#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
