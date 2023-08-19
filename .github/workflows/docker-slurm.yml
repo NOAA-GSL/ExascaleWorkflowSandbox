@@ -30,7 +30,7 @@ jobs:
           cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          docker compose -f docker-compose.yml up -d
+          docker compose -f docker-compose.yml up --build -d 
       -
         name: Create ssh keys in cluster
         run: |
@@ -68,3 +68,9 @@ jobs:
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
           docker-compose -f docker-compose.yml down
+      -
+        name: Push containers
+        run: |
+          docker push ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
+          docker push ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
+          docker push ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
