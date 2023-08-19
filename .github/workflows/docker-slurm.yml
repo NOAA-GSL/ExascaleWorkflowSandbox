@@ -86,7 +86,7 @@ jobs:
       -
         name: Parsl/Flux hello MPI test
         run: |
-          docker exec frontend bash -l -c "spack env activate flux; cd work ; ./parsl_mpi_flux_hello.py"
+          docker exec frontend bash -l -c "spack env activate flux; cd /tmp/install; ./install_flux.sh; cd; cd work ; ./parsl_mpi_flux_hello.py"
           docker exec frontend bash -l -c "cat work/resource_list.txt"
           docker exec frontend bash -l -c "cat work/mpi_apps.hello.out"
 # Uncomment this step to enable interactive debugging
