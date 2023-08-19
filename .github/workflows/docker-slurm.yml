@@ -24,52 +24,52 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+#      -
+#        name: Pull caches
+#        run: |
+#          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache || true
+#          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache || true
+#          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache || true
       -
-        name: Pull caches
-        run: |
-          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache || true
-          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache || true
-          docker pull ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache || true
-#      -
-#        name: Build frontend
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: ./docker
-#          file: ./docker/frontend/Dockerfile
-#          push: false
-#          load: true
-#          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
-#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
-#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
-#      -
-#        name: Build master
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: ./docker
-#          file: ./docker/master/Dockerfile
-#          push: false
-#          load: true
-#          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
-#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
-#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
-#      -
-#        name: Build node
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: ./docker
-#          file: ./docker/node/Dockerfile
-#          push: false
-#          load: true
-#          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
-#          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
-#          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
+        name: Build frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/frontend/Dockerfile
+          push: false
+          load: true
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
+      -
+        name: Build master
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/master/Dockerfile
+          push: false
+          load: true
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
+      -
+        name: Build node
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/node/Dockerfile
+          push: false
+          load: true
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
       -
         name: Start Slurm cluster containers
         run: |
           cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          docker compose -f docker-compose.yml up -d
+          docker compose -f docker-compose.yml up -d --no-build
       -
         name: Create ssh keys in cluster
         run: |

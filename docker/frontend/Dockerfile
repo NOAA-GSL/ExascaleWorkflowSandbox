@@ -44,6 +44,9 @@ SHELL ["/bin/bash", "-c"]
 # && cd /tmp/install \
 # && ./install_base.sh
 
+RUN echo "foobar foobar foobar" > /tmp/foobarfoobar \
+ && echo "hello cruel world" >> /tmp/foobarfoobar
+
 # Install the Spack workflow environment
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
