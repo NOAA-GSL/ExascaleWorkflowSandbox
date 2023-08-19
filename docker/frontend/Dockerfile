@@ -52,7 +52,8 @@ RUN . /opt/spack/share/spack/setup-env.sh \
 # Install the Spack workflow environment
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
- && ./install_parsl.sh
+ && ./install_parsl.sh \
+ && ./install_flux.sh
 
 # Set up user shell init
 RUN echo ". /opt/spack/share/spack/setup-env.sh" >> /home/admin/.bash_profile \
