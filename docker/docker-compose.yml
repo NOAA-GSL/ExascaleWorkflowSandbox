@@ -3,9 +3,7 @@ services:
         build:
           context: ./
           cache_from:
-                - type=registry
-                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
-                - mode=max
+                - type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
 #          cache_to:
 #                - type=registry
 #                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
@@ -46,10 +44,10 @@ services:
   slurmnode1:
         build:
           context: ./
-          cache_from:
-                - type=registry
-                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
-                - mode=max
+#          cache_from:
+#                - type=registry
+#                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
+#                - mode=max
           dockerfile: ./node/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
         container_name: node1
@@ -67,10 +65,10 @@ services:
   slurmnode2:
         build:
           context: ./
-          cache_from:
-                - type=registry
-                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
-                - mode=max
+#          cache_from:
+#                - type=registry
+#                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
+#                - mode=max
           dockerfile: ./node/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
         container_name: node2
@@ -88,10 +86,10 @@ services:
   slurmnode3:
         build:
           context: ./
-          cache_from:
-                - type=registry
-                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
-                - mode=max
+#          cache_from:
+#                - type=registry
+#                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
+#                - mode=max
           dockerfile: ./node/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
         container_name: node3
