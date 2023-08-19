@@ -39,25 +39,17 @@ COPY ./install /tmp/install
 USER admin
 SHELL ["/bin/bash", "-c"]
 
-# Install the Spack workflow environment
-#RUN . /opt/spack/share/spack/setup-env.sh \
-# && cd /tmp/install \
-# && ./install_base.sh
-
-RUN echo "foobar foobar foobar" > /tmp/foobarfoobar \
- && echo "hello cruel world" >> /tmp/foobarfoobar
-
-# Install the Spack workflow environment
+# Install the Spack flux environment
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
  && ./install_flux.sh
 
-# Install the Spack workflow environment
+# Install parsl into the flux environment
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
  && ./install_parsl.sh
 
-# Install the Spack workflow environment again
+# Re-install the Spack flux environment to rebuild view after pip install of parsl
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
  && ./install_flux.sh

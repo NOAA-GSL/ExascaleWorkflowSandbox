@@ -43,10 +43,12 @@ spack config add config:install_tree:padded_length:128
 spack env create ${SPACK_ENV_NAME} || true
 spack env activate ${SPACK_ENV_NAME}
 
+# Re-install pip to update the view and make it reappear in the flux environment
 spack env activate flux
 spack add py-pip%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
 spack install
+
+# Install parsl with pip
 python -m pip install parsl
-#pip install 'dill @ git+https://github.com/uqfoundation/dill'
 
 exit 0
