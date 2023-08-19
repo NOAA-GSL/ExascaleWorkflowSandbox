@@ -52,7 +52,11 @@ RUN . /opt/spack/share/spack/setup-env.sh \
 # Install the Spack workflow environment
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
- && ./install_parsl.sh \
+ && ./install_parsl.sh
+
+# Install the Spack workflow environment again
+RUN . /opt/spack/share/spack/setup-env.sh \
+ && cd /tmp/install \
  && ./install_flux.sh
 
 # Set up user shell init
