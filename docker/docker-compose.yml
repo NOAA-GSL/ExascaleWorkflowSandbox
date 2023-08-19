@@ -24,10 +24,10 @@ services:
   slurmmaster:
         build:
           context: ./
-          cache_from:
-                - type=registry
-                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
-                - mode=max
+#          cache_from:
+#                - type=registry
+#                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
+#                - mode=max
           dockerfile: ./master/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
         container_name: master
