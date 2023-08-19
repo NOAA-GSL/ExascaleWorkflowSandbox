@@ -2,8 +2,8 @@ services:
   slurmfrontend:
         build:
           context: ./
-          cache_from:
-                - type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
+#          cache_from:
+#                - type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
           dockerfile: ./frontend/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
         container_name: frontend
