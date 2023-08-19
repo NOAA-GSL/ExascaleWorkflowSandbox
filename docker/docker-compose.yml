@@ -2,6 +2,14 @@ services:
   slurmfrontend:
         build:
           context: ./
+          cache_from:
+                - type=registry
+                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
+                - mode=max
+#          cache_to:
+#                - type=registry
+#                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
+#                - mode=max
           dockerfile: ./frontend/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
         container_name: frontend
@@ -16,6 +24,10 @@ services:
   slurmmaster:
         build:
           context: ./
+          cache_from:
+                - type=registry
+                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
+                - mode=max
           dockerfile: ./master/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
         container_name: master
@@ -34,6 +46,10 @@ services:
   slurmnode1:
         build:
           context: ./
+          cache_from:
+                - type=registry
+                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
+                - mode=max
           dockerfile: ./node/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
         container_name: node1
@@ -51,6 +67,10 @@ services:
   slurmnode2:
         build:
           context: ./
+          cache_from:
+                - type=registry
+                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
+                - mode=max
           dockerfile: ./node/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
         container_name: node2
@@ -68,6 +88,10 @@ services:
   slurmnode3:
         build:
           context: ./
+          cache_from:
+                - type=registry
+                - ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
+                - mode=max
           dockerfile: ./node/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
         container_name: node3
