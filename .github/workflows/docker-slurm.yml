@@ -25,16 +25,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       -
-        name: Update to avoid docker compose V2 bug
-        run: |
-          sudo apt-get update && sudo apt-get upgrade
-      -
         name: Start Slurm cluster containers
         run: |
           cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          docker compose -f docker-compose.yml up --build -d 
+          docker-compose -f docker-compose.yml up --build -d 
       -
         name: Create ssh keys in cluster
         run: |
