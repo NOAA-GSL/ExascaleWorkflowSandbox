@@ -26,7 +26,8 @@ config = Config(
                 walltime='00:10:00',
                 launcher=SimpleLauncher(),
                 worker_init='''
-# FluxExecutor ignores worker_init
+. /opt/spack/share/spack/setup-env.sh
+spack env activate flux
 ''',
             ),
         )
@@ -45,6 +46,8 @@ shared_dir = './'
 @bash_app
 def resource_list():
     return '''
+    . /opt/spack/share/spack/setup-env.sh
+    spack env activate flux
     flux resource list > resource_list.txt
     '''
 

@@ -1,3 +1,5 @@
+[![ExascaleSandboxTests](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yml/badge.svg)](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yml)
+
 ```
 This repository is a scientific product and is not official communication
 of the National Oceanic and Atmospheric Administration, or the United States
