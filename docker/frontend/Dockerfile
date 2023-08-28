@@ -39,20 +39,10 @@ COPY ./install /tmp/install
 USER admin
 SHELL ["/bin/bash", "-c"]
 
-# Install the Spack flux environment
+# Install the Spack Parsl/Flux environment
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
- && ./install_flux.sh
-
-# Install parsl into the flux environment
-RUN . /opt/spack/share/spack/setup-env.sh \
- && cd /tmp/install \
- && ./install_parsl.sh
-
-# Re-install the Spack flux environment to rebuild view after pip install of parsl
-RUN . /opt/spack/share/spack/setup-env.sh \
- && cd /tmp/install \
- && ./install_flux.sh
+ && ./install.sh
 
 # Set up user shell init
 RUN echo ". /opt/spack/share/spack/setup-env.sh" >> /home/admin/.bash_profile \
