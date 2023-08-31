@@ -1,0 +1,4 @@
+     STATE NNODES   NCORES    NGPUS NODELIST
+      free      3       23        0 slurmnode[1-3]
+ allocated      1        1        0 slurmnode3
+      down      0        0        0 

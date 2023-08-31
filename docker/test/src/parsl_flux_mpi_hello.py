@@ -48,7 +48,7 @@ def resource_list():
     return '''
     . /opt/spack/share/spack/setup-env.sh
     spack env activate flux
-    flux resource list > resource_list.txt
+    flux resource list > parsl_flux_resource_list.txt
     '''
 
 # Compile the hello MPI program with Intel
@@ -74,14 +74,14 @@ r = resource_list().result()
 
 # complile the app and wait for it to complete (.result())
 compile_app(dirpath=shared_dir,
-            stdout=os.path.join(shared_dir, "mpi_apps.compile.out"),
-            stderr=os.path.join(shared_dir, "mpi_apps.compile.err",),
+            stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.out"),
+            stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.err"),
            ).result()
 
 # run the mpi app
 hello = mpi_hello(dirpath=shared_dir,
-                  stdout=os.path.join(shared_dir, "mpi_apps.hello.out"),
-                  stderr=os.path.join(shared_dir, "mpi_apps.hello.err",),
+                  stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
+                  stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err",),
                   parsl_resource_specification={"num_tasks": 6, "num_nodes": 3})
 
 # Wait for the MPI app to finish

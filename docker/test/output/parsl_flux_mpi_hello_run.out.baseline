@@ -1,0 +1,6 @@
+Hello world from host slurmnode1, rank 0 out of 6
+Hello world from host slurmnode1, rank 1 out of 6
+Hello world from host slurmnode2, rank 2 out of 6
+Hello world from host slurmnode2, rank 3 out of 6
+Hello world from host slurmnode3, rank 4 out of 6
+Hello world from host slurmnode3, rank 5 out of 6
