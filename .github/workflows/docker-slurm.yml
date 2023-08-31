@@ -34,7 +34,7 @@ jobs:
       -
         name: Copy test files to work directory
         run: |
-          docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r../test/* ."
+          docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../test/* ."
       -
         name: Parsl hello test
         run: |
