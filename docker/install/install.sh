@@ -52,6 +52,6 @@ spack install --no-checksum
 spack add py-pip%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
 spack install
 # Install Parsl
-python -m pip install parsl
+python3 -m pip install parsl
 
 exit 0
