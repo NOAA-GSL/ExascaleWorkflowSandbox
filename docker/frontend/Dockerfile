@@ -39,7 +39,7 @@ USER admin
 SHELL ["/bin/bash", "-c"]
 
 # Install the Spack Parsl/Flux environment
-RUN . /opt/spack/share/spack/setup-env.sh
+RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
  && ./install_flux_parsl.sh
 
