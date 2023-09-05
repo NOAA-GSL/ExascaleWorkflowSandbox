@@ -30,8 +30,8 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends -o=Dpkg::Use
 COPY ./install /tmp/install
 
 # Install Spack
-RUN cd /tmp/install
- && ./install_spack /opt/spack v0.19.2 \
+RUN cd /tmp/install \
+ && ./install_spack.sh /opt/spack v0.19.2 \
  && chgrp -R admin /opt/spack \
  && chmod -R g+rw /opt/spack
 
