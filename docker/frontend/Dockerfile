@@ -39,10 +39,8 @@ USER admin
 SHELL ["/bin/bash", "-c"]
 
 # Install the Spack Parsl/Flux environment
-RUN cd /tmp/install \
- && . /opt/spack/share/spack/setup-env.sh \
- && ./install_bootstrap.sh \
- && ./install_base.sh \
+RUN . /opt/spack/share/spack/setup-env.sh
+ && cd /tmp/install \
  && ./install_flux_parsl.sh
 
 # Set up user shell init
