@@ -42,6 +42,7 @@ RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
  && ./install_bootstrap.sh \
  && ./install_base.sh \
+ && ./install_flux_parsl.sh \
  && ./install_flux_parsl.sh
 
 # Set up user shell init
