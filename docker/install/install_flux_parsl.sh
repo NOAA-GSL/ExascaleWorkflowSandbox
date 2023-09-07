@@ -61,4 +61,10 @@ spack install
 # Install Parsl
 python3 -m pip install parsl
 
+# Refresh the Spack environment view to recover PYTHONPATH and CPATH
+spack add flux-core@0.53.0%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
+spack add flux-sched@0.28.0%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
+spack add py-pip%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
+spack install
+
 exit 0
