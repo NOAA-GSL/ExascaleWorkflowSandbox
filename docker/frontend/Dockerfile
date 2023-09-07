@@ -32,8 +32,7 @@ COPY ./install /tmp/install
 # Install Spack
 RUN cd /tmp/install \
  && ./install_spack.sh /opt/spack v0.19.2 \
- && chgrp -R admin /opt/spack \
- && chmod -R g+rw /opt/spack
+ && chown -R admin:admin /opt/spack
 
 USER admin
 SHELL ["/bin/bash", "-c"]
@@ -41,12 +40,14 @@ SHELL ["/bin/bash", "-c"]
 # Install the Spack Parsl/Flux environment
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
+ && ./install_bootstrap.sh \
+ && ./install_base.sh \
  && ./install_flux_parsl.sh
 
 # Set up user shell init
-RUN echo ". /opt/spack/share/spack/setup-env.sh" >> /home/admin/.bash_profile \
+RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bash_profile \
+ && echo ". /opt/spack/share/spack/setup-env.sh" >> /home/admin/.bash_profile \
  && echo "spack env activate flux" >> /home/admin/.bash_profile \
- && echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bash_profile \
  && chown admin:admin /home/admin/.bash_profile
 
 SHELL ["/bin/bash"]
