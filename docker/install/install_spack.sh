@@ -30,7 +30,7 @@ if [[ -d ~/.spack ]]; then
 fi
 
 # Check for existing Spack installation
-if [[ -d ${SPACK_DIR} ]]; then
+if [[ -d ${SPACK_DIR} && -n "$(ls -A ${SPACK_DIR})" ]]; then
   echo "A Spack installation already exists at ${SPACK_DIR}."
   echo
   echo "Please choose another location or remove ${SPACK_DIR} and try again."
