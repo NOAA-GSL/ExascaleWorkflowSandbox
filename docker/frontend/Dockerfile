@@ -26,23 +26,25 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends -o=Dpkg::Use
     intel-oneapi-compiler-fortran \
     intel-oneapi-mpi-devel
 
+# Create directory in /opt for Spack install
+RUN mkdir -p /opt/spack \
+ && chown admin:admin /opt/spack
+
 # Copy the install scripts
 COPY ./install /tmp/install
 
-# Install Spack
-RUN cd /tmp/install \
- && ./install_spack.sh /opt/spack v0.19.2 \
- && chown -R admin:admin /opt/spack
-
 USER admin
 SHELL ["/bin/bash", "-c"]
+
+# Install Spack
+RUN cd /tmp/install \
+ && ./install_spack.sh /opt/spack v0.19.2
 
 # Install the Spack Parsl/Flux environment
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
  && ./install_bootstrap.sh \
  && ./install_base.sh \
- && ./install_flux_parsl.sh \
  && ./install_flux_parsl.sh
 
 # Set up user shell init
