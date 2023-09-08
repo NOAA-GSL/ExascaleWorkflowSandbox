@@ -40,14 +40,17 @@ SHELL ["/bin/bash", "-c"]
 RUN cd /tmp/install \
  && ./install_spack.sh /opt/spack v0.19.2
 
-# Install the Spack Parsl/Flux environment
+# Install the bootstrap compiler if necessary
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
- && ./install_bootstrap.sh \
- && ./install_base.sh \
- && ./install_flux_parsl.sh
+ && ./install_bootstrap.sh
 
-# Re-install the Spack Parsl/Flux environment to work around bug
+# Install the base compiler if necessary
+RUN . /opt/spack/share/spack/setup-env.sh \
+ && cd /tmp/install \
+ && ./install_base.sh
+
+# Install the Spack Parsl/Flux environment
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
  && ./install_flux_parsl.sh
