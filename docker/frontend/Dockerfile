@@ -34,7 +34,7 @@ RUN mkdir -p /opt/spack \
 COPY ./install /tmp/install
 
 USER admin
-SHELL ["/bin/bash", "-c"]
+SHELL ["/bin/bash", "-l", "-c"]
 
 # Install Spack
 RUN cd /tmp/install \
@@ -51,6 +51,11 @@ RUN . /opt/spack/share/spack/setup-env.sh \
  && ./install_base.sh
 
 # Install the Spack Parsl/Flux environment
+RUN . /opt/spack/share/spack/setup-env.sh \
+ && cd /tmp/install \
+ && ./install_flux_parsl.sh
+
+# Re-install the Spack Parsl/Flux environment to work around Python/Spack/Pip bugs
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
  && ./install_flux_parsl.sh
