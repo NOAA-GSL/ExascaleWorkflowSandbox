@@ -47,6 +47,11 @@ RUN . /opt/spack/share/spack/setup-env.sh \
  && ./install_base.sh \
  && ./install_flux_parsl.sh
 
+# Re-install the Spack Parsl/Flux environment to work around bug
+RUN . /opt/spack/share/spack/setup-env.sh \
+ && cd /tmp/install \
+ && ./install_flux_parsl.sh
+
 # Set up user shell init
 RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bash_profile \
  && echo ". /opt/spack/share/spack/setup-env.sh" >> /home/admin/.bash_profile \
