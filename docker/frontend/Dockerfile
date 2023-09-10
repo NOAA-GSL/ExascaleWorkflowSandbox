@@ -30,40 +30,46 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends -o=Dpkg::Use
 RUN mkdir -p /opt/spack \
  && chown admin:admin /opt/spack
 
+# Set up Spack initialization
+RUN echo ". /opt/spack/share/spack/setup-env.sh" > /etc/profile.d/spack.sh
+
 # Copy the install scripts
 COPY ./install /tmp/install
 
 USER admin
-SHELL ["/bin/bash", "-l", "-c"]
 
 # Install Spack
 RUN cd /tmp/install \
  && ./install_spack.sh /opt/spack v0.19.2
 
+SHELL ["/bin/bash", "-l", "-c"]
+
 # Install the bootstrap compiler if necessary
-RUN . /opt/spack/share/spack/setup-env.sh \
- && cd /tmp/install \
+RUN cd /tmp/install \
  && ./install_bootstrap.sh
 
 # Install the base compiler if necessary
-RUN . /opt/spack/share/spack/setup-env.sh \
- && cd /tmp/install \
+RUN cd /tmp/install \
  && ./install_base.sh
 
 # Install the Spack Parsl/Flux environment
-RUN . /opt/spack/share/spack/setup-env.sh \
- && cd /tmp/install \
+RUN cd /tmp/install \
  && ./install_flux_parsl.sh
 
-# Re-install the Spack Parsl/Flux environment to work around Python/Spack/Pip bugs
-RUN . /opt/spack/share/spack/setup-env.sh \
- && cd /tmp/install \
+USER root
+
+RUN echo "spack env activate flux" >> /etc/profile.d/spack.sh
+RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" > /etc/profile.d/intel_oneapi.sh
+
+USER admin
+
+# Re-install the Spack Parsl/Flux environment to work around weird bug
+RUN cd /tmp/install \
+ && spack env deactivate flux \
  && ./install_flux_parsl.sh
 
 # Set up user shell init
-RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bash_profile \
- && echo ". /opt/spack/share/spack/setup-env.sh" >> /home/admin/.bash_profile \
- && echo "spack env activate flux" >> /home/admin/.bash_profile \
- && chown admin:admin /home/admin/.bash_profile
+#RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bash_profile \
+# && echo "spack env activate flux" >> /home/admin/.bash_profile
 
-SHELL ["/bin/bash"]
+#SHELL ["/bin/bash"]
