@@ -31,7 +31,8 @@ jobs:
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
           docker compose version
-          docker compose -f docker-compose.yml up --build -d 
+          docker compose -f docker-compose.yml build
+          docker compose -f docker-compose.yml up -d 
       -
         name: Copy test files to work directory
         run: |

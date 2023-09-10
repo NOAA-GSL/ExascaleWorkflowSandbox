@@ -65,5 +65,5 @@ USER admin
 
 # Re-install the Spack Parsl/Flux environment to work around weird bug
 RUN cd /tmp/install \
- && spack env deactivate flux \
+ && spack env deactivate \
  && ./install_flux_parsl.sh
