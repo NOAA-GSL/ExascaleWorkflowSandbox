@@ -67,9 +67,3 @@ USER admin
 RUN cd /tmp/install \
  && spack env deactivate flux \
  && ./install_flux_parsl.sh
-
-# Set up user shell init
-#RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bash_profile \
-# && echo "spack env activate flux" >> /home/admin/.bash_profile
-
-#SHELL ["/bin/bash"]
