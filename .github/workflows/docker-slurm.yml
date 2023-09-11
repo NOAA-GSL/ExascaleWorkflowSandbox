@@ -28,10 +28,13 @@ jobs:
         name: Start Slurm cluster containers
         run: |
           cd docker
-          export DOCKER_CLIENT_TIMEOUT=600
-          export COMPOSE_HTTP_TIMEOUT=600
+          export DOCKER_CLIENT_TIMEOUT=1200
+          export COMPOSE_HTTP_TIMEOUT=1200
           docker compose version
           docker compose config
+          docker images
+          docker image prune -a -f
+          docker images
           docker compose -f docker-compose.yml build
           docker images
           docker ps -a
