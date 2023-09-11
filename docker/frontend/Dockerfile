@@ -53,8 +53,8 @@ RUN cd /tmp/install \
  && ./install_base.sh
 
 # Install the Spack Parsl/Flux environment
-RUN cd /tmp/install \
- && ./install_flux_parsl.sh
+#RUN cd /tmp/install \
+# && ./install_flux_parsl.sh
 
 USER root
 
@@ -64,6 +64,6 @@ RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" > /etc/profile.d
 USER admin
 
 # Re-install the Spack Parsl/Flux environment to work around weird bug
-RUN cd /tmp/install \
- && spack env deactivate \
- && ./install_flux_parsl.sh
+#RUN cd /tmp/install \
+# && spack env deactivate \
+# && ./install_flux_parsl.sh
