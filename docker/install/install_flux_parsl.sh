@@ -39,6 +39,11 @@ spack config add concretizer:reuse:true
 spack config add config:db_lock_timeout:300
 spack config add config:install_tree:padded_length:128
 
+# Add Spack-built compilers if necessary
+if [ "${SPACK_ENV_COMPILER}" != "${DEFAULT_COMPILER}" ]; then
+  spack compiler add $(spack location -i ${SPACK_ENV_COMPILER}%${SPACK_ENV_COMPILER})
+fi
+
 # Configure spack environment
 spack env create ${SPACK_ENV_NAME} || true
 spack env activate ${SPACK_ENV_NAME}
@@ -48,9 +53,11 @@ spack add flux-core@0.53.0%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OP
 spack add flux-sched@0.28.0%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
 spack concretize
 spack install --no-checksum
+
 # Install pip
 spack add py-pip%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
 spack install
+
 # Install Parsl
 python3 -m pip install parsl
 
