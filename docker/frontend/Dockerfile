@@ -26,12 +26,9 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends -o=Dpkg::Use
     intel-oneapi-compiler-fortran \
     intel-oneapi-mpi-devel
 
-# Install Spack
-RUN git clone -c feature.manyFiles=true -c core.sharedRepository=true https://github.com/spack/spack.git /opt/spack \
- && cd /opt/spack \
- && git checkout v0.19.2 \
- && chgrp -R admin /opt/spack \
- && chmod -R g+rw /opt/spack
+# Create directory in /opt for Spack install
+RUN mkdir -p /opt/spack \
+ && chown admin:admin /opt/spack
 
 # Copy the install scripts
 COPY ./install /tmp/install
@@ -39,15 +36,26 @@ COPY ./install /tmp/install
 USER admin
 SHELL ["/bin/bash", "-c"]
 
+# Install Spack
+RUN cd /tmp/install \
+ && ./install_spack.sh /opt/spack v0.19.2
+
 # Install the Spack Parsl/Flux environment
 RUN . /opt/spack/share/spack/setup-env.sh \
  && cd /tmp/install \
- && ./install.sh
+ && ./install_bootstrap.sh \
+ && ./install_base.sh \
+ && ./install_flux_parsl.sh
+
+# Re-install the Spack Parsl/Flux environment to work around bug
+RUN . /opt/spack/share/spack/setup-env.sh \
+ && cd /tmp/install \
+ && ./install_flux_parsl.sh
 
 # Set up user shell init
-RUN echo ". /opt/spack/share/spack/setup-env.sh" >> /home/admin/.bash_profile \
+RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bash_profile \
+ && echo ". /opt/spack/share/spack/setup-env.sh" >> /home/admin/.bash_profile \
  && echo "spack env activate flux" >> /home/admin/.bash_profile \
- && echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bash_profile \
  && chown admin:admin /home/admin/.bash_profile
 
 SHELL ["/bin/bash"]
