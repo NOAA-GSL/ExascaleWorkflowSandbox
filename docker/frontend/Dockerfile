@@ -68,5 +68,3 @@ RUN echo "spack env activate flux" >> /etc/profile.d/spack.sh
 RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" > /etc/profile.d/intel_oneapi.sh
 
 USER admin
-
-SHELL ["/bin/bash"]

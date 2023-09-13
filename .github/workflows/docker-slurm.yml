@@ -67,8 +67,8 @@ jobs:
         name: Start Slurm cluster containers
         run: |
           cd docker
-          export DOCKER_CLIENT_TIMEOUT=1200
-          export COMPOSE_HTTP_TIMEOUT=1200
+          export DOCKER_CLIENT_TIMEOUT=600
+          export COMPOSE_HTTP_TIMEOUT=600
           docker compose version
           docker compose config
           docker images
@@ -104,10 +104,25 @@ jobs:
           cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          docker-compose -f docker-compose.yml down
+          docker compose -f docker-compose.yml down
       -
-        name: Push containers
-        run: |
-          docker push ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
-          docker push ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
-          docker push ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
+        name: Push frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/frontend/Dockerfile
+          push: true
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
+      -
+        name: Build master
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/master/Dockerfile
+          push: false
+          load: true
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
