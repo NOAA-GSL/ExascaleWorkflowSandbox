@@ -1,0 +1,18 @@
+---
+jedi path: '/work/noaa/gsd-hpcs/charrop/hercules/SENA/JEDI/develop/build'
+experiment:
+  path:            '/work/noaa/gsd-hpcs/charrop/hercules/SENA/JEDI/experiments'
+  name:            'qg.3dvar'
+  begin:           '2009-12-15T00:00:00Z'
+  length:          'P18D'
+  cycle frequency: 'PT6H'
+forecast:
+  frequency: 'PT1H'
+  length:    'P2D'
+assimilation:
+  type:          '3dvar'
+  algorithm:     'dripcg'
+  window begin:  'MT6H'
+  window length: 'PT12H'
+verification:
+  spinup: 'P10D'
