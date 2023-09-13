@@ -34,7 +34,7 @@ RUN mkdir -p /opt/spack \
 COPY ./install /tmp/install
 
 USER admin
-SHELL ["/bin/bash", "-c"]
+SHELL ["/bin/bash", "-l", "-c"]
 
 # Install Spack
 RUN cd /tmp/install \
