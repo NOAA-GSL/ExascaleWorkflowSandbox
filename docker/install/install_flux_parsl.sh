@@ -49,16 +49,14 @@ spack env create ${SPACK_ENV_NAME} || true
 spack env activate ${SPACK_ENV_NAME}
 
 # Install flux components
+spack add python@3.9.15%${SPACK_ENV_COMPILER} ${TARGET_ARCH_OPT}
 spack add flux-core@0.53.0%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
 spack add flux-sched@0.28.0%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
+spack add py-pip%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
 spack concretize
 spack install --no-checksum
 
-# Install pip
-spack add py-pip%${SPACK_ENV_COMPILER} ^python@3.9.15 ${TARGET_ARCH_OPT}
-spack install
-
 # Install Parsl
-python3 -m pip install parsl
+python3 -m pip install parsl[monitoring]
 
 exit 0
