@@ -1,7 +1,7 @@
 ---
-jedi path: '/work/noaa/gsd-hpcs/charrop/hercules/SENA/JEDI/develop/build'
+jedi path: '/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI/exascale-workflow-bundle'
 experiment:
-  path:            '/work/noaa/gsd-hpcs/charrop/hercules/SENA/JEDI/experiments'
+  path:            '/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI/experiments'
   name:            'qg.3dvar'
   begin:           '2009-12-15T00:00:00Z'
   length:          'P18D'
