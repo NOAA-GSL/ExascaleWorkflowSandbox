@@ -13,10 +13,12 @@ source /etc/bashrc
 export JEDI_VERSION=${1:-develop}
 
 # Set location of JEDI source and build
-export WORK=/work/noaa/gsd-hpcs/charrop/hercules/SENA/JEDI
+#export WORK=/work/noaa/gsd-hpcs/charrop/hercules/SENA/JEDI
+#export WORK=/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI
 #export WORK=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-export JEDI_ROOT=${WORK}/${JEDI_VERSION}
-export JEDI_SRC=${JEDI_ROOT}/jedi-bundle
+export JEDI_ROOT=/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI
+#export JEDI_SRC=${JEDI_ROOT}/jedi-bundle
+export JEDI_SRC=${JEDI_ROOT}/exascale-workflow-bundle
 export JEDI_BUILD=${JEDI_ROOT}/build
 
 # Setup software environment
@@ -25,3 +27,4 @@ export JEDI_BUILD=${JEDI_ROOT}/build
 # Run ecbuild
 cd ${JEDI_BUILD}
 make -j 24 VERBOSE=1 > ${JEDI_ROOT}/make.out 2>&1
+make install >> ${JEDI_ROOT}/make.out 2>&1
