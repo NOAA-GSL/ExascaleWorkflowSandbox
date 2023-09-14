@@ -76,7 +76,6 @@ for observer in observers:
 assim_config['output']['datadir'] = fcst_path
 iterations_config = assim_config['variational']['iterations']
 for iteration in iterations_config:
-    print(iteration)
     iteration['online diagnostics']['increment']['datadir'] = fcst_path
 assim_config['final']['increment']['output']['datadir'] = fcst_path
 
