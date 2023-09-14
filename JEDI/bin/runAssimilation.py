@@ -85,6 +85,6 @@ if (not os.path.exists(f'{exp_path}/yaml')):
 with open(f"{exp_path}/yaml/{assimilation_type}.{assimilation_algorithm}.{analysis_time_str}.yaml", 'w') as file:
     yaml.dump(assim_config, file)
         
-# Run the forecast
+# Run the assimilation
 with open(f'{fcst_path}/{assimilation_type}.{assimilation_algorithm}.{analysis_time_str}.log', 'w') as logfile:
     subprocess.run([f"{exp_config['jedi path']}/bin/qg_4dvar.x", f'{exp_path}/yaml/{assimilation_type}.{assimilation_algorithm}.{analysis_time_str}.yaml'], stdout = logfile, stderr = sys.stdout)
