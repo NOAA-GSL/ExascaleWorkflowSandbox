@@ -25,7 +25,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       -
-        name: Prune GHA docker images
+        name: Prune pre-loaded GHA docker images
         run: |
           docker images
           docker image prune -a -f
@@ -116,13 +116,22 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
       -
-        name: Build master
+        name: Push master
         uses: docker/build-push-action@v4
         with:
           context: ./docker
           file: ./docker/master/Dockerfile
-          push: false
-          load: true
+          push: true
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
+      -
+        name: Push node
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/node/Dockerfile
+          push: true
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
