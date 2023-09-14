@@ -28,7 +28,9 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends -o=Dpkg::Use
 
 # Create directory in /opt for Spack install
 RUN mkdir -p /opt/spack \
- && chown admin:admin /opt/spack
+ && mkdir -p /opt/etc \
+ && chown admin:admin /opt/spack \
+ && chown admin:admin /opt/etc
 
 # Copy the install scripts
 COPY ./install /tmp/install
@@ -59,17 +61,12 @@ RUN cd /tmp/install \
 # Generate commands to activate the flux Spack environment
 RUN . /opt/spack/share/spack/setup-env.sh \
  && source /opt/intel/oneapi/setvars.sh \
- && spack env activate --sh flux > /tmp/spack.sh
-
-## Re-install the Spack Parsl/Flux environment to work around bug
-#RUN cd /tmp/install \
-# && . /opt/spack/share/spack/setup-env.sh \
-# && ./install_flux_parsl.sh
+ && spack env activate --sh flux > /opt/etc/activate-parsl-flux.sh
 
 USER root
 
 # Set up Intel and Spack initialization
 RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" > /etc/profile.d/intel-oneapi.sh \
- && cp /tmp/spack.sh /etc/profile.d/spack.sh
+ && echo "source /opt/etc/activate-parsl-flux.sh" > /etc/profile.d/parsl-flux.sh
 
 USER admin
