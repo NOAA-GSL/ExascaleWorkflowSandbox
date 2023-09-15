@@ -1,7 +1,8 @@
+version: "3.8"
 services:
   slurmfrontend:
         build:
-          context: ./
+          context: .
           dockerfile: ./frontend/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
         container_name: frontend
@@ -15,7 +16,7 @@ services:
                 - 8888:8888
   slurmmaster:
         build:
-          context: ./
+          context: .
           dockerfile: ./master/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
         container_name: master
@@ -33,7 +34,7 @@ services:
                 - 6819:6819
   slurmnode1:
         build:
-          context: ./
+          context: .
           dockerfile: ./node/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
         container_name: node1
@@ -50,7 +51,7 @@ services:
                 - slurmmaster
   slurmnode2:
         build:
-          context: ./
+          context: .
           dockerfile: ./node/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
         container_name: node2
@@ -67,7 +68,7 @@ services:
                 - slurmmaster
   slurmnode3:
         build:
-          context: ./
+          context: .
           dockerfile: ./node/Dockerfile
         image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
         container_name: node3
