@@ -8,6 +8,7 @@ import re
 from datetime import datetime, timedelta
 import subprocess
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 import leadtime
 
@@ -100,26 +101,45 @@ while f <= leadtime.fcst_to_seconds(exp_config['forecast']['length']):
     f = f + leadtime.fcst_to_seconds(exp_config['forecast']['frequency'])
 
 # Write out the verification stats
-with open(f'{exp_path}/verify/verify.dat', 'w') as datafile:
+with open(f'{verify_path}/verify.dat', 'w') as datafile:
 
     # Write column headers
     datafile.write("LeadTime AssimilationOn AssimilationOff\n")
 
     # Write mean MSE for each lead time to data file
     f = 0
+    x = []
+    y_on = []
+    y_off = []
     while f <= leadtime.fcst_to_seconds(exp_config['forecast']['length']):
 
         mseOn = 0
         mseOff = 0
         i = 0
         size = len(mses["on"][f])
+        x.append(leadtime.seconds_to_fcst(f))
         while i < size:
             mseOn += mses["on"][f][i]
             mseOff += mses["off"][f][i]
             i += 1
 
+        y_on.append(mseOn / size)
+        y_off.append(mseOff / size)
         datafile.write(f"{leadtime.seconds_to_fcst(f)} {mseOn / size} {mseOff / size}\n")
 
         f = f + leadtime.fcst_to_seconds(exp_config['forecast']['frequency'])
 
+# Create a plot
+fig = plt.figure(figsize=(8,6))
+ax = plt.axes()
+
+plt.plot(x, y_on, label='Assimilation On')
+plt.plot(x, y_off, label='Assimilation Off')
+plt.title('MSE vs Forecast Lead Time')
+plt.xlabel('Forecast Lead Time')
+plt.ylabel('MSE of q')
+ax.xaxis.set_major_locator(ticker.MultipleLocator(6))
+plt.legend()
+
+plt.savefig(f'{verify_path}/verify.png')
 
