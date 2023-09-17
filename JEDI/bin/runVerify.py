@@ -43,14 +43,20 @@ verify_path = f'{exp_path}/verify'
 if not os.path.exists(verify_path):
     os.makedirs(verify_path)
 
+# Set the list of verification variables
+var_list = ["x", "q", "u", "v"]
+    
 # Initialize dictionary for storing MSE for each forecast lead time
-mses = { "on" : {}, "off" : {} }
+mses = {}
+for v in var_list:
+    mses[v] = { "on" : {}, "off" : {} }
 
 # Loop over lead times and cacluate MSE/RMSE for each
 f=0
 while f <= leadtime.fcst_to_seconds(exp_config['forecast']['length']):
-    mses["on"][f] = []
-    mses["off"][f] = []
+    for v in var_list:
+        mses[v]["on"][f] = []
+        mses[v]["off"][f] = []
 
     print(f'Verifying forecast lead time: {leadtime.seconds_to_fcst(f)}')
     
@@ -77,22 +83,14 @@ while f <= leadtime.fcst_to_seconds(exp_config['forecast']['length']):
             fcst_filename = f"{fcst_path}/forecast.fc.{t_str}.{leadtime.seconds_to_fcst(f)}.nc"
 
             # Calculate the MSE
-            proc = subprocess.run(['cdo', '-s', '-infon', '-fldmean', '-sqr', '-selname,q,u,v', '-sellevel,1', '-sub', truth_filename, fcst_filename ], capture_output = True, text=True)
-            mse_q_pattern = re.compile('(\S+)\s* : q')
-            mse_u_pattern = re.compile('(\S+)\s* : u')
-            mse_v_pattern = re.compile('(\S+)\s* : v')
-            match_q = mse_q_pattern.search(proc.stdout)
-            match_u = mse_u_pattern.search(proc.stdout)
-            match_v = mse_v_pattern.search(proc.stdout)
-            if (match_q):
-                mse_q = float(match_q.group(1))
-            if (match_u):
-                mse_u = float(match_u.group(1))
-            if (match_v):
-                mse_v = float(match_v.group(1))
-            mses[assim_on_off][f].append(mse_q)
-            #mses[assim_on_off][f].append(mse_q)
-            #mses[assim_on_off][f].append(mse_q)
+            proc = subprocess.run(['cdo', '-s', '-infon', '-fldmean', '-sqr', '-selname,x,q,u,v', '-sellevel,1', '-sub', truth_filename, fcst_filename ], capture_output = True, text=True)
+
+            for v in var_list:
+                mse_pattern = re.compile(f'(\S+)\s* : {v}')
+                match = mse_pattern.search(proc.stdout)
+                if (match):
+                    mse = float(match.group(1))
+                    mses[v][assim_on_off][f].append(mse)
 
         # Increment cycle
         t = t + timedelta(0, exp_freq)
@@ -100,46 +98,49 @@ while f <= leadtime.fcst_to_seconds(exp_config['forecast']['length']):
     # Increment forecast lead time
     f = f + leadtime.fcst_to_seconds(exp_config['forecast']['frequency'])
 
-# Write out the verification stats
-with open(f'{verify_path}/verify.dat', 'w') as datafile:
+# Write out the verification stats for each variable
+y_on = {}
+y_off = {}
+for v in var_list:
+    print(f'Writing verification data for {v}')
+    with open(f'{verify_path}/verify_{v}.dat', 'w') as datafile:
 
-    # Write column headers
-    datafile.write("LeadTime AssimilationOn AssimilationOff\n")
+        # Write column headers
+        datafile.write("LeadTime AssimilationOn AssimilationOff\n")
 
-    # Write mean MSE for each lead time to data file
-    f = 0
-    x = []
-    y_on = []
-    y_off = []
-    while f <= leadtime.fcst_to_seconds(exp_config['forecast']['length']):
-
-        mseOn = 0
-        mseOff = 0
-        i = 0
-        size = len(mses["on"][f])
-        x.append(leadtime.seconds_to_fcst(f))
-        while i < size:
-            mseOn += mses["on"][f][i]
-            mseOff += mses["off"][f][i]
-            i += 1
-
-        y_on.append(mseOn / size)
-        y_off.append(mseOff / size)
-        datafile.write(f"{leadtime.seconds_to_fcst(f)} {mseOn / size} {mseOff / size}\n")
-
-        f = f + leadtime.fcst_to_seconds(exp_config['forecast']['frequency'])
-
-# Create a plot
-fig = plt.figure(figsize=(8,6))
-ax = plt.axes()
-
-plt.plot(x, y_on, label='Assimilation On')
-plt.plot(x, y_off, label='Assimilation Off')
-plt.title('MSE vs Forecast Lead Time')
-plt.xlabel('Forecast Lead Time')
-plt.ylabel('MSE of q')
-ax.xaxis.set_major_locator(ticker.MultipleLocator(6))
-plt.legend()
-
-plt.savefig(f'{verify_path}/verify.png')
-
+        # Write mean MSE for each lead time to data file
+        f = 0
+        x = []
+        y_on[v] = []
+        y_off[v] = []
+        while f <= leadtime.fcst_to_seconds(exp_config['forecast']['length']):
+            mseOn = 0
+            mseOff = 0
+            i = 0
+            size = len(mses[v]["on"][f])
+            x.append(leadtime.seconds_to_fcst(f))
+            while i < size:
+                mseOn += mses[v]["on"][f][i]
+                mseOff += mses[v]["off"][f][i]
+                i += 1
+                
+            y_on[v].append(mseOn / size)
+            y_off[v].append(mseOff / size)
+            datafile.write(f"{leadtime.seconds_to_fcst(f)} {mseOn / size} {mseOff / size}\n")    
+            f = f + leadtime.fcst_to_seconds(exp_config['forecast']['frequency'])
+                
+# Create plots
+for v in var_list:
+    fig = plt.figure(figsize=(8,6))
+    ax = plt.axes()
+    
+    plt.plot(x, y_on[v], label='Assimilation On')
+    plt.plot(x, y_off[v], label='Assimilation Off')
+    plt.title('MSE vs Forecast Lead Time')
+    plt.xlabel('Forecast Lead Time')
+    plt.ylabel(f'MSE of {v}')
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(6))
+    plt.legend()
+    
+    plt.savefig(f'{verify_path}/verify_{v}.png')
+    plt.close(fig)
