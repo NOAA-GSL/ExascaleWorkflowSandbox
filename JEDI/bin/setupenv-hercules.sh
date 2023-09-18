@@ -14,6 +14,10 @@ module load soca-env/unified-dev
 
 module unload crtm
 
+module load cdo
+
+module load imagemagick
+
 module list
 
 ulimit -s unlimited

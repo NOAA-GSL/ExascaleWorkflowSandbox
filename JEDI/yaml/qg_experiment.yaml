@@ -4,7 +4,7 @@ experiment:
   path:            '/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI/experiments'
   name:            'qg.3dvar'
   begin:           '2009-12-15T00:00:00Z'
-  length:          'P18D'
+  length:          'P20D'
   cycle frequency: 'PT6H'
 forecast:
   frequency: 'PT1H'
@@ -15,4 +15,4 @@ assimilation:
   window begin:  'MT6H'
   window length: 'PT12H'
 verification:
-  spinup: 'P10D'
+  spinup: 'P2D'
