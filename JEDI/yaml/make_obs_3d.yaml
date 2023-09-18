@@ -1,13 +1,13 @@
 geometry:
-  nx: 40
-  ny: 20
+  nx: 80
+  ny: 40
   depths: [4500.0, 5500.0]
 initial condition:
   date: 2010-01-01T00:00:00Z
   filename: Data/truth.fc.2009-12-15T00:00:00Z.P17D.nc
 model:
   name: QG
-  tstep: PT1H
+  tstep: PT1M
 forecast length: PT15H
 window begin: 2010-01-01T00:00:00Z
 window length: PT15H
@@ -21,7 +21,7 @@ observations:
           obsfile: Data/truth.obs3d.nc
       obs type: Stream
       generate:
-        begin: PT10H
+        begin: PT3H
         nval: 1
         obs density: 100
         obs error: 4.0e6
@@ -34,7 +34,7 @@ observations:
           obsfile: Data/truth.obs3d.nc
       obs type: Wind
       generate:
-        begin: PT11H
+        begin: PT4H
         nval: 2
         obs density: 100
         obs error: 6.0
@@ -47,7 +47,7 @@ observations:
           obsfile: Data/truth.obs3d.nc
       obs type: WSpeed
       generate:
-        begin: PT10H
+        begin: PT7H
         nval: 1
         obs density: 100
         obs error: 12.0

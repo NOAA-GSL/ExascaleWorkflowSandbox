@@ -25,6 +25,14 @@ with open(exp_config_file, 'r') as file:
 # Get the experiment path
 exp_path = f"{exp_config['experiment']['path']}/{exp_config['experiment']['name']}"
 
+# Load the convertstate config template
+with open(f'{exp_config_path}/convertstate.yaml') as file:
+    convertstate_config = yaml.safe_load(file)
+
+    # Load the diffstates config template
+with open(f'{exp_config_path}/diffstates.yaml') as file:
+    diffstates_config = yaml.safe_load(file)
+
 # Get the driver path
 driver_path = os.path.dirname(os.path.abspath(sys.argv[0]))
 
@@ -73,6 +81,21 @@ while f <= leadtime.fcst_to_seconds(exp_config['forecast']['length']):
         # Construct the truth forecast filename
         truth_filename = f'{exp_path}/truth/truth.fc.{exp_start_str}.{valid_truth_fcst}.nc'
 
+        # Construct the interpolated truth forecast filename
+        convert_filename = f'{verify_path}/convert.fc.{exp_start_str}.{valid_truth_fcst}.nc'
+
+        # Interpolate truth onto the forecast geometry
+        if not os.path.isfile(convert_filename):
+            for state in convertstate_config['states']:
+                state['input']['date'] = exp_start_str
+                state['input']['filename'] = truth_filename
+                state['output']['date'] = exp_start_str
+                state['output']['datadir'] = verify_path
+                with open(f'{exp_path}/yaml/convertstate.{exp_start_str}.{valid_truth_fcst}.yaml', 'w') as file:
+                    yaml.dump(convertstate_config, file)
+                with open(f'{verify_path}/convertstate.{exp_start_str}.{valid_truth_fcst}.log', 'w') as logfile:
+                    subprocess.run([f"{exp_config['jedi path']}/bin/qg_convertstate.x", f'{exp_path}/yaml/convertstate.{exp_start_str}.{valid_truth_fcst}.yaml'], stdout = logfile, stderr = sys.stdout)
+
         # Get MSE for forecasts with and without assimilation turned on
         for assim_on_off in ["on", "off"]:
 
@@ -83,7 +106,7 @@ while f <= leadtime.fcst_to_seconds(exp_config['forecast']['length']):
             fcst_filename = f"{fcst_path}/forecast.fc.{t_str}.{leadtime.seconds_to_fcst(f)}.nc"
 
             # Calculate the MSE
-            proc = subprocess.run(['cdo', '-s', '-infon', '-fldmean', '-sqr', '-selname,x,q,u,v', '-sellevel,1', '-sub', truth_filename, fcst_filename ], capture_output = True, text=True)
+            proc = subprocess.run(['cdo', '-s', '-infon', '-fldmean', '-sqr', '-selname,x,q,u,v', '-sellevel,1', '-sub', convert_filename, fcst_filename ], capture_output = True, text=True)
 
             for v in var_list:
                 mse_pattern = re.compile(f'(\S+)\s* : {v}')

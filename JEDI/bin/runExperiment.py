@@ -54,3 +54,5 @@ while t <= exp_end:
     # Increment cycle
     t = t + timedelta(0, exp_freq)
 
+# Run experiment verification
+subprocess.run([f'{driver_path}/runVerify.py', f'{exp_config_file}'], stdout = sys.stdout, stderr = sys.stdout)

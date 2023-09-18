@@ -57,7 +57,10 @@ for assim_on_off in ["on", "off"]:
         shutil.copy(f"{fcst_path}/{exp_config['assimilation']['type']}.an.{analysis_time_str}.nc", f"{fcst_path}/{analysis_file}")
 
     # Set the forecast configuration initial conditions
-    fcst_config['initial condition']['filename'] = f'{fcst_path}/{analysis_file}'
+    if exp_config['experiment']['begin'] == analysis_time_str:
+        fcst_config['initial condition']['read_from_file'] = 0
+    else:
+        fcst_config['initial condition']['filename'] = f'{fcst_path}/{analysis_file}'
     fcst_config['initial condition']['date'] = analysis_time_str
 
     # Set the forecast configuration length

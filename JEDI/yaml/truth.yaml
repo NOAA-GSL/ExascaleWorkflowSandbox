@@ -1,14 +1,14 @@
-forecast length: P18D
+forecast length: P20D
 geometry:
-  nx: 40
-  ny: 20
+  nx: 80
+  ny: 40
   depths: [4000.0, 6000.0]
 initial condition:
   date: 2009-12-15T00:00:00Z
   read_from_file: 0
 model:
   name: QG
-  tstep: PT10M
+  tstep: PT1M
 output:
   datadir: Data
   date: 2009-12-15T00:00:00Z
