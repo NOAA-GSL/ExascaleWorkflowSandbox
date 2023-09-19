@@ -52,8 +52,8 @@ with open(f"{exp_path}/yaml/{exp_config['experiment']['name']}.yaml", 'w') as fi
     yaml.dump(exp_config, file)
 
 # Run the truth forecast
-print(f"Running {truth_config['forecast length']} truth forecast initialized at {truth_config['initial condition']['date']}")
-os.makedirs(f'{exp_path}/truth')
-with open(f'{exp_path}/truth/makeTruth.log', 'w') as logfile:
-    subprocess.run([f"{exp_config['jedi path']}/bin/qg_forecast.x", f'{exp_path}/yaml/truth.yaml'], stdout = logfile, stderr = sys.stdout)
+#print(f"Running {truth_config['forecast length']} truth forecast initialized at {truth_config['initial condition']['date']}")
+#os.makedirs(f'{exp_path}/truth')
+#with open(f'{exp_path}/truth/makeTruth.log', 'w') as logfile:
+#    subprocess.run([f"{exp_config['jedi path']}/bin/qg_forecast.x", f'{exp_path}/yaml/truth.yaml'], stdout = logfile, stderr = sys.stdout)
 
