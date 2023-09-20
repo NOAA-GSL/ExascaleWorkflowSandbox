@@ -57,7 +57,7 @@ def resource_list():
     flux resource list > parsl_flux_resource_list.txt
     '''
 
-# Run "truth" forecasts
+# Define "truth" forecast task
 @bash_app
 def truth_app(jedi_path, stdout=None, stderr=None, parsl_resource_specification={}):
     return '''
@@ -70,7 +70,7 @@ def truth_app(jedi_path, stdout=None, stderr=None, parsl_resource_specification=
     $JEDI_PATH/exascale-workflow-bundle/bin/qg_forecast.x $JEDI_PATH/experiments/qg.3dvar/yaml/truth.yaml
     '''.format(jedi_path)
 
-# Create simulate obs
+# Define simulated obs creation task
 @bash_app
 def obs_app(jedi_path, t, assimilation_type, stdout=None, stderr=None, parsl_resource_specification={}):
     return '''
@@ -86,9 +86,9 @@ def obs_app(jedi_path, t, assimilation_type, stdout=None, stderr=None, parsl_res
     '''.format(jedi_path, t, assimilation_type)
 
 
-# Run assimilation
+# Define assimilation task
 @bash_app
-def obs_app(jedi_path, t, assimilation_type, stdout=None, stderr=None, parsl_resource_specification={}):
+def assimilation_app(jedi_path, t, assimilation_type, assimilation_algorithm, stdout=None, stderr=None, parsl_resource_specification={}):
     return '''
     export JEDI_PATH={}
     export ANALYSIS_TIME={}
@@ -100,6 +100,20 @@ def obs_app(jedi_path, t, assimilation_type, stdout=None, stderr=None, parsl_res
     cd $JEDI_PATH/experiments/qg.3dvar/forecasts/$ANALYSIS_TIME/on
     $JEDI_PATH/exascale-workflow-bundle/bin/qg_4dvar.x $JEDI_PATH/experiments/qg.3dvar/yaml/$TYPE.$ALGORITHM.$ANALYSIS_TIME.yaml
     '''.format(jedi_path, t, assimilation_type, assimilation_algorithm)
+
+# Define the forecast task
+@bash_app
+def forecast_app(jedi_path, t, assimilation_mode, stdout=None, stderr=None, parsl_resource_specification={}):
+    return '''
+    export JEDI_PATH={}
+    export ANALYSIS_TIME={}
+    export ASSIM_MODE={}
+    . $JEDI_PATH/bin/setupenv-hercules.sh
+    unset I_MPI_PMI_LIBRARY
+    $JEDI_PATH/bin/runFcst.py $JEDI_PATH/yaml/qg_experiment.yaml $ANALYSIS_TIME $ASSIM_MODE
+    cd $JEDI_PATH/experiments/qg.3dvar/forecasts/$ANALYSIS_TIME/$ASSIM_MODE
+    $JEDI_PATH/exascale-workflow-bundle/bin/qg_forecast.x $JEDI_PATH/experiments/qg.3dvar/yaml/forecast.$ANALYSIS_TIME.yaml
+    '''.format(jedi_path, t, assimilation_mode)
 
 #############################
 #
@@ -131,11 +145,11 @@ exp_end = exp_start_time + timedelta(0, exp_length) - timedelta(0, exp_freq)
 r = resource_list().result()
 
 # Run the truth forecast
-truth = truth_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
-                  stdout=os.path.join(jedi_path, 'truth.out'),
-                  stderr=os.path.join(jedi_path, 'truth.err'),
-                  parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
-                  ).result()
+#truth = truth_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
+#                  stdout=os.path.join(jedi_path, 'truth.out'),
+#                  stderr=os.path.join(jedi_path, 'truth.err'),
+#                  parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
+#                  ).result()
 
 # Run experiment cycles
 t = exp_start_time
@@ -158,17 +172,26 @@ while t <= exp_end:
                       ).result()
 
         # Run the assimilation
-        3dvar = obs_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
-                        t=t_str,
-                        assimilation_type='3dvar',
-                        assimilation_algorithm='dripcg',
-                        stdout=os.path.join(jedi_path, '3dvar.out'),
-                        stderr=os.path.join(jedi_path, '3dvar.err'),
-                        parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
-                        ).result()
+        assim = assimilation_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
+                                 t=t_str,
+                                 assimilation_type='3dvar',
+                                 assimilation_algorithm='dripcg',
+                                 stdout=os.path.join(jedi_path, '3dvar.out'),
+                                 stderr=os.path.join(jedi_path, '3dvar.err'),
+                                 parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
+                                 ).result()
 
-    # Run the forecast
-    #subprocess.run([f'{driver_path}/runForecast.py', f'{exp_config_file}', f'{t_str}'], stdout = sys.stdout, stderr = sys.stdout)
+    # Run forecasts with and without assimilation
+    for assim_on_off in ["on", "off"]:
+        
+        # Run the forecast for the given assimilation mode
+        fcst = forecast_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
+                            t=t_str,
+                            assimilation_mode=assim_on_off,
+                            stdout=os.path.join(jedi_path, 'forecast.out'),
+                            stderr=os.path.join(jedi_path, 'forecast.err'),
+                            parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
+                            ).result()
 
     # Increment cycle
     t = t + timedelta(0, exp_freq)
