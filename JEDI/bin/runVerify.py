@@ -84,17 +84,17 @@ while f <= leadtime.fcst_to_seconds(exp_config['forecast']['length']):
         # Construct the interpolated truth forecast filename
         convert_filename = f'{verify_path}/convert.fc.{exp_start_str}.{valid_truth_fcst}.nc'
 
-        # Interpolate truth onto the forecast geometry
-        if not os.path.isfile(convert_filename):
-            for state in convertstate_config['states']:
-                state['input']['date'] = exp_start_str
-                state['input']['filename'] = truth_filename
-                state['output']['date'] = exp_start_str
-                state['output']['datadir'] = verify_path
-                with open(f'{exp_path}/yaml/convertstate.{exp_start_str}.{valid_truth_fcst}.yaml', 'w') as file:
-                    yaml.dump(convertstate_config, file)
-                with open(f'{verify_path}/convertstate.{exp_start_str}.{valid_truth_fcst}.log', 'w') as logfile:
-                    subprocess.run([f"{exp_config['jedi path']}/bin/qg_convertstate.x", f'{exp_path}/yaml/convertstate.{exp_start_str}.{valid_truth_fcst}.yaml'], stdout = logfile, stderr = sys.stdout)
+        ## Interpolate truth onto the forecast geometry
+        #if not os.path.isfile(convert_filename):
+        #    for state in convertstate_config['states']:
+        #        state['input']['date'] = exp_start_str
+        #        state['input']['filename'] = truth_filename
+        #        state['output']['date'] = exp_start_str
+        #        state['output']['datadir'] = verify_path
+        #        with open(f'{exp_path}/yaml/convertstate.{exp_start_str}.{valid_truth_fcst}.yaml', 'w') as file:
+        #            yaml.dump(convertstate_config, file)
+        #        with open(f'{verify_path}/convertstate.{exp_start_str}.{valid_truth_fcst}.log', 'w') as logfile:
+        #            subprocess.run([f"{exp_config['jedi path']}/bin/qg_convertstate.x", f'{exp_path}/yaml/convertstate.{exp_start_str}.{valid_truth_fcst}.yaml'], stdout = logfile, stderr = sys.stdout)
 
         # Get MSE for forecasts with and without assimilation turned on
         for assim_on_off in ["on", "off"]:

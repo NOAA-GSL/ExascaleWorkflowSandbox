@@ -128,6 +128,17 @@ def convert_app(jedi_path, fcst_lead, stdout=None, stderr=None, parsl_resource_s
     $JEDI_PATH/exascale-workflow-bundle/bin/qg_convertstate.x $JEDI_PATH/experiments/qg.3dvar/yaml/convertstate.$FCST_LEAD.yaml
     '''.format(jedi_path, fcst_lead)
 
+# Define the verify task
+@bash_app
+def verify_app(jedi_path, stdout=None, stderr=None, parsl_resource_specification={}):
+    return '''
+    export JEDI_PATH={}
+    . $JEDI_PATH/bin/setupenv-hercules.sh
+    unset I_MPI_PMI_LIBRARY
+    cd $JEDI_PATH/experiments/qg.3dvar/verify
+    $JEDI_PATH/bin/runVerify.py $JEDI_PATH/yaml/qg_experiment.yaml
+    '''.format(jedi_path)
+
 #############################
 #
 # Begin workflow program
@@ -160,61 +171,61 @@ spinup = leadtime.fcst_to_seconds(exp_config['verification']['spinup'])
 # Check the Flux resource list
 r = resource_list().result()
 
-## Run the truth forecast
-#truth = truth_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
-#                  stdout=os.path.join(jedi_path, 'truth.out'),
-#                  stderr=os.path.join(jedi_path, 'truth.err'),
-#                  parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
-#                  ).result()
-#
-## Run experiment cycles
-#t = exp_start_time
-#while t <= exp_end:
-#
-#    t_str = t.strftime("%Y-%m-%dT%H:%M:%SZ")
-#
-#    print(f'Running cycle {t_str}')
-#
-#    # Run the assimilation if needed
-#    if t > exp_start_time:
-#
-#        # Create simulated obs for this analysis time
-#        obs = obs_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
-#                      t=t_str,
-#                      assimilation_type='3dvar',
-#                      stdout=os.path.join(jedi_path, 'obs.out'),
-#                      stderr=os.path.join(jedi_path, 'obs.err'),
-#                      parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
-#                      ).result()
-#
-#        # Run the assimilation
-#        assim = assimilation_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
-#                                 t=t_str,
-#                                 assimilation_type='3dvar',
-#                                 assimilation_algorithm='dripcg',
-#                                 stdout=os.path.join(jedi_path, '3dvar.out'),
-#                                 stderr=os.path.join(jedi_path, '3dvar.err'),
-#                                 parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
-#                                 ).result()
-#
-#    # Run forecasts with and without assimilation
-#    for assim_on_off in ["on", "off"]:
-#        
-#        # Run the forecast for the given assimilation mode
-#        fcst = forecast_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
-#                            t=t_str,
-#                            assimilation_mode=assim_on_off,
-#                            stdout=os.path.join(jedi_path, 'forecast.out'),
-#                            stderr=os.path.join(jedi_path, 'forecast.err'),
-#                            parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
-#                            ).result()
-#
-#    # Increment cycle
-#    t = t + timedelta(0, exp_freq)
+# Run the truth forecast
+truth = truth_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
+                  stdout=os.path.join(jedi_path, 'truth.out'),
+                  stderr=os.path.join(jedi_path, 'truth.err'),
+                  parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
+                  ).result()
+
+# Run experiment cycles
+t = exp_start_time
+while t <= exp_end:
+
+    t_str = t.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    print(f'Running cycle {t_str}')
+
+    # Run the assimilation if needed
+    if t > exp_start_time:
+
+        # Create simulated obs for this analysis time
+        obs = obs_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
+                      t=t_str,
+                      assimilation_type='3dvar',
+                      stdout=os.path.join(jedi_path, 'obs.out'),
+                      stderr=os.path.join(jedi_path, 'obs.err'),
+                      parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
+                      ).result()
+
+        # Run the assimilation
+        assim = assimilation_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
+                                 t=t_str,
+                                 assimilation_type='3dvar',
+                                 assimilation_algorithm='dripcg',
+                                 stdout=os.path.join(jedi_path, '3dvar.out'),
+                                 stderr=os.path.join(jedi_path, '3dvar.err'),
+                                 parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
+                                 ).result()
+
+    # Run forecasts with and without assimilation
+    for assim_on_off in ["on", "off"]:
+        
+        # Run the forecast for the given assimilation mode
+        fcst = forecast_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
+                            t=t_str,
+                            assimilation_mode=assim_on_off,
+                            stdout=os.path.join(jedi_path, 'forecast.out'),
+                            stderr=os.path.join(jedi_path, 'forecast.err'),
+                            parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
+                            ).result()
+
+    # Increment cycle
+    t = t + timedelta(0, exp_freq)
 
 # Prepare interpolated truth values for verification
 l = spinup
-while l <= exp_length:
+while l <= exp_length + leadtime.fcst_to_seconds(exp_config['forecast']['length']):
 
     # Get the leadtime of f
     fcst_lead = leadtime.seconds_to_fcst(l)
@@ -229,7 +240,12 @@ while l <= exp_length:
 
     # Increment forecast lead time
     l = l + leadtime.fcst_to_seconds(exp_config['forecast']['frequency'])
-
+                    
 # Verify experiment forecasts by calculating their MSE
+verify = verify_app(jedi_path='/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox/JEDI',
+                    stdout=os.path.join(jedi_path, 'verify.out'),
+                    stderr=os.path.join(jedi_path, 'verify.err'),
+                    parsl_resource_specification={"num_tasks": 1, "num_nodes": 1}
+                    ).result()
 
 parsl.clear()
