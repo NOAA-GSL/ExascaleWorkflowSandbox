@@ -1,0 +1,12 @@
+name: chiltepin-env
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python
+  - pip
+  - flux-core
+  - flux-sched
+  - pip:
+    - parsl[monitoring]

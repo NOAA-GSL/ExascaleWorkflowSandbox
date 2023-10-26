@@ -3,10 +3,6 @@ FROM noaagsl/slurm-frontend:latest
 RUN apt-get update -y && apt-get install -y \
     curl \
     libpmi2-0-dev \
-    python3 \
-    python3-distutils \
-    python3-pip \
-    python3-venv \
     unzip
 
 # Add apt repository public key for Intel OneAPI
@@ -26,47 +22,28 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends -o=Dpkg::Use
     intel-oneapi-compiler-fortran \
     intel-oneapi-mpi-devel
 
-# Create directory in /opt for Spack install
-RUN mkdir -p /opt/spack \
- && mkdir -p /opt/etc \
- && chown admin:admin /opt/spack \
- && chown admin:admin /opt/etc
+# Copy install scripts
+COPY ./install/install_miniconda.sh /tmp/install_miniconda.sh
+COPY ./install/chiltepin.yml /tmp/chiltepin.yml
 
-# Copy the install scripts
-COPY ./install /tmp/install
+# Copy conda init script
+COPY ./install/conda_init.sh /etc/profile.d/conda_init.sh
 
-USER admin
+# Install Miniconda3 and chiltepin environment
+SHELL ["/bin/bash", "-l", "-c"]
+RUN cd /tmp \
+ && ./install_miniconda.sh /opt/miniconda3 \
+ && conda env create --name chiltepin --file chiltepin.yml \
+ && conda clean -afy
 
 SHELL ["/bin/bash", "-c"]
-
-# Install Spack
-RUN cd /tmp/install \
- && ./install_spack.sh /opt/spack v0.19.2
-
-# Install the bootstrap compiler if necessary
-RUN cd /tmp/install \
- && . /opt/spack/share/spack/setup-env.sh \
- && ./install_bootstrap.sh
-
-# Install the base compiler if necessary
-RUN cd /tmp/install \
- && . /opt/spack/share/spack/setup-env.sh \
- && ./install_base.sh
-
-# Install the Spack Parsl/Flux environment
-RUN cd /tmp/install \
- && . /opt/spack/share/spack/setup-env.sh \
- && ./install_flux_parsl.sh
-
-# Generate commands to activate the flux Spack environment
-RUN . /opt/spack/share/spack/setup-env.sh \
- && source /opt/intel/oneapi/setvars.sh \
- && spack env activate --sh flux > /opt/etc/activate-parsl-flux.sh
-
-USER root
-
-# Set up Intel and flux-parsl Spack environment initialization
-RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" > /etc/profile.d/intel-oneapi.sh \
- && echo "source /opt/etc/activate-parsl-flux.sh" > /etc/profile.d/parsl-flux.sh
-
 USER admin
+
+RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bashrc
+RUN echo "source /etc/profile.d/conda_init.sh > /dev/null 2>&1" >> /home/admin/.bashrc
+RUN echo "conda activate chiltepin" >> /home/admin/.bashrc
+RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bash_profile
+RUN echo "source /etc/profile.d/conda_init.sh > /dev/null 2>&1" >> /home/admin/.bash_profile
+RUN echo "conda activate chiltepin" >> /home/admin/.bash_profile
+
+SHELL ["/bin/bash"]
