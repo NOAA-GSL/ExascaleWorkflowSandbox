@@ -8,3 +8,6 @@ USER admin
 RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bashrc
 RUN echo "source /etc/profile.d/conda_init.sh > /dev/null 2>&1" >> /home/admin/.bashrc
 RUN echo "conda activate chiltepin" >> /home/admin/.bashrc
+RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bash_profile
+RUN echo "source /etc/profile.d/conda_init.sh > /dev/null 2>&1" >> /home/admin/.bash_profile
+RUN echo "conda activate chiltepin" >> /home/admin/.bash_profile
