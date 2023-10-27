@@ -1,6 +1,6 @@
 input geometry:
-  nx: 80
-  ny: 40
+  nx: 160
+  ny: 80
   depths: [4500.0, 5500.0]
 output geometry:
   nx: 40

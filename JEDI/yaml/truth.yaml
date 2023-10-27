@@ -1,7 +1,7 @@
 forecast length: P20D
 geometry:
-  nx: 80
-  ny: 40
+  nx: 160
+  ny: 80
   depths: [4000.0, 6000.0]
 initial condition:
   date: 2009-12-15T00:00:00Z

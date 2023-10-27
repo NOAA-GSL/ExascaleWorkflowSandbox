@@ -1,6 +1,6 @@
 geometry:
-  nx: 80
-  ny: 40
+  nx: 160
+  ny: 80
   depths: [4500.0, 5500.0]
 initial condition:
   date: 2010-01-01T00:00:00Z
@@ -21,11 +21,11 @@ observations:
           obsfile: Data/truth.obs3d.nc
       obs type: Stream
       generate:
-        begin: PT3H
+        begin: PT1H
         nval: 1
         obs density: 100
         obs error: 4.0e6
-        obs period: PT1H
+        obs period: PT2H
   - obs operator:
       obs type: Wind
     obs space:
@@ -34,7 +34,7 @@ observations:
           obsfile: Data/truth.obs3d.nc
       obs type: Wind
       generate:
-        begin: PT4H
+        begin: PT1H
         nval: 2
         obs density: 100
         obs error: 6.0
@@ -47,7 +47,7 @@ observations:
           obsfile: Data/truth.obs3d.nc
       obs type: WSpeed
       generate:
-        begin: PT7H
+        begin: PT1H
         nval: 1
         obs density: 100
         obs error: 12.0
