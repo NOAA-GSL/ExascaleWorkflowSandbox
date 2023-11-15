@@ -8,5 +8,8 @@ dependencies:
   - pip
   - flux-core
   - flux-sched
+  - openmpi-mpicc
+  - openmpi-mpicxx
+  - openmpi-mpifort
   - pip:
     - parsl[monitoring]

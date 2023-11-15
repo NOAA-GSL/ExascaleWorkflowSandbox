@@ -26,8 +26,8 @@ config = Config(
                 walltime='00:10:00',
                 launcher=SimpleLauncher(),
                 worker_init='''
-. /opt/spack/share/spack/setup-env.sh
-spack env activate flux
+source /opt/conda_init.sh
+conda activate chiltepin 
 ''',
             ),
         )
@@ -46,16 +46,33 @@ shared_dir = './'
 @bash_app
 def resource_list():
     return '''
-    . /opt/spack/share/spack/setup-env.sh
-    spack env activate flux
+    . /opt/conda_init.sh
+    conda activate chiltepin
     flux resource list > parsl_flux_resource_list.txt
+    '''
+
+# Test Flux PMI launch
+@bash_app
+def pmi_barrier(parsl_resource_specification={}):
+    return '''
+    . /opt/conda_init.sh
+    conda activate chiltepin
+    env | grep -i flux > parsl_flux_pmi_barrier.txt
+    env | grep -i pmi >> parsl_flux_pmi_barrier.txt
+    export FLUX_PMI_LIBRARY_PATH=/opt/miniconda3/envs/chiltepin/lib/flux/libpmi.so
+    flux pmi --method=libpmi:$FLUX_PMI_LIBRARY_PATH barrier >> parsl_flux_pmi_barrier.txt
     '''
 
 # Compile the hello MPI program with Intel
 @bash_app
-def compile_app(dirpath, stdout=None, stderr=None, compiler="mpiifort -fc=ifx", parsl_resource_specification={"num_tasks": 1}):
+def compile_app(dirpath, stdout=None, stderr=None, compiler="mpif90", parsl_resource_specification={"num_tasks": 1}):
+#def compile_app(dirpath, stdout=None, stderr=None, compiler="mpiifort -fc=ifx", parsl_resource_specification={"num_tasks": 1}):
     return '''
+    . /opt/conda_init.sh
+    conda activate chiltepin
+    #. /opt/jedi_init.sh
     cd {}
+    which mpif90
     {} -o mpi_hello.exe mpi_hello.f90
     '''.format(dirpath, compiler)
 
@@ -63,14 +80,20 @@ def compile_app(dirpath, stdout=None, stderr=None, compiler="mpiifort -fc=ifx", 
 @bash_app
 def mpi_hello(dirpath, stdout=None, stderr=None, app="./mpi_hello.exe", parsl_resource_specification={}):
     return '''
-    # Flux requires I_MPI_PMI_LIBRARY to be unset because it provides its own PMI
-    unset I_MPI_PMI_LIBRARY
+    . /opt/conda_init.sh
+    conda activate chiltepin
+    #. /opt/jedi_init.sh
+    export FLUX_PMI_LIBRARY_PATH=/opt/miniconda3/envs/chiltepin/lib/flux/libpmi.so
+    which mpirun
     cd {}
     {}
     '''.format(dirpath, app)
 
 # Check the Flux resource list
 r = resource_list().result()
+
+# Check the Flux pmi status
+p = pmi_barrier(parsl_resource_specification={"num_tasks": 6, "num_nodes": 3}).result()
 
 # complile the app and wait for it to complete (.result())
 compile_app(dirpath=shared_dir,

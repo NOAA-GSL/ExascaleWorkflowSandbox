@@ -1,13 +1,41 @@
 FROM noaagsl/slurm-master:latest
 
-RUN apt-get update -y && apt-get install -y \
-    libpmi2-0-dev
+#Set environment variables for installing tzdata
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+ENV CC=gcc
+ENV CXX=g++
+ENV FC=gfortran
 
-# Set up Intel and Chiltepin environment initialization
-USER admin
-RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bashrc
-RUN echo "source /etc/profile.d/conda_init.sh > /dev/null 2>&1" >> /home/admin/.bashrc
-RUN echo "conda activate chiltepin" >> /home/admin/.bashrc
-RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bash_profile
-RUN echo "source /etc/profile.d/conda_init.sh > /dev/null 2>&1" >> /home/admin/.bash_profile
-RUN echo "conda activate chiltepin" >> /home/admin/.bash_profile
+RUN apt-get -yqq update && apt-get -yqq upgrade && apt-get -yqq install \
+    bc \
+    build-essential \
+    ca-certificates \
+    cpp \
+    curl \
+    file \
+    g++ \
+    gcc \
+    gfortran \
+    git \
+    git-lfs \
+    gnupg2 \
+    gpg \
+    iproute2 \
+    libpmi2-0-dev \
+    libqt5svg5-dev \
+    locales \
+    make \
+    python3 \
+    python3-pip \
+    python3-setuptools \
+    qt5-default \
+    qt5dxcb-plugin \
+    unzip \
+    vim \
+    wget \
+ && rm -rf /var/lib/apt/lists/*
+
+# Copy conda and jedi init scripts
+COPY ./install/conda_init.sh /opt/conda_init.sh
+COPY ./install/jedi_init.sh /opt/jedi_init.sh

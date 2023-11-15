@@ -1,49 +1,60 @@
+FROM myimage-gnu as JEDI
+
 FROM noaagsl/slurm-frontend:latest
 
-RUN apt-get update -y && apt-get install -y \
+#Set environment variables for installing tzdata
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+ENV CC=gcc
+ENV CXX=g++
+ENV FC=gfortran
+
+RUN apt-get -yqq update && apt-get -yqq upgrade && apt-get -yqq install \
+    bc \
+    build-essential \
+    ca-certificates \
+    cpp \
     curl \
+    file \
+    g++ \
+    gcc \
+    gfortran \
+    git \
+    git-lfs \
+    gnupg2 \
+    gpg \
+    iproute2 \
     libpmi2-0-dev \
-    unzip
+    libqt5svg5-dev \
+    locales \
+    make \
+    python3 \
+    python3-pip \
+    python3-setuptools \
+    qt5-default \
+    qt5dxcb-plugin \
+    unzip \
+    vim \
+    wget \
+ && rm -rf /var/lib/apt/lists/*
 
-# Add apt repository public key for Intel OneAPI
-ARG url=https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
-ADD $url ./
-RUN file=$(basename "$url") && \
-    apt-key add "$file" && \
-    rm "$file"
+# Copy JEDI stack from JEDI stage
+COPY --from=JEDI /opt/software /opt/software
+COPY --from=JEDI /opt/view /opt/view
+COPY --from=JEDI /opt/._view /opt/._view
+COPY --from=JEDI /opt/spack-environment /opt/spack-environment
 
-# Configure the apt repository
-ARG repo=https://apt.repos.intel.com/oneapi
-RUN echo "deb [trusted=yes] $repo all main" > /etc/apt/sources.list.d/oneAPI.list
+# Copy conda and jedi init scripts
+COPY ./install/jedi_init.sh /opt/jedi_init.sh
+COPY ./install/conda_init.sh /opt/conda_init.sh
 
-# Install Intel oneapi packages and set up modules
-RUN apt-get update -y && apt-get install -y --no-install-recommends -o=Dpkg::Use-Pty=0 \
-    intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic \
-    intel-oneapi-compiler-fortran \
-    intel-oneapi-mpi-devel
-
-# Copy install scripts
+# Copy conda install scripts
 COPY ./install/install_miniconda.sh /tmp/install_miniconda.sh
 COPY ./install/chiltepin.yml /tmp/chiltepin.yml
 
-# Copy conda init script
-COPY ./install/conda_init.sh /etc/profile.d/conda_init.sh
-
 # Install Miniconda3 and chiltepin environment
-SHELL ["/bin/bash", "-l", "-c"]
 RUN cd /tmp \
  && ./install_miniconda.sh /opt/miniconda3 \
+ && . /opt/conda_init.sh \
  && conda env create --name chiltepin --file chiltepin.yml \
  && conda clean -afy
-
-SHELL ["/bin/bash", "-c"]
-USER admin
-
-RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bashrc
-RUN echo "source /etc/profile.d/conda_init.sh > /dev/null 2>&1" >> /home/admin/.bashrc
-RUN echo "conda activate chiltepin" >> /home/admin/.bashrc
-RUN echo "source /opt/intel/oneapi/setvars.sh > /dev/null 2>&1" >> /home/admin/.bash_profile
-RUN echo "source /etc/profile.d/conda_init.sh > /dev/null 2>&1" >> /home/admin/.bash_profile
-RUN echo "conda activate chiltepin" >> /home/admin/.bash_profile
-
-SHELL ["/bin/bash"]
