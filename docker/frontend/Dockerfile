@@ -1,4 +1,4 @@
-FROM myimage-gnu as JEDI
+FROM ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest as JEDI
 
 FROM noaagsl/slurm-frontend:latest
 

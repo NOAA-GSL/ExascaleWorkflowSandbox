@@ -35,7 +35,3 @@ RUN apt-get -yqq update && apt-get -yqq upgrade && apt-get -yqq install \
     vim \
     wget \
  && rm -rf /var/lib/apt/lists/*
-
-# Copy conda and jedi init scripts
-COPY ./install/conda_init.sh /opt/conda_init.sh
-COPY ./install/jedi_init.sh /opt/jedi_init.sh
