@@ -72,7 +72,6 @@ def compile_app(dirpath, stdout=None, stderr=None, compiler="mpif90", parsl_reso
     conda activate chiltepin
     #. /opt/jedi_init.sh
     cd {}
-    which mpif90
     {} -o mpi_hello.exe mpi_hello.f90
     '''.format(dirpath, compiler)
 
@@ -84,7 +83,6 @@ def mpi_hello(dirpath, stdout=None, stderr=None, app="./mpi_hello.exe", parsl_re
     conda activate chiltepin
     #. /opt/jedi_init.sh
     export FLUX_PMI_LIBRARY_PATH=/opt/miniconda3/envs/chiltepin/lib/flux/libpmi.so
-    which mpirun
     cd {}
     {}
     '''.format(dirpath, app)
