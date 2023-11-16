@@ -38,7 +38,6 @@ jobs:
           context: ./docker
           file: ./docker/spack-stack/Dockerfile
           push: true
-          load: true
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache,mode=max
