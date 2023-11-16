@@ -10,6 +10,7 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    timeout-minutes: 720
     steps:
       -
         name: Checkout repository
@@ -30,6 +31,17 @@ jobs:
           docker images
           docker image prune -a -f
           docker images
+      -
+        name: Build spack-stack
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker
+          file: ./docker/spack-stack/Dockerfile
+          push: true
+          load: true
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache,mode=max
       -
         name: Build frontend
         uses: docker/build-push-action@v4
@@ -81,13 +93,13 @@ jobs:
       -
         name: Parsl hello test
         run: |
-          docker exec frontend bash -l -c "cd work/src ; ./parsl_hello.py"
+          docker exec frontend bash -l -c "cd work/src ; . /opt/conda-init.sh; conda activate chiltepin; ./parsl_hello.py"
           docker exec frontend bash -l -c "diff work/src/parsl_python_hello.out work/output/parsl_python_hello.out.baseline"
           docker exec frontend bash -l -c "diff work/src/parsl_bash_hello.out work/output/parsl_bash_hello.out.baseline"
       -
         name: Parsl/Flux hello MPI test
         run: |
-          docker exec frontend bash -l -c "cd work/src ; ./parsl_flux_mpi_hello.py"
+          docker exec frontend bash -l -c "cd work/src ; . /opt/conda-init.sh; conda activate chiltepin; ./parsl_flux_mpi_hello.py"
           docker exec frontend bash -l -c "diff work/src/parsl_flux_resource_list.txt work/output/parsl_flux_resource_list.txt.baseline"
           docker exec frontend bash -l -c "diff work/src/parsl_flux_mpi_hello_compile.out work/output/parsl_flux_mpi_hello_compile.out.baseline"
           docker exec frontend bash -l -c "diff work/src/parsl_flux_mpi_hello_run.out work/output/parsl_flux_mpi_hello_run.out.baseline"
