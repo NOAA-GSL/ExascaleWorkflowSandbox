@@ -100,6 +100,7 @@ jobs:
         run: |
           docker exec frontend bash -l -c "cd work/src ; . /opt/conda_init.sh; conda activate chiltepin; ./parsl_flux_mpi_hello.py"
           docker exec frontend bash -l -c "diff work/src/parsl_flux_resource_list.txt work/output/parsl_flux_resource_list.txt.baseline"
+	  docker exec frontend bash -l -c "grep 'completed pmi barrier on 6 tasks' work/src/parsl_flux_pmi_barrier.txt"
           docker exec frontend bash -l -c "diff work/src/parsl_flux_mpi_hello_compile.out work/output/parsl_flux_mpi_hello_compile.out.baseline"
           docker exec frontend bash -l -c "diff work/src/parsl_flux_mpi_hello_run.out work/output/parsl_flux_mpi_hello_run.out.baseline"
       -

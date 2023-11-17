@@ -66,7 +66,6 @@ def pmi_barrier(parsl_resource_specification={}):
 # Compile the hello MPI program with Intel
 @bash_app
 def compile_app(dirpath, stdout=None, stderr=None, compiler="mpif90", parsl_resource_specification={"num_tasks": 1}):
-#def compile_app(dirpath, stdout=None, stderr=None, compiler="mpiifort -fc=ifx", parsl_resource_specification={"num_tasks": 1}):
     return '''
     . /opt/conda_init.sh
     conda activate chiltepin
