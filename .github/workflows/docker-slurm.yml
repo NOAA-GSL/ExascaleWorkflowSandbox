@@ -32,6 +32,11 @@ jobs:
           docker image prune -a -f
           docker images
       -
+        name: Create spack-stack Dockerfile
+        run: |
+          cd docker/spack-stack
+          ./create_dockerfile.sh
+      -
         name: Build spack-stack
         uses: docker/build-push-action@v4
         with:
