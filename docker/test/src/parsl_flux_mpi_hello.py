@@ -63,28 +63,26 @@ def pmi_barrier(parsl_resource_specification={}):
     flux pmi --method=libpmi:$FLUX_PMI_LIBRARY_PATH barrier >> parsl_flux_pmi_barrier.txt
     '''
 
-# Compile the hello MPI program with Intel
+# Compile the hello MPI program with GNU and OpenMPI
 @bash_app
-def compile_app(dirpath, stdout=None, stderr=None, compiler="mpif90", parsl_resource_specification={"num_tasks": 1}):
+def compile_app(dirpath, stdout=None, stderr=None, stack="chiltepin", parsl_resource_specification={"num_tasks": 1}):
     return '''
     . /opt/conda_init.sh
     conda activate chiltepin
-    #. /opt/jedi_init.sh
     cd {}
-    {} -o mpi_hello.exe mpi_hello.f90
-    '''.format(dirpath, compiler)
+    mpif90 -o mpi_hello.exe mpi_hello.f90
+    '''.format(dirpath)
 
-# Run the hello MPI program with Intel
+# Run the hello MPI program with GNU and OpenMPI
 @bash_app
-def mpi_hello(dirpath, stdout=None, stderr=None, app="./mpi_hello.exe", parsl_resource_specification={}):
+def mpi_hello(dirpath, stdout=None, stderr=None, stack="chiltepin", parsl_resource_specification={}):
     return '''
     . /opt/conda_init.sh
     conda activate chiltepin
-    #. /opt/jedi_init.sh
     export FLUX_PMI_LIBRARY_PATH=/opt/miniconda3/envs/chiltepin/lib/flux/libpmi.so
     cd {}
-    {}
-    '''.format(dirpath, app)
+    ./mpi_hello.exe
+    '''.format(dirpath)
 
 # Check the Flux resource list
 r = resource_list().result()
@@ -96,12 +94,14 @@ p = pmi_barrier(parsl_resource_specification={"num_tasks": 6, "num_nodes": 3}).r
 compile_app(dirpath=shared_dir,
             stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.out"),
             stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.err"),
+            stack="chiltepin",
            ).result()
 
 # run the mpi app
 hello = mpi_hello(dirpath=shared_dir,
                   stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
                   stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err",),
+                  stack="chiltepin",
                   parsl_resource_specification={"num_tasks": 6, "num_nodes": 3})
 
 # Wait for the MPI app to finish
