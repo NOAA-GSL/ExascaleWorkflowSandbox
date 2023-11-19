@@ -47,6 +47,10 @@ chiltepin= '''
     conda activate chiltepin
 '''
 
+spack_stack='''
+    . /opt/jedi_init.sh
+'''
+
 # Print out resources that Flux sees after it starts
 @bash_app
 def resource_list():
@@ -93,21 +97,38 @@ r = resource_list().result()
 # Check the Flux pmi status
 p = pmi_barrier(parsl_resource_specification={"num_tasks": 6, "num_nodes": 3}).result()
 
-# complile the app and wait for it to complete (.result())
+# complile the app with chiltepin stack and wait for it to complete (.result())
 compile_app(dirpath=shared_dir,
             stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.out"),
             stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.err"),
-            stack="chiltepin",
+            stack=chiltepin,
            ).result()
 
-# run the mpi app
+# run the mpi app with chiltepin stack
 hello = mpi_hello(dirpath=shared_dir,
                   stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
                   stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err",),
-                  stack="chiltepin",
+                  stack=chiltepin,
                   parsl_resource_specification={"num_tasks": 6, "num_nodes": 3})
 
-# Wait for the MPI app to finish
+# Wait for the MPI app with chiltepin stack to finish
+hello.result()
+
+# complile the app with spack-stack stack and wait for it to complete (.result())
+compile_app(dirpath=shared_dir,
+            stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.out"),
+            stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.err"),
+            stack=spack_stack,
+           ).result()
+
+# run the mpi app with spack-stack stack
+hello = mpi_hello(dirpath=shared_dir,
+                  stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
+                  stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err",),
+                  stack=spack_stack,
+                  parsl_resource_specification={"num_tasks": 6, "num_nodes": 3})
+
+# Wait for the MPI app with spack-stack stack to finish
 hello.result()
 
 parsl.clear()
