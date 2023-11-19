@@ -42,6 +42,11 @@ parsl.load(config)
 remote = False
 shared_dir = './'
 
+chiltepin= '''
+    . /opt/conda_init.sh
+    conda activate chiltepin
+'''
+
 # Print out resources that Flux sees after it starts
 @bash_app
 def resource_list():
@@ -65,24 +70,22 @@ def pmi_barrier(parsl_resource_specification={}):
 
 # Compile the hello MPI program with GNU and OpenMPI
 @bash_app
-def compile_app(dirpath, stdout=None, stderr=None, stack="chiltepin", parsl_resource_specification={"num_tasks": 1}):
+def compile_app(dirpath, stdout=None, stderr=None, stack=chiltepin, parsl_resource_specification={"num_tasks": 1}):
     return '''
-    . /opt/conda_init.sh
-    conda activate chiltepin
+    {}
     cd {}
     mpif90 -o mpi_hello.exe mpi_hello.f90
-    '''.format(dirpath)
+    '''.format(stack,dirpath)
 
 # Run the hello MPI program with GNU and OpenMPI
 @bash_app
-def mpi_hello(dirpath, stdout=None, stderr=None, stack="chiltepin", parsl_resource_specification={}):
+def mpi_hello(dirpath, stdout=None, stderr=None, stack=chiltepin, parsl_resource_specification={}):
     return '''
-    . /opt/conda_init.sh
-    conda activate chiltepin
+    {}
     export FLUX_PMI_LIBRARY_PATH=/opt/miniconda3/envs/chiltepin/lib/flux/libpmi.so
     cd {}
     ./mpi_hello.exe
-    '''.format(dirpath)
+    '''.format(stack, dirpath)
 
 # Check the Flux resource list
 r = resource_list().result()
