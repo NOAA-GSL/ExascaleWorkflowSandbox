@@ -42,6 +42,15 @@ parsl.load(config)
 remote = False
 shared_dir = './'
 
+chiltepin= '''
+    . /opt/conda_init.sh
+    conda activate chiltepin
+'''
+
+spack_stack='''
+    . /opt/jedi_init.sh
+'''
+
 # Print out resources that Flux sees after it starts
 @bash_app
 def resource_list():
@@ -63,28 +72,24 @@ def pmi_barrier(parsl_resource_specification={}):
     flux pmi --method=libpmi:$FLUX_PMI_LIBRARY_PATH barrier >> parsl_flux_pmi_barrier.txt
     '''
 
-# Compile the hello MPI program with Intel
+# Compile the hello MPI program with GNU and OpenMPI
 @bash_app
-def compile_app(dirpath, stdout=None, stderr=None, compiler="mpif90", parsl_resource_specification={"num_tasks": 1}):
+def compile_app(dirpath, stdout=None, stderr=None, stack=chiltepin, parsl_resource_specification={"num_tasks": 1}):
     return '''
-    . /opt/conda_init.sh
-    conda activate chiltepin
-    #. /opt/jedi_init.sh
+    {}
     cd {}
-    {} -o mpi_hello.exe mpi_hello.f90
-    '''.format(dirpath, compiler)
+    mpif90 -o mpi_hello.exe mpi_hello.f90
+    '''.format(stack,dirpath)
 
-# Run the hello MPI program with Intel
+# Run the hello MPI program with GNU and OpenMPI
 @bash_app
-def mpi_hello(dirpath, stdout=None, stderr=None, app="./mpi_hello.exe", parsl_resource_specification={}):
+def mpi_hello(dirpath, stdout=None, stderr=None, stack=chiltepin, parsl_resource_specification={}):
     return '''
-    . /opt/conda_init.sh
-    conda activate chiltepin
-    #. /opt/jedi_init.sh
+    {}
     export FLUX_PMI_LIBRARY_PATH=/opt/miniconda3/envs/chiltepin/lib/flux/libpmi.so
     cd {}
-    {}
-    '''.format(dirpath, app)
+    ./mpi_hello.exe
+    '''.format(stack, dirpath)
 
 # Check the Flux resource list
 r = resource_list().result()
@@ -92,19 +97,38 @@ r = resource_list().result()
 # Check the Flux pmi status
 p = pmi_barrier(parsl_resource_specification={"num_tasks": 6, "num_nodes": 3}).result()
 
-# complile the app and wait for it to complete (.result())
+# complile the app with chiltepin stack and wait for it to complete (.result())
 compile_app(dirpath=shared_dir,
             stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.out"),
             stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.err"),
+            stack=chiltepin,
            ).result()
 
-# run the mpi app
+# run the mpi app with chiltepin stack
 hello = mpi_hello(dirpath=shared_dir,
                   stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
                   stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err",),
+                  stack=chiltepin,
                   parsl_resource_specification={"num_tasks": 6, "num_nodes": 3})
 
-# Wait for the MPI app to finish
+# Wait for the MPI app with chiltepin stack to finish
+hello.result()
+
+# complile the app with spack-stack stack and wait for it to complete (.result())
+compile_app(dirpath=shared_dir,
+            stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.out"),
+            stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.err"),
+            stack=spack_stack,
+           ).result()
+
+# run the mpi app with spack-stack stack
+hello = mpi_hello(dirpath=shared_dir,
+                  stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
+                  stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err",),
+                  stack=spack_stack,
+                  parsl_resource_specification={"num_tasks": 6, "num_nodes": 3})
+
+# Wait for the MPI app with spack-stack stack to finish
 hello.result()
 
 parsl.clear()
