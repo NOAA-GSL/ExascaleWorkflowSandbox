@@ -21,8 +21,8 @@ config = Config(
                 channel=LocalChannel(),
                 nodes_per_block=3,
                 init_blocks=1,
-                partition='slurmpar',
-                account='',
+                partition='hercules',
+                account='gsd-hpcs',
                 walltime='00:10:00',
                 launcher=SimpleLauncher(),
                 worker_init='''
@@ -34,6 +34,7 @@ config = Config(
 
 
 import os
+import sys
 
 # Set FLUX_SSH
 os.environ["FLUX_SSH"] = "ssh"
@@ -43,27 +44,33 @@ parsl.load(config)
 
 shared_dir = './'
 
-chiltepin_stack= '''
-     export FLUX_PMI_LIBRARY_PATH=/opt/miniconda3/envs/chiltepin/lib/flux/libpmi.so
-     export OMPI_MCA_btl=self,tcp
-'''
+def stack_factory(platform="chiltepin"):
 
-spack_stack='''
-#    . /opt/jedi_init.sh
-'''
+    if (platform=="chiltepin"):
+        return '''
+        export FLUX_PMI_LIBRARY_PATH=/opt/miniconda3/envs/chiltepin/lib/flux/libpmi.so
+        export OMPI_MCA_btl=self,tcp
+        export CHILTEPIN_MPIF90=mpif90
+        '''
+    elif (platform=="jedi"):
+        return '''
+        #    . /opt/jedi_init.sh
+        '''
+    elif (platform=="hercules"):
+        return '''
+        module load intel-oneapi-compilers/2023.1.0
+        module load intel-oneapi-mpi/2021.7.1
+        unset I_MPI_PMI_LIBRARY
+        export CHILTEPIN_MPIF90="mpiifort -fc=ifx"
+        '''
+    else:
+        raise Exception("Invalid platform")
 
-hercules_stack='''
-module load intel-oneapi-compilers/2023.1.0
-module load intel-oneapi-mpi/2021.7.1
-unset I_MPI_PMI_LIBRARY
-conda activate chiltepin
-export FLUX_SSH=/usr/bin/ssh
-export FLUX_PMI_LIBRARY_PATH=/home/charrop/miniforge3/envs/chiltepin/lib/flux/libpmi.so
-'''
+stack = stack_factory(sys.argv[1])
 
 # Print out resources that Flux sees after it starts
 @bash_app
-def resource_list(stack=chiltepin_stack):
+def resource_list(stack=stack):
     return '''
     {}
     flux resource list > parsl_flux_resource_list.txt
@@ -71,7 +78,7 @@ def resource_list(stack=chiltepin_stack):
 
 # Test Flux PMI launch
 @bash_app
-def pmi_barrier(stack=chiltepin_stack, parsl_resource_specification={}):
+def pmi_barrier(stack=stack, parsl_resource_specification={}):
     return '''
     {}
     flux pmi barrier > parsl_flux_pmi_barrier.txt
@@ -79,17 +86,16 @@ def pmi_barrier(stack=chiltepin_stack, parsl_resource_specification={}):
 
 # Compile the hello MPI program with GNU and OpenMPI
 @bash_app
-def compile_app(dirpath, stdout=None, stderr=None, stack=chiltepin_stack, parsl_resource_specification={"num_tasks": 1}):
+def compile_app(dirpath, stdout=None, stderr=None, stack=stack, parsl_resource_specification={"num_tasks": 1}):
     return '''
     {}
     cd {}
-    #mpiifort -fc=ifx -o mpi_hello.exe mpi_hello.f90
-    mpif90 -o mpi_hello.exe mpi_hello.f90
+    $CHILTEPIN_MPIF90 -o mpi_hello.exe mpi_hello.f90
     '''.format(stack,dirpath)
 
 # Run the hello MPI program with GNU and OpenMPI
 @bash_app
-def mpi_hello(dirpath, stdout=None, stderr=None, stack=chiltepin_stack, parsl_resource_specification={}):
+def mpi_hello(dirpath, stdout=None, stderr=None, stack=stack, parsl_resource_specification={}):
     return '''
     {}
     cd {}
@@ -97,25 +103,23 @@ def mpi_hello(dirpath, stdout=None, stderr=None, stack=chiltepin_stack, parsl_re
     '''.format(stack, dirpath)
 
 # Check the Flux resource list
-r = resource_list(stack=chiltepin_stack).result()
+r = resource_list(stack=stack).result()
 
 # Check the Flux pmi status
-p = pmi_barrier(stack=chiltepin_stack, parsl_resource_specification={"num_tasks": 6, "num_nodes": 3}).result()
+p = pmi_barrier(stack=stack, parsl_resource_specification={"num_tasks": 6, "num_nodes": 3}).result()
 
 # complile the app with chiltepin stack and wait for it to complete (.result())
 compile_app(dirpath=shared_dir,
             stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.out"),
             stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.err"),
-            stack=chiltepin_stack,
-#            stack=hercules_stack,
+            stack=stack,
            ).result()
 
 # run the mpi app with chiltepin stack
 hello = mpi_hello(dirpath=shared_dir,
                   stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
                   stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err",),
-                  stack=chiltepin_stack,
-#                  stack=hercules_stack,
+                  stack=stack,
                   parsl_resource_specification={"num_tasks": 6, "num_nodes": 3})
 
 # Wait for the MPI app with chiltepin stack to finish
