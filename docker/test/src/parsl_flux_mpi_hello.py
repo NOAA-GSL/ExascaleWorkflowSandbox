@@ -10,27 +10,44 @@ from parsl.launchers import SimpleLauncher
 from parsl.addresses import address_by_hostname
 from parsl.data_provider.files import File
 
-# Update to import config for your machine
-config = Config(
-    executors=[
-        FluxExecutor(
-            label="flux",
-            # Start Flux with srun and tell it there are 40 cores per node
-            launch_cmd='srun --mpi=pmi2 --tasks-per-node=1 -c2 ' + FluxExecutor.DEFAULT_LAUNCH_CMD,
-            provider=SlurmProvider(
-                channel=LocalChannel(),
-                nodes_per_block=3,
-                init_blocks=1,
-                partition='hercules',
-                account='gsd-hpcs',
-                walltime='00:10:00',
-                launcher=SimpleLauncher(),
-                worker_init='''
-''',
-            ),
-        )
-    ],
-)
+def config_factory(platform="chiltepin"):
+
+    if (platform=="chiltepin"):
+        cores_per_node=2
+        partition="slurmpar"
+        account=""
+    elif (platform=="jedi"):
+        pass
+    elif (platform=="hercules"):
+        cores_per_node=20
+        partition="hercules"
+        account="gsd-hpcs"
+    else:
+        raise Exception("Invalid platform")
+
+    # Update to import config for your machine
+    config = Config(
+        executors=[
+            FluxExecutor(
+                label="flux",
+                # Start Flux with srun and tell it how many cores per node to expect
+                launch_cmd=f'srun --mpi=pmi2 --tasks-per-node=1 -c{cores_per_node} ' + FluxExecutor.DEFAULT_LAUNCH_CMD,
+                provider=SlurmProvider(
+                    channel=LocalChannel(),
+                    nodes_per_block=3,
+                    init_blocks=1,
+                    partition=partition,
+                    account=account,
+                    walltime='00:10:00',
+                    launcher=SimpleLauncher(),
+                    worker_init='''
+                    ''',
+                ),
+            )
+        ],
+    )
+
+    return config
 
 
 import os
@@ -40,6 +57,7 @@ import sys
 os.environ["FLUX_SSH"] = "ssh"
 
 # Load the configuration
+config = config_factory(sys.argv[1])
 parsl.load(config)
 
 shared_dir = './'
