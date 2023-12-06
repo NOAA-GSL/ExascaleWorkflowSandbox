@@ -2,89 +2,27 @@
 
 import parsl
 from parsl.app.app import python_app, bash_app
-from parsl.config import Config
-from parsl.channels import LocalChannel
-from parsl.providers import SlurmProvider
-from parsl.executors import FluxExecutor
-from parsl.launchers import SimpleLauncher
-from parsl.addresses import address_by_hostname
-from parsl.data_provider.files import File
-
-def config_factory(platform="chiltepin"):
-
-    if (platform=="chiltepin"):
-        cores_per_node=2
-        partition="slurmpar"
-        account=""
-    elif (platform=="jedi"):
-        pass
-    elif (platform=="hercules"):
-        cores_per_node=20
-        partition="hercules"
-        account="gsd-hpcs"
-    else:
-        raise Exception("Invalid platform")
-
-    # Update to import config for your machine
-    config = Config(
-        executors=[
-            FluxExecutor(
-                label="flux",
-                # Start Flux with srun and tell it how many cores per node to expect
-                launch_cmd=f'srun --mpi=pmi2 --tasks-per-node=1 -c{cores_per_node} ' + FluxExecutor.DEFAULT_LAUNCH_CMD,
-                provider=SlurmProvider(
-                    channel=LocalChannel(),
-                    nodes_per_block=3,
-                    init_blocks=1,
-                    partition=partition,
-                    account=account,
-                    walltime='00:10:00',
-                    launcher=SimpleLauncher(),
-                    worker_init='''
-                    ''',
-                ),
-            )
-        ],
-    )
-
-    return config
-
 
 import os
 import sys
+import yaml
 
-# Set FLUX_SSH
-os.environ["FLUX_SSH"] = "ssh"
+import chiltepin_config
+
+with open(sys.argv[1], "r") as stream:
+    try:
+        yaml_config = yaml.safe_load(stream)
+    except yaml.YAMLError as exc:
+        print("Invalid taml configuration")
+        raise(exc)
 
 # Load the configuration
-config = config_factory(sys.argv[1])
+config, env_init = chiltepin_config.config_factory(yaml_config)
 parsl.load(config)
 
 shared_dir = './'
 
-def stack_factory(platform="chiltepin"):
-
-    if (platform=="chiltepin"):
-        return '''
-        export FLUX_PMI_LIBRARY_PATH=/opt/miniconda3/envs/chiltepin/lib/flux/libpmi.so
-        export OMPI_MCA_btl=self,tcp
-        export CHILTEPIN_MPIF90=mpif90
-        '''
-    elif (platform=="jedi"):
-        return '''
-        #    . /opt/jedi_init.sh
-        '''
-    elif (platform=="hercules"):
-        return '''
-        module load intel-oneapi-compilers/2023.1.0
-        module load intel-oneapi-mpi/2021.7.1
-        unset I_MPI_PMI_LIBRARY
-        export CHILTEPIN_MPIF90="mpiifort -fc=ifx"
-        '''
-    else:
-        raise Exception("Invalid platform")
-
-stack = stack_factory(sys.argv[1])
+stack = env_init
 
 # Print out resources that Flux sees after it starts
 @bash_app
