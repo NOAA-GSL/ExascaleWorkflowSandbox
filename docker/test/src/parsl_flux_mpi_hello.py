@@ -9,12 +9,13 @@ import yaml
 
 import chiltepin_config
 
+# Open and parse the yaml config
 with open(sys.argv[1], "r") as stream:
     try:
         yaml_config = yaml.safe_load(stream)
-    except yaml.YAMLError as exc:
+    except yaml.YAMLError as e:
         print("Invalid taml configuration")
-        raise(exc)
+        raise(e)
 
 # Load the configuration
 config, env_init = chiltepin_config.config_factory(yaml_config)
@@ -81,21 +82,5 @@ hello = mpi_hello(dirpath=shared_dir,
 # Wait for the MPI app with chiltepin stack to finish
 hello.result()
 
-## complile the app with spack-stack stack and wait for it to complete (.result())
-#compile_app(dirpath=shared_dir,
-#            stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.out"),
-#            stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.err"),
-#            stack=spack_stack,
-#           ).result()
-#
-## run the mpi app with spack-stack stack
-#hello = mpi_hello(dirpath=shared_dir,
-#                  stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
-#                  stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err",),
-#                  stack=spack_stack,
-#                  parsl_resource_specification={"num_tasks": 6, "num_nodes": 3})
-#
-# Wait for the MPI app with spack-stack stack to finish
-#hello.result()
-
+# Cleanup
 parsl.clear()
