@@ -1,0 +1,10 @@
+provider:
+  cores per node: 20
+  partition: "hercules"
+  account: "gsd-hpcs"
+
+environment:
+  - "module load intel-oneapi-compilers/2023.1.0"
+  - "module load intel-oneapi-mpi/2021.7.1"
+  - "unset I_MPI_PMI_LIBRARY"
+  - "export CHILTEPIN_MPIF90='mpiifort -fc=ifx'"
