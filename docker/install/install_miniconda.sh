@@ -23,4 +23,4 @@ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ${
 bash ${MINICONDA_PATH}/miniconda.sh -b -u -p ${MINICONDA_PATH}
 rm -f ${MINICONDA_PATH}/miniconda.sh
 conda update -y conda
-conda init
+conda init bash
