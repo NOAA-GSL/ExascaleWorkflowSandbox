@@ -51,44 +51,37 @@ def mpi_hello(dirpath, stdout=None, stderr=None, env="", parsl_resource_specific
     ./mpi_hello.exe
     '''.format(env, dirpath)
 
-# Test Flux resource list
-def test_flux_resource_list(config_file):
+# Set up fixture to initialize and cleanup Parsl
+@pytest.fixture(scope="module")
+def load_config(config_file, request):
     yaml_config = parse_config(config_file)
     config, environment = config_factory(yaml_config)
     parsl.load(config)
-    r = resource_list(env=environment).result()
-    parsl.clear()
+    request.addfinalizer(parsl.clear)
+    return environment
+
+# Test Flux resource list
+def test_flux_resource_list(load_config):
+    r = resource_list(env=load_config).result()
     
 # Test Flux pmi barrier
-def test_flux_pmi(config_file):
-    yaml_config = parse_config(config_file)
-    config, environment = config_factory(yaml_config)
-    parsl.load(config)
-    p = pmi_barrier(env=environment, parsl_resource_specification={"num_tasks": 6, "num_nodes": 3}).result() 
-    parsl.clear()
+def test_flux_pmi(load_config):
+    p = pmi_barrier(env=load_config, parsl_resource_specification={"num_tasks": 6, "num_nodes": 3}).result()
 
-def test_compile_app(config_file):
-    yaml_config = parse_config(config_file)
-    config, environment = config_factory(yaml_config)
+def test_compile_app(load_config):
     shared_dir = "./"
-    parsl.load(config)
     compile_app(dirpath=shared_dir,
                 stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.out"),
                 stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.err"),
-                env=environment,
+                env=load_config,
                 ).result()
-    parsl.clear()
 
-def test_mpi_hello(config_file):
-    yaml_config = parse_config(config_file)
-    config, environment = config_factory(yaml_config)
+def test_mpi_hello(load_config):
     shared_dir = "./"
-    parsl.load(config)
     hello = mpi_hello(dirpath=shared_dir,
                       stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
                       stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err",),
-                      env=environment,
+                      env=load_config,
                       parsl_resource_specification={"num_tasks": 6, "num_nodes": 3})
     # Wait for the MPI app with chiltepin stack to finish
     hello.result()
-    parsl.clear()
