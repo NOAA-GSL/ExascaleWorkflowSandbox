@@ -92,8 +92,11 @@ def test_compile_app(load_config):
 
 def test_mpi_hello(load_config):
     shared_dir = "./"
-    os.remove("parsl_flux_mpi_hello_run.out")
-    os.remove("parsl_flux_mpi_hello_run.err")
+    # Remove any previous output if necessary
+    if os.path.exists("parsl_flux_mpi_hello_run.out"):
+        os.remove("parsl_flux_mpi_hello_run.out")
+    if os.path.exists("parsl_flux_mpi_hello_run.err"):
+        os.remove("parsl_flux_mpi_hello_run.err")
     hello = mpi_hello(dirpath=shared_dir,
                       stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
                       stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err"),
