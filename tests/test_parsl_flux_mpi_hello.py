@@ -17,13 +17,6 @@ def parse_config(filename):
             raise(e)
     return yaml_config
 
-# Set up fixture to initialize and cleanup Parsl
-@pytest.fixture
-def load_config(config_file):
-    parsl.load(config)
-    yield
-    parsl.clear()
-
 # Print out resources that Flux sees after it starts
 @bash_app
 def resource_list(env=""):
