@@ -52,6 +52,41 @@ cd docker/install
 conda env create --name chiltepin --file chiltepin.yml
 ```
 
+## Building and running Chiltepin container
+
+Chiltepin provides a Docker container environment for building and running Parsl and Chiltepin
+applications. It makes use of docker compose to build a mult-node Slurm cluster for use as a
+backend for running the applications.  This repository is mounted from the host into the container's
+chiltepin directory.
+
+To build the container:
+
+```
+cd docker
+docker compose -f docker-compose.yml up -d --build
+```
+
+To use the container after it is built and up, log in with a bash shell:
+
+```
+docker exec -it frontend bash -l
+```
+
+Once in the container, you can activate the chiltepin environment, install chiltepin in
+editable mode, and run the tests
+
+```
+conda activate chiltepin
+cd chiltepin
+pip install -e .
+cd tests
+pytest --assert=plain --config=chiltepin.yaml
+```
+
+NOTE: Depending on how many cores your machine has and how many you've allocated to Docker,
+you may need to modify the `cores per node` setting in the configuration yaml file to match
+your machine's specifications to get all tests to pass.
+
 # Running Parsl apps
 
 The Chiltepin conda environment must be activated to run Parsl Chiltepin applications
