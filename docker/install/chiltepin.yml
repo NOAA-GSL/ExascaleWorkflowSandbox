@@ -5,6 +5,7 @@ channels:
 
 dependencies:
   - python
+  - pytest=7.4.0
   - pip
   - flux-core
   - flux-sched
