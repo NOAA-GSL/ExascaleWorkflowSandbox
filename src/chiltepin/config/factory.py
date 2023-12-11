@@ -28,6 +28,7 @@ def config_factory(yaml_config={}):
                 launch_cmd=f'srun --mpi=pmi2 --tasks-per-node=1 -c{cores_per_node} ' + FluxExecutor.DEFAULT_LAUNCH_CMD,
                 provider=SlurmProvider(
                     channel=LocalChannel(),
+                    cores_per_node=cores_per_node,
                     nodes_per_block=3,
                     init_blocks=1,
                     partition=partition,
