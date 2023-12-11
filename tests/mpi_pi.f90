@@ -54,7 +54,9 @@ program calculatePi
 
   pi = 4.0 * nCircle / nSquare
 
-  write(*,"(A,A,A,A,A,A,A,F15.13)") "Host ", TRIM(hostname), " rank ", TRIM(ADJUSTL(rank)), " of ", TRIM(ADJUSTL(size)), " local approximaiton of pi = ", pi
+  write(*,"(A,A,A,A,A,A,A,F15.13)") "Host ", TRIM(hostname), " rank ", &
+          TRIM(ADJUSTL(rank)), " of ", TRIM(ADJUSTL(size)), &
+          " local approximation of pi = ", pi
 
   call MPI_Reduce(nCircle, sumCircle, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD, error)
   call MPI_Reduce(nSquare, sumSquare, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD, error)
