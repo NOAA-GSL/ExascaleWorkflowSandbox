@@ -41,7 +41,7 @@ RUN apt-get -yqq update && apt-get -yqq upgrade && apt-get -yqq install \
 # Copy JEDI stack from JEDI stage
 COPY --from=JEDI /opt/software /opt/software
 COPY --from=JEDI /opt/view /opt/view
-COPY --from=JEDI /opt/._view /opt/._view
+COPY --from=JEDI /opt/views /opt/views
 COPY --from=JEDI /opt/spack-environment /opt/spack-environment
 
 # Copy conda and jedi init scripts
