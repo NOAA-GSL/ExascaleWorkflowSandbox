@@ -55,7 +55,7 @@ conda env create --name chiltepin --file chiltepin.yml
 ## Building and running Chiltepin container
 
 Chiltepin provides a Docker container environment for building and running Parsl and Chiltepin
-applications. It makes use of docker compose to build a mult-node Slurm cluster for use as a
+applications. It makes use of docker compose to build a multi-node Slurm cluster for use as a
 backend for running the applications.  This repository is mounted from the host into the container's
 chiltepin directory.
 
@@ -110,5 +110,5 @@ Once chiltepin has been installed with `pip`, the tests can be run with:
 pytest --assert=plain --config=<config.yaml>
 ```
 
-Where `<config.yaml>` is a configuration file specific to the test platform.  See the examples
-in `tests/chiltepin.yaml`, `tests/ci.yaml`, and `hercules.yaml` for examples.
+Where `<config.yaml>` is a configuration file specific to the test platform.  For examples,
+look in `tests/chiltepin.yaml`, `tests/ci.yaml`, and `hercules.yaml`.
