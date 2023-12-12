@@ -1,5 +1,5 @@
 provider:
-  cores per node: 16
+  cores per node: 2 
   partition: "slurmpar"
   account: ""
 
