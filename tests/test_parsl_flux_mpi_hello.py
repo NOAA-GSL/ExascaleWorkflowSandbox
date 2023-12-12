@@ -34,22 +34,40 @@ def pmi_barrier(stdout=None, stderr=None, env="", parsl_resource_specification={
     flux pmi barrier
     '''.format(env)
 
-# Compile the hello MPI program with GNU and OpenMPI
+# Compile the hello MPI program with environment passed in
 @bash_app
-def compile_app(dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={"num_tasks": 1}):
+def compile_mpi_hello(dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={"num_tasks": 1}):
     return '''
     {}
     cd {}
     $CHILTEPIN_MPIF90 -o mpi_hello.exe mpi_hello.f90
     '''.format(env,dirpath)
 
-# Run the hello MPI program with GNU and OpenMPI
+# Run the hello MPI program with environment passed in
 @bash_app
-def mpi_hello(dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={}):
+def run_mpi_hello(dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={}):
     return '''
     {}
     cd {}
     ./mpi_hello.exe
+    '''.format(env, dirpath)
+
+# Compile the pi approximation MPI program with environment passed in
+@bash_app
+def compile_mpi_pi(dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={"num_tasks": 1}):
+    return '''
+    {}
+    cd {}
+    $CHILTEPIN_MPIF90 -o mpi_pi.exe mpi_pi.f90
+    '''.format(env,dirpath)
+
+# Run the pi approximation MPI program with environment passed in
+@bash_app
+def run_mpi_pi(dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={}):
+    return '''
+    {}
+    cd {}
+    ./mpi_pi.exe
     '''.format(env, dirpath)
 
 # Set up fixture to initialize and cleanup Parsl
@@ -59,48 +77,100 @@ def load_config(config_file, request):
     config, environment = config_factory(yaml_config)
     parsl.load(config)
     request.addfinalizer(parsl.clear)
-    return environment
+    return {"config": config, "environment": environment}
 
 # Test Flux resource list
 def test_flux_resource_list(load_config):
     r = resource_list(stdout=('parsl_flux_resource_list.out', 'w'),
                       stderr=('parsl_flux_resource_list.err', 'w'),
-                      env=load_config).result()
+                      env=load_config["environment"]).result()
     assert r == 0
     
 # Test Flux pmi barrier
 def test_flux_pmi(load_config):
     p = pmi_barrier(stdout=('parsl_flux_pmi_barrier.out', 'w'),
                     stderr=('parsl_flux_pmi_barrier.err', 'w'),
-                    env=load_config,
+                    env=load_config["environment"],
                     parsl_resource_specification={"num_tasks": 6, "num_nodes": 3},
                     ).result()
     assert p == 0
     with open("parsl_flux_pmi_barrier.out", "r") as f:
         assert re.match(r'ƒ\S+: completed pmi barrier on 6 tasks in [0-9.]+s.', f.read())
 
-def test_compile_app(load_config):
+def test_compile_mpi_hello(load_config):
     shared_dir = "./"
-    c = compile_app(dirpath=shared_dir,
-                    stdout=(os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.out"), 'w'),
-                    stderr=(os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.err"), 'w'),
-                    env=load_config,
-                    ).result()
+    c = compile_mpi_hello(dirpath=shared_dir,
+                          stdout=(os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.out"), 'w'),
+                          stderr=(os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.err"), 'w'),
+                          env=load_config["environment"],
+                          ).result()
     assert c == 0
     assert os.path.isfile("mpi_hello.exe")
     assert os.stat("parsl_flux_mpi_hello_compile.out").st_size == 0
 
-def test_mpi_hello(load_config):
+def test_run_mpi_hello(load_config):
     shared_dir = "./"
     # Remove any previous output if necessary
     if os.path.exists("parsl_flux_mpi_hello_run.out"):
         os.remove("parsl_flux_mpi_hello_run.out")
     if os.path.exists("parsl_flux_mpi_hello_run.err"):
         os.remove("parsl_flux_mpi_hello_run.err")
-    hello = mpi_hello(dirpath=shared_dir,
-                      stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
-                      stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err"),
-                      env=load_config,
-                      parsl_resource_specification={"num_tasks": 6, "num_nodes": 3},
-                      ).result()
+    hello = run_mpi_hello(dirpath=shared_dir,
+                          stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
+                          stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err"),
+                          env=load_config["environment"],
+                          parsl_resource_specification={"num_tasks": 6, "num_nodes": 3},
+                          ).result()
     assert hello == 0
+
+def test_compile_mpi_pi(load_config):
+    shared_dir = "./"
+    c = compile_mpi_pi(dirpath=shared_dir,
+                       stdout=(os.path.join(shared_dir, "parsl_flux_mpi_pi_compile.out"), 'w'),
+                       stderr=(os.path.join(shared_dir, "parsl_flux_mpi_pi_compile.err"), 'w'),
+                       env=load_config["environment"],
+                       ).result()
+    assert c == 0
+    assert os.path.isfile("mpi_pi.exe")
+    assert os.stat("parsl_flux_mpi_pi_compile.out").st_size == 0
+
+def test_run_mpi_pi(load_config):
+    shared_dir = "./"
+    # Remove any previous output if necessary
+    if os.path.exists("parsl_flux_mpi_pi1_run.out"):
+        os.remove("parsl_flux_mpi_pi1_run.out")
+    if os.path.exists("parsl_flux_mpi_pi1_run.err"):
+        os.remove("parsl_flux_mpi_pi1_run.err")
+    if os.path.exists("parsl_flux_mpi_pi2_run.out"):
+        os.remove("parsl_flux_mpi_pi2_run.out")
+    if os.path.exists("parsl_flux_mpi_pi2_run.err"):
+        os.remove("parsl_flux_mpi_pi2_run.err")
+    cores_per_node = load_config["config"].executors[0].provider.cores_per_node
+    pi1 = run_mpi_pi(dirpath=shared_dir,
+                     stdout=os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.out"),
+                     stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.err"),
+                     env=load_config["environment"],
+                     parsl_resource_specification={"num_tasks": cores_per_node * 2, "num_nodes": 2},
+                     )
+    pi2 = run_mpi_pi(dirpath=shared_dir,
+                     stdout=os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.out"),
+                     stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.err"),
+                     env=load_config["environment"],
+                     parsl_resource_specification={"num_tasks": cores_per_node, "num_nodes": 1},
+                     )
+    assert pi1.result() == 0
+    assert pi2.result() == 0
+    # Extract the hostnames used by pi1
+    with open("parsl_flux_mpi_pi1_run.out", "r") as f:
+        pi1_hosts=[]
+        for line in f:
+            if re.match(r"Host ", line):
+                pi1_hosts.append(line.split()[1])
+    # Extract the hostnames used by pi2
+    with open("parsl_flux_mpi_pi2_run.out", "r") as f:
+        pi2_hosts=[]
+        for line in f:
+            if re.match(r"Host ", line):
+                pi2_hosts.append(line.split()[1])
+    # Verify each pi test ran on a different set of nodes
+    assert set(pi1_hosts).intersection(pi2_hosts) == set()
