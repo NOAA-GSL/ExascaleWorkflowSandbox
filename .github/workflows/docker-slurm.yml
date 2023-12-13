@@ -44,6 +44,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./docker
+          platforms: linux/amd64,linux/arm64
           file: ./docker/spack-stack/Dockerfile
           push: true
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
@@ -54,7 +55,6 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./docker
-          platforms: linux/amd64,linux/arm64
           file: ./docker/frontend/Dockerfile
           push: false
           load: true
@@ -66,7 +66,6 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./docker
-          platforms: linux/amd64,linux/arm64
           file: ./docker/master/Dockerfile
           push: false
           load: true
@@ -78,7 +77,6 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./docker
-          platforms: linux/amd64,linux/arm64
           file: ./docker/node/Dockerfile
           push: false
           load: true

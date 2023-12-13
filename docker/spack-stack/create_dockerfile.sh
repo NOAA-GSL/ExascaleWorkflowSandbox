@@ -15,6 +15,11 @@ perl -p -i -e "s/variants: \+internal-hwloc \+two_level_namespace/variants: \+in
 # Create the spack-stack Dockerfile
 spack containerize > ../../../Dockerfile
 
+# Implement workarounds so that container can build under qemu
+# See https://github.com/spack/spack/issues/41639
+perl -p -i -e 's:RUN cd /opt/spack-environment && spack env activate:RUN . \$SPACK_ROOT/share/spack/setup-env.sh && cd /opt/spack-environment && spack env activate:g' ../../../Dockerfile
+perl -p -i -e 's:spack env activate --sh:. \$SPACK_ROOT/share/spack/setup-env.sh && \\\n    spack env activate --sh:s' ../../../Dockerfile
+
 # Remove unneeded spack-stack install
 popd
 rm -rf spack-stack
