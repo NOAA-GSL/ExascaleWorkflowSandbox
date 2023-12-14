@@ -1,0 +1,10 @@
+provider:
+  cores per node: 40
+  partition: "hera"
+  account: "gsd-hpcs"
+
+environment:
+  - "module load intel/2022.3.0"
+  - "module load impi/2022.3.0"
+  - "unset I_MPI_PMI_LIBRARY"
+  - "export CHILTEPIN_MPIF90='mpiifort -fc=ifx'"
