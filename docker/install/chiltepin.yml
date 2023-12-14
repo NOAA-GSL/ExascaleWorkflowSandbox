@@ -7,11 +7,11 @@ dependencies:
   - python
   - pytest=7.4.0
   - pip
-  - flux-core
-  - flux-sched
+  - flux-core=0.52.0
+  - flux-sched=0.28.0
   - openmpi
   - openmpi-mpicc
   - openmpi-mpicxx
   - openmpi-mpifort
   - pip:
-    - parsl[monitoring]
+    - parsl[monitoring]==2023.12.4
