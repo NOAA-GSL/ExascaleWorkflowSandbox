@@ -9,7 +9,7 @@ on:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu2204-8c-32g-300ssd
     timeout-minutes: 720
     steps:
       -
