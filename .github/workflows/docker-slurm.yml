@@ -22,6 +22,11 @@ jobs:
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
       -
+        name: Check architecture
+        run: |
+          uname -a
+          ls foobar
+      -
         name: Setup Docker/Colima
         run: |
           sudo chmod ugo+w /usr/local/bin
