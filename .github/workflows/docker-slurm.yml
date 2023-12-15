@@ -29,7 +29,7 @@ jobs:
         name: Setup Docker/Colima
         run: |
           brew install docker docker-compose colima lima
-          brew services start colima
+          /opt/homebrew/opt/colima/bin/colima start -f
 #      -
 #        name: Set up Docker Buildx
 #        uses: docker/setup-buildx-action@v2
