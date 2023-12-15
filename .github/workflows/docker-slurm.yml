@@ -9,7 +9,7 @@ on:
 
 jobs:
   docker:
-    runs-on: ubuntu2204-64c-256g-2040ssd
+    runs-on: macos-latest-large
     timeout-minutes: 720
     steps:
       -
