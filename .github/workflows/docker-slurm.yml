@@ -21,9 +21,7 @@ jobs:
       -
         name: Setup Docker/Colima
         run: |
-          brew install --HEAD colima
-          colima start
-          brew install docker
+          brew install docker docker-compose lima
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
