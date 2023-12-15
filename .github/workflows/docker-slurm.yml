@@ -28,8 +28,11 @@ jobs:
       -
         name: Setup Docker/Colima
         run: |
-          brew install docker docker-compose colima lima
-          /opt/homebrew/opt/colima/bin/colima start -f
+          brew install docker docker-compose colima
+          export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
+          brew update
+          brew reinstall qemu
+          /opt/homebrew/opt/colima/bin/colima start -f --arch aarch64
 #      -
 #        name: Set up Docker Buildx
 #        uses: docker/setup-buildx-action@v2
