@@ -18,9 +18,9 @@ jobs:
 #      -
 #        name: Set up QEMU
 #        uses: docker/setup-qemu-action@v3
-      - name: Set up Homebrew
-        id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+#      - name: Set up Homebrew
+#        id: set-up-homebrew
+#        uses: Homebrew/actions/setup-homebrew@master
       -
         name: Check architecture
         run: |
