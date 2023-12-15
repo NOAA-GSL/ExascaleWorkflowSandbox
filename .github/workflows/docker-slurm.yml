@@ -9,7 +9,7 @@ on:
 
 jobs:
   docker:
-    runs-on: macos-latest-large
+    runs-on: macos-latest-xlarge
     timeout-minutes: 720
     steps:
       -
