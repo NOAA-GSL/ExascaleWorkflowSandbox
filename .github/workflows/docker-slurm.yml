@@ -21,6 +21,7 @@ jobs:
       -
         name: Setup Docker/Colima
         run: |
+          brew install --HEAD colima
           brew install docker
           colima start
       -
