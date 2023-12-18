@@ -123,6 +123,12 @@ def test_run_mpi_hello(load_config):
                           ).result()
     assert hello == 0
 
+    with open('parsl_flux_mpi_hello_run.out', 'r') as f:
+        print("file", f.read())
+        for line in f:
+            assert re.match(r'ƒ\S+: Hello world from host -\S+, rank \d+ out of 6.', f.read())
+
+
 def test_compile_mpi_pi(load_config):
     shared_dir = "./"
     c = compile_mpi_pi(dirpath=shared_dir,
