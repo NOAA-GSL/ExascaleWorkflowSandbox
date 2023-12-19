@@ -5,3 +5,14 @@
 # Ignore Python artifacts
 __pycache__
 *.egg-info
+
+
+# Ignore test output
+tests/flux_*
+tests/runinfo
+tests/*.exe
+tests/*.err
+tests/*.out
+tests/core.*
+*.swp
+runinfo/
