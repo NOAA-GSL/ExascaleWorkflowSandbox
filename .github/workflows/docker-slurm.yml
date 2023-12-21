@@ -32,9 +32,12 @@ jobs:
           docker image prune -a -f
           docker images
       -
-        name: Create spack-stack Dockerfile
+        name: Create spack-stack Dockerfile and mirror
         run: |
+          export GITHUB_USER=${{ github.actor }}
+          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
           cd docker/spack-stack
+          cat mirrors.in.yaml | envsubst > mirrors.yaml
           ./create_dockerfile.sh
       -
         name: Build spack-stack
@@ -42,6 +45,7 @@ jobs:
         with:
           context: ./docker
           file: ./docker/spack-stack/Dockerfile
+          secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
           push: true
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache
