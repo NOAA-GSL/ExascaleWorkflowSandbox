@@ -88,10 +88,9 @@ def test_flux_resource_list(load_config):
 
     pattern = re.compile(
       r'(\s+)STATE(\s+)NNODES(\s+)NCORES(\s+)NGPUS(\s+)NODELIST\n'
-      r'(\s+)free(\s+)(\d+)(\s+)(\d+)(\s+)(0)(\s+)(\S+)\n'
+      r'(\s+)free(\s+)(3)(\s+)(\d+)(\s+)(0)(\s+)(\S+)\n'
       r'(\s+)allocated(\s+)(1)(\s+)(1)(\s+)(0)(\s+)(\S+)\n'
-      r'(\s+)down(\s+)(0)(\s+)(0)(\s+)(0)'
-      r'.*\n',
+      r'(\s+)down(\s+)(0)(\s+)(0)(\s+)(0)',
     re.DOTALL)
 
     with open("parsl_flux_resource_list.out", "r") as f:
