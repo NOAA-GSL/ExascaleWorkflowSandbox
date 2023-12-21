@@ -85,6 +85,16 @@ def test_flux_resource_list(load_config):
                       stderr=('parsl_flux_resource_list.err', 'w'),
                       env=load_config["environment"]).result()
     assert r == 0
+
+    pattern = re.compile(
+      r'(\s+)STATE(\s+)NNODES(\s+)NCORES(\s+)NGPUS(\s+)NODELIST\n'
+      r'(\s+)free(\s+)(3)(\s+)(\d+)(\s+)(0)(\s+)(\S+)\n'
+      r'(\s+)allocated(\s+)(1)(\s+)(1)(\s+)(0)(\s+)(\S+)\n'
+      r'(\s+)down(\s+)(0)(\s+)(0)(\s+)(0)',
+    re.DOTALL)
+
+    with open("parsl_flux_resource_list.out", "r") as f:
+        assert pattern.match(f.read())
     
 # Test Flux pmi barrier
 def test_flux_pmi(load_config):
