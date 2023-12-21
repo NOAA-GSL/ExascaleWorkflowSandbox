@@ -122,6 +122,9 @@ def test_run_mpi_hello(load_config):
                           parsl_resource_specification={"num_tasks": 6, "num_nodes": 3},
                           ).result()
     assert hello == 0
+    with open('parsl_flux_mpi_hello_run.out', 'r') as f:
+        for line in f:
+            assert re.match(r'Hello world from host \S+, rank \d+ out of 6', line)
 
     with open('parsl_flux_mpi_hello_run.out', 'r') as f:
         for line in f:

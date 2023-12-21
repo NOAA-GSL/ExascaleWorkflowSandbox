@@ -1,7 +1,17 @@
 # Ignore Emacs backup files
-*~
 *#
+*~
 
 # Ignore Python artifacts
-__pycache__
 *.egg-info
+__pycache__
+
+# Ignore test output
+*.swp
+runinfo/
+tests/*.err
+tests/*.exe
+tests/*.out
+tests/core.*
+tests/flux_*
+tests/runinfo
