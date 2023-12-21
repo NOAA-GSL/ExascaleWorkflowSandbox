@@ -12,6 +12,9 @@ spack stack create ctr --container=docker-ubuntu-gcc-openmpi --specs=jedi-ci
 cd envs/docker-ubuntu-gcc-openmpi
 perl -p -i -e "s/variants: \+internal-hwloc \+two_level_namespace/variants: \+internal-hwloc \+two_level_namespace \~static/g" spack.yaml
 
+# Modify spack.yaml to increase parallelism
+perl -p -i -e "s/build_jobs: 2/build_jobs: 16/g" spack.yaml
+
 # Create the spack-stack Dockerfile
 spack containerize > ../../../Dockerfile
 
