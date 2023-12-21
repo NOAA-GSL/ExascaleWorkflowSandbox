@@ -86,7 +86,14 @@ def test_flux_resource_list(load_config):
                       env=load_config["environment"]).result()
     assert r == 0
 
-    pattern = re.compile(r'.*', re.DOTALL)
+    pattern = re.compile(
+      r'(\s+)STATE(\s+)NNODES(\s+)NCORES(\s+)NGPUS(\s+)NODELIST\n'
+      r'(\s+)free(\s+)(\d+)(\s+)(\d+)(\s+)(\d+)(\s+)(\S+)\n'
+      r'(\s+)allocated(\s+)(\d+)(\s+)(\d+)(\s+)(\d+)(\s+)(\S+)\n'
+      r'(\s+)down(\s+)(\d+)(\s+)(\d+)(\s+)(\d+)'
+      r'.*\n',
+    re.DOTALL)
+
     with open("parsl_flux_resource_list.out", "r") as f:
         assert pattern.match(f.read())
     
