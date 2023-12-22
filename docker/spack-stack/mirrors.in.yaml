@@ -1,6 +1,3 @@
 mirrors:
   ghcr_registry:
     url: oci://ghcr.io/v2/noaa-gsl/exascaleworkflowsandbox/spack-stack-build-cache-x86
-    access_pair:
-      - $GITHUB_USER
-      - $GITHUB_TOKEN
