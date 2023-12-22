@@ -39,7 +39,7 @@ jobs:
         name: Create spack-stack Dockerfile and mirror
         run: |
           export GITHUB_USER=${{ github.actor }}
-          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          export GITHUB_TOKEN=${{ secrets.GHCR_TOKEN }}
           cd docker/spack-stack
           cat mirrors.in.yaml | envsubst > mirrors.yaml
           ./create_dockerfile.sh
