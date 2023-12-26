@@ -30,5 +30,5 @@ perl -p -i -e 's:foobar2:cd /opt/spack-environment:s' Dockerfile
 perl -p -i -e 's:foobar3:\. \$SPACK_ROOT/share/spack/setup-env.sh:s' Dockerfile
 perl -p -i -e 's:foobar4:spack env activate \.:s' Dockerfile
 perl -p -i -e 's:foobar5:spack install --fail-fast --no-check-signature:s' Dockerfile
-perl -p -i -e 's:foobar6:spack buildcache push --unsigned ghcr_registry:s' Dockerfile
+perl -p -i -e 's:foobar6:spack buildcache push --unsigned --update-index s3_spack_stack_buildcache:s' Dockerfile
 perl -p -i -e 's:foobar7:spack gc -y:s' Dockerfile

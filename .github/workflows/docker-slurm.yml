@@ -38,8 +38,8 @@ jobs:
       -
         name: Create spack-stack Dockerfile and mirror
         run: |
-          export GITHUB_USER=${{ github.actor }}
-          export GITHUB_TOKEN=${{ secrets.GHCR_TOKEN }}
+          export S3_BUILD_CACHE_KEY=${{ secrets.SPACK_STACK_BUILDCACHE_KEY.actor }}
+          export S3_BUILD_CACHE_SECRET_KEY=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}
           cd docker/spack-stack
           cat mirrors.in.yaml | envsubst > mirrors.yaml
           ./create_dockerfile.sh

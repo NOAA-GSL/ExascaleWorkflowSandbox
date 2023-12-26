@@ -1,6 +1,6 @@
 mirrors:
-  ghcr_registry:
-    url: oci://ghcr.io/v2/noaa-gsl/exascaleworkflowsandbox/spack-stack-build-cache-x86
+  s3_spack_stack_buildcache:
+    url: s3://spack-stack-bulid-cache/ubuntu-x86
     access_pair:
-      - $GITHUB_USER
-      - $GITHUB_TOKEN
+      - $S3_BUILD_CACHE_KEY
+      - $S3_BUILD_CACHE_SECRET_KEY
