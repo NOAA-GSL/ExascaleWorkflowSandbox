@@ -22,13 +22,24 @@ spack containerize > ../../../Dockerfile
 popd
 rm -rf spack-stack
 
-# Modify the Dockerfile to use buildcache mirror at our ghcr
-perl -p -i -e 's:cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y:foobar:g' Dockerfile
-perl -p -i -e 's:foobar:foobar1 \\\n    foobar2 \\\n&&  foobar3 \\\n&&  foobar4 \\\n&&  foobar5 \\\n&&  foobar6 \\\n&&  foobar7\n:g' Dockerfile
-perl -p -i -e 's:foobar1:--mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml:g' Dockerfile
-perl -p -i -e 's:foobar2:cd /opt/spack-environment:s' Dockerfile
-perl -p -i -e 's:foobar3:\. \$SPACK_ROOT/share/spack/setup-env.sh:s' Dockerfile
-perl -p -i -e 's:foobar4:spack env activate \.:s' Dockerfile
-perl -p -i -e 's:foobar5:spack install --fail-fast --no-check-signature:s' Dockerfile
-perl -p -i -e 's:foobar6:spack buildcache push --unsigned --update-index s3_spack_stack_buildcache:s' Dockerfile
-perl -p -i -e 's:foobar7:spack gc -y:s' Dockerfile
+# Create spack build command patch
+export docker_patch=$(
+cat<<'END_HEREDOC'
+RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml <<EOF
+  set -e
+  cd /opt/spack-environment
+  . $SPACK_ROOT/share/spack/setup-env.sh
+  spack env activate .
+  spack mirror add --s3-access-key-id "" --s3-access-key-secret "" s3_spack_stack_buildcache_ro s3://spack-stack-bulid-cache/ubuntu-x86
+  spack install --fail-fast --no-check-signature
+  spack mirror list
+  if [ "$(spack mirror list | wc -l)" = "3" ]; then
+    spack buildcache push --unsigned --update-index s3_spack_stack_buildcache_rw
+  fi
+  spack gc -y
+EOF
+END_HEREDOC
+)
+
+# Patch the Dockerfile to use buildcache mirrors on AWS S3
+perl -p -i -e 's:RUN cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y:$ENV{docker_patch}:g' Dockerfile

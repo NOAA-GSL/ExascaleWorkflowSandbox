@@ -1,5 +1,5 @@
 mirrors:
-  s3_spack_stack_buildcache:
+  s3_spack_stack_buildcache_rw:
     url: s3://spack-stack-bulid-cache/ubuntu-x86
     access_pair:
       - $S3_BUILD_CACHE_KEY
