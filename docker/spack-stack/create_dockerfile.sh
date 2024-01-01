@@ -48,7 +48,9 @@ rm -rf spack-stack
 # Create spack build command patch
 export docker_patch=$(
 cat<<'END_HEREDOC'
-RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml <<EOF
+RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml \
+    --mount=type=secret,id=spack_stack_buildcache_key \
+    --mount=type=secret,id=spack_stack_buildcache_secret_key <<EOF
   set -e
   cd /opt/spack-environment
   . $SPACK_ROOT/share/spack/setup-env.sh
@@ -58,6 +60,8 @@ RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml <<EO
   python -m pip install parsl[monitoring]==2023.12.4
   spack mirror list
   if [ "$(spack mirror list | wc -l)" = "3" ]; then
+    export AWS_ACCESS_KEY_ID=$(cat /run/secrets/spack_stack_buildcache_key)
+    export AWS_SECRET_ACCESS_KEY=$(cat /run/secrets/spack_stack_buildcache_secret_key)
     spack buildcache push --unsigned --update-index s3_spack_stack_buildcache_rw
   fi
   spack gc -y

@@ -50,6 +50,9 @@ jobs:
           context: ./docker
           file: ./docker/spack-stack/Dockerfile
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
+          secrets: |
+            "aws_access_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
+            "aws_secret_access_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
           push: true
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache
