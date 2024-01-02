@@ -107,10 +107,10 @@ jobs:
           docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
       -
         name: Install chiltepin package
-        run: docker exec frontend bash -l -c "conda activate chiltepin ; cd work ; pip install -e ."
+        run: docker exec frontend bash -l -c "cd work ; pip install -e ."
       -
         name: Run test suite
-        run: docker exec frontend bash -l -c "conda activate chiltepin ; cd work/tests ; pytest --assert=plain --config=ci.yaml"
+        run: docker exec frontend bash -l -c "cd work/tests ; pytest --assert=plain --config=ci.yaml"
       -
         name: Debug session
         if: ${{ failure() }}
