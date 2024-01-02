@@ -50,6 +50,9 @@ jobs:
           context: ./docker
           file: ./docker/spack-stack/Dockerfile
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
+          secrets: |
+            "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
+            "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
           push: true
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache
@@ -104,10 +107,10 @@ jobs:
           docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
       -
         name: Install chiltepin package
-        run: docker exec frontend bash -l -c "conda activate chiltepin ; cd work ; pip install -e ."
+        run: docker exec frontend bash -l -c "cd work ; pip install -e ."
       -
         name: Run test suite
-        run: docker exec frontend bash -l -c "conda activate chiltepin ; cd work/tests ; pytest --assert=plain --config=ci.yaml"
+        run: docker exec frontend bash -l -c "cd work/tests ; pytest --assert=plain --config=ci.yaml"
       -
         name: Debug session
         if: ${{ failure() }}
