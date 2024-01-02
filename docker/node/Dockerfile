@@ -36,7 +36,6 @@ RUN apt-get -yqq update && apt-get -yqq upgrade && apt-get -yqq install \
     wget \
  && rm -rf /var/lib/apt/lists/*
 
-COPY ./install/conda_init.sh /tmp/conda_init.sh
-
-RUN cat /tmp/conda_init.sh >> /home/admin/.bashrc \
- && cat /tmp/conda_init.sh >> /home/admin/.bash_profile
+# Set up spack-stack environment
+RUN echo ". /opt/spack-environment/activate.sh" >> /home/admin/.bashrc \
+ && echo ". /opt/spack-environment/activate.sh" >> /home/admin/.bash_profile
