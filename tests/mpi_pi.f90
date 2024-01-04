@@ -30,7 +30,7 @@ program calculatePi
 
   if (worldRank == 0) then
     call date_and_time(VALUES=timeValues)
-    write(*,"(A,I2.2,A,I2.2,A,I4,A,I2,A,I2,A,I2.2)") "End Time = ", timeValues(3), "/", timeValues(2), "/", timeValues(3), " ", timeValues(5), ":", timeValues(6), ":", timeValues(7)
+    write(*,"(A,I2.2,A,I2.2,A,I4,A,I2,A,I2,A,I2.2)") "Start Time = ", timeValues(3), "/", timeValues(2), "/", timeValues(3), " ", timeValues(5), ":", timeValues(6), ":", timeValues(7)
   end if
 
   ! Initialize the random number seed
@@ -67,7 +67,7 @@ program calculatePi
 
   if (worldRank == 0) then
     call date_and_time(VALUES=timeValues)
-   write(*,"(A,I2.2,A,I2.2,A,I4,A,I2,A,I2,A,I2.2)") "End Time = ", timeValues(3), "/", timeValues(2), "/", timeValues(3), " ", timeValues(5), ":", timeValues(6), ":", timeValues(7)
+    write(*,"(A,I2.2,A,I2.2,A,I4,A,I2,A,I2,A,I2.2)") "End Time = ", timeValues(3), "/", timeValues(2), "/", timeValues(3), " ", timeValues(5), ":", timeValues(6), ":", timeValues(7)
   end if
 
   ! Finalize the MPI environment.
