@@ -36,7 +36,7 @@ the Docker container.
 ## Install the Chiltepin spack environment
 
 The Flux packages must be installed with Spack.  A convenience installation
-script is provided which installs spack and uses it to build the chiltepin
+script is provided which installs spack and then builds the chiltepin
 environment containing the flux packages as well as pytest and parsl.
 
 ```
@@ -44,13 +44,13 @@ cd install
 ./install.sh
 ```
 
-## Activate the chiltepin spack environment
+## Activate the Chiltepin spack environment
 
-After the chiltepin spack environment is built it must be activated. Whilte
+After the chiltepin spack environment is built it must be activated. While
 the installation step above need only be done once, this step must be done
 in each new shell where you want to use Chiltepin.  This step is very
-similar to activation of conda environments.  First spack must be
-initialized, then the activation command can be run.
+similar to activation of conda environments.  First, spack must be
+initialized, and then the environment activation command can be run.
 
 ```
 cd install
@@ -59,7 +59,7 @@ spack env activate chiltepin
 
 ```
 
-## Building and running Chiltepin container
+## Building and running the Chiltepin container
 
 Chiltepin provides a Docker container environment for building and running Parsl and Chiltepin
 applications. It makes use of docker compose to build a multi-node Slurm cluster for use as a
@@ -79,7 +79,7 @@ To use the container after it is built and up, log in with a bash shell:
 docker exec -it frontend bash -l
 ```
 
-Once in the container, you can install chiltepin in editable mode, and run the tests
+Once in the container, you can install Chiltepin in editable mode, and run the tests
 
 ```
 cd chiltepin
@@ -94,7 +94,7 @@ your machine's specifications to get all tests to pass.
 
 # Running Parsl apps
 
-If running Chiltepin in the container, the the Chiltepin spack environment is activated
+If running Chiltepin in the container, the Chiltepin spack environment is activated
 automatically when logging in to the front-end node.  If running on an HPC, it must be
 activated  manually to run Parsl Chiltepin applications
 
@@ -113,7 +113,7 @@ cd <repository root>
 pip install -e .
 ```
 
-Once chiltepin has been installed with `pip`, the tests can be run with:
+Once Chiltepin has been installed with `pip`, the tests can be run with:
 
 ```
 pytest --assert=plain --config=<config.yaml>
