@@ -33,23 +33,30 @@ because the Flux scheduler does not support MacOS.  It can be used, however,
 on Macs in a container.  See below for instructions for building and using
 the Docker container.
 
-## Install the Chiltepin conda environment
+## Install the Chiltepin spack environment
 
-You will need a conda (miniconda3, anaconda, conda-forge, etc) installation.
-If you do not have one, you can use the script included in the docker directory
-to install it:
-
-```
-cd docker/install
-./install_miniconda.sh <installation path>
-```
-
-The chiltepin conda environment can be installed using the environment
-configuration in the docker directory:
+The Flux packages must be installed with Spack.  A convenience installation
+script is provided which installs spack and uses it to build the chiltepin
+environment containing the flux packages as well as pytest and parsl.
 
 ```
-cd docker/install
-conda env create --name chiltepin --file chiltepin.yml
+cd install
+./install.sh
+```
+
+## Activate the chiltepin spack environment
+
+After the chiltepin spack environment is built it must be activated. Whilte
+the installation step above need only be done once, this step must be done
+in each new shell where you want to use Chiltepin.  This step is very
+similar to activation of conda environments.  First spack must be
+initialized, then the activation command can be run.
+
+```
+cd install
+. spack/share/spack/setup-env.sh
+spack env activate chiltepin
+
 ```
 
 ## Building and running Chiltepin container
@@ -72,11 +79,9 @@ To use the container after it is built and up, log in with a bash shell:
 docker exec -it frontend bash -l
 ```
 
-Once in the container, you can activate the chiltepin environment, install chiltepin in
-editable mode, and run the tests
+Once in the container, you can install chiltepin in editable mode, and run the tests
 
 ```
-conda activate chiltepin
 cd chiltepin
 pip install -e .
 cd tests
@@ -89,10 +94,14 @@ your machine's specifications to get all tests to pass.
 
 # Running Parsl apps
 
-The Chiltepin conda environment must be activated to run Parsl Chiltepin applications
+If running Chiltepin in the container, the the Chiltepin spack environment is activated
+automatically when logging in to the front-end node.  If running on an HPC, it must be
+activated  manually to run Parsl Chiltepin applications
 
 ```
-conda activate chiltepin
+cd install
+. spack/share/spack/setup-env.sh
+spack env activate chiltepin
 ```
 
 # Running the test suite
@@ -111,4 +120,9 @@ pytest --assert=plain --config=<config.yaml>
 ```
 
 Where `<config.yaml>` is a configuration file specific to the test platform.  For examples,
-look in `tests/chiltepin.yaml`, `tests/ci.yaml`, and `hercules.yaml`.
+look in one of the following:
+
+1. `tests/chiltepin.yaml`
+2. `tests/ci.yaml`
+3. `tests/hercules.yaml`
+3. `tests/hera.yaml`
