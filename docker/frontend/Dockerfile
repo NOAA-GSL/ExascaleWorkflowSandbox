@@ -44,23 +44,6 @@ COPY --from=JEDI /opt/view /opt/view
 COPY --from=JEDI /opt/views /opt/views
 COPY --from=JEDI /opt/spack-environment /opt/spack-environment
 
-# Copy conda and jedi init scripts
-COPY ./install/jedi_init.sh /opt/jedi_init.sh
-COPY ./install/conda_init.sh /tmp/conda_init.sh
-
-# Copy conda install scripts
-COPY ./install/install_miniconda.sh /tmp/install_miniconda.sh
-COPY ./install/chiltepin.yml /tmp/chiltepin.yml
-
-RUN mkdir -p /opt/admin \
- && chown admin:admin /opt/admin
-
-USER admin
-
-# Install Miniconda3 and chiltepin environment
-RUN cd /tmp \
- && ./install_miniconda.sh /opt/admin/miniconda3 \
- && . /tmp/conda_init.sh \
- && conda env create --name chiltepin --file chiltepin.yml \
- && conda clean -afy \
- && cat /tmp/conda_init.sh >> /home/admin/.bash_profile
+# Set up spack-stack environment
+RUN echo ". /opt/spack-environment/activate.sh" >> /home/admin/.bashrc \
+ && echo ". /opt/spack-environment/activate.sh" >> /home/admin/.bash_profile
