@@ -105,7 +105,7 @@ def test_flux_pmi(load_config):
                     ).result()
     assert p == 0
     with open("parsl_flux_pmi_barrier.out", "r") as f:
-        assert re.match(r'ƒ\S+: completed pmi barrier on 6 tasks in [0-9.]+s.', f.read())
+        assert re.match(r'[fƒ]\S+: completed pmi barrier on 6 tasks in [0-9.]+s.', f.read())
 
 def test_compile_mpi_hello(load_config):
     shared_dir = "./"
@@ -135,6 +135,11 @@ def test_run_mpi_hello(load_config):
     with open('parsl_flux_mpi_hello_run.out', 'r') as f:
         for line in f:
             assert re.match(r'Hello world from host \S+, rank \d+ out of 6', line)
+
+    with open('parsl_flux_mpi_hello_run.out', 'r') as f:
+        for line in f:
+            assert re.match(r'Hello world from host \S+, rank \d+ out of 6', line)
+
 
 def test_compile_mpi_pi(load_config):
     shared_dir = "./"

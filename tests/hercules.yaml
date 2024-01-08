@@ -1,10 +1,16 @@
 provider:
-  cores per node: 20
+  cores per node: 80
   partition: "hercules"
   account: "gsd-hpcs"
 
 environment:
-  - "module load intel-oneapi-compilers/2023.1.0"
-  - "module load intel-oneapi-mpi/2021.7.1"
+  - "module purge"
+  - "module use /work/noaa/epic/role-epic/spack-stack/hercules/modulefiles"
+  - "module load ecflow/5.8.4"
+  - "module load mysql/8.0.31"
+  - "module use /work/noaa/epic/role-epic/spack-stack/hercules/spack-stack-1.5.1/envs/unified-env/install/modulefiles/Core"
+  - "module load stack-intel/2021.9.0"
+  - "module load stack-intel-oneapi-mpi/2021.9.0"
+  - "module load stack-python/3.10.8"
   - "unset I_MPI_PMI_LIBRARY"
-  - "export CHILTEPIN_MPIF90='mpiifort -fc=ifx'"
+  - "export CHILTEPIN_MPIF90=$MPIF90"

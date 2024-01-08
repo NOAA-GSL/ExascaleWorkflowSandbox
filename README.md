@@ -33,26 +33,57 @@ because the Flux scheduler does not support MacOS.  It can be used, however,
 on Macs in a container.  See below for instructions for building and using
 the Docker container.
 
-## Install the Chiltepin conda environment
+## Dependencies
 
-You will need a conda (miniconda3, anaconda, conda-forge, etc) installation.
-If you do not have one, you can use the script included in the docker directory
-to install it:
+Installation and use of Chiltepin requires Python version 3.6 or higher.
 
-```
-cd docker/install
-./install_miniconda.sh <installation path>
-```
+Additionally, in order to take advantage of buildcache mirrors for faster
+installation, the boto3 Python package is required.  Installation will work
+without boto3, but will require the Chiltepin dependencies to be built from
+scratch instead of being pulled from the buildcache.
 
-The chiltepin conda environment can be installed using the environment
-configuration in the docker directory:
+NOTE: For Python 3.6, `botocore 1.25.0` is required:
 
 ```
-cd docker/install
-conda env create --name chiltepin --file chiltepin.yml
+python3 -m pip install --user boto3==1.23.10 botocore==1.25.0
 ```
 
-## Building and running Chiltepin container
+For Python 3.7+ it should be sufficient to install the latest boto3
+
+```
+python3 -m pip install --user boto3
+```
+
+Alternatively, users can install their own Python using something like
+miniconda3 or make use of virtual environments as appropriate.
+
+## Install the Chiltepin spack environment
+
+The Flux packages must be installed with Spack.  A convenience installation
+script is provided which installs spack and then builds the chiltepin
+environment containing the flux packages as well as pytest and parsl.
+
+```
+cd install
+./install.sh
+```
+
+## Activate the Chiltepin spack environment
+
+After the chiltepin spack environment is built it must be activated. While
+the installation step above needs to be done only once, this step must be
+done in each new shell where you want to use Chiltepin.  This step is very
+similar to activation of conda environments.  First, spack must be
+initialized, and then the environment activation command can be run.
+
+```
+cd install
+. spack/share/spack/setup-env.sh
+spack env activate chiltepin
+
+```
+
+## Building and running the Chiltepin container
 
 Chiltepin provides a Docker container environment for building and running Parsl and Chiltepin
 applications. It makes use of docker compose to build a multi-node Slurm cluster for use as a
@@ -72,11 +103,9 @@ To use the container after it is built and up, log in with a bash shell:
 docker exec -it frontend bash -l
 ```
 
-Once in the container, you can activate the chiltepin environment, install chiltepin in
-editable mode, and run the tests
+Once in the container, you can install Chiltepin in editable mode, and run the tests
 
 ```
-conda activate chiltepin
 cd chiltepin
 pip install -e .
 cd tests
@@ -89,10 +118,14 @@ your machine's specifications to get all tests to pass.
 
 # Running Parsl apps
 
-The Chiltepin conda environment must be activated to run Parsl Chiltepin applications
+If running Chiltepin in the container, the Chiltepin spack environment is activated
+automatically when logging in to the front-end node.  If running on an HPC, it must be
+activated  manually to run Parsl Chiltepin applications
 
 ```
-conda activate chiltepin
+cd install
+. spack/share/spack/setup-env.sh
+spack env activate chiltepin
 ```
 
 # Running the test suite
@@ -104,11 +137,16 @@ cd <repository root>
 pip install -e .
 ```
 
-Once chiltepin has been installed with `pip`, the tests can be run with:
+Once Chiltepin has been installed with `pip`, the tests can be run with:
 
 ```
 pytest --assert=plain --config=<config.yaml>
 ```
 
 Where `<config.yaml>` is a configuration file specific to the test platform.  For examples,
-look in `tests/chiltepin.yaml`, `tests/ci.yaml`, and `hercules.yaml`.
+look in one of the following:
+
+1. `tests/chiltepin.yaml`
+2. `tests/ci.yaml`
+3. `tests/hercules.yaml`
+3. `tests/hera.yaml`
