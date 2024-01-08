@@ -71,8 +71,8 @@ cd install
 ## Activate the Chiltepin spack environment
 
 After the chiltepin spack environment is built it must be activated. While
-the installation step above need only be done once, this step must be done
-in each new shell where you want to use Chiltepin.  This step is very
+the installation step above needs to be done only once, this step must be
+done in each new shell where you want to use Chiltepin.  This step is very
 similar to activation of conda environments.  First, spack must be
 initialized, and then the environment activation command can be run.
 
