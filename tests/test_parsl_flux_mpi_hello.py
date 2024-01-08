@@ -187,3 +187,21 @@ def test_run_mpi_pi(load_config):
                 pi2_hosts.append(line.split()[1])
     # Verify each pi test ran on a different set of nodes
     assert set(pi1_hosts).intersection(pi2_hosts) == set()
+
+    with open("parsl_flux_mpi_pi1_run.out", "r") as pi1: 
+        for line in pi1:
+            if re.match(r"Start Time ", line):
+                print(line.strip("="))
+                pi1_start_time = line.strip("=")
+            if re.match(r"End Time ", line):
+                print(line.strip("=").lstrip())
+                pi1_end_time = line
+
+    with open("parsl_flux_mpi_pi2_run.out", "r") as pi2: 
+        for line in pi2:
+            if re.match(r"Start Time ", line):
+                print(line.strip("=").lstrip())
+                pi2_start_time = line
+            if re.match(r"End Time ", line):
+                print(line.strip("=").lstrip())
+                pi2_end_time = line
