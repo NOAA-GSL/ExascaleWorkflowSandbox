@@ -1,4 +1,5 @@
 import os
+from datetime import datetime as dt
 import parsl
 from parsl.app.app import python_app, bash_app
 import pytest
@@ -191,17 +192,18 @@ def test_run_mpi_pi(load_config):
     with open("parsl_flux_mpi_pi1_run.out", "r") as pi1: 
         for line in pi1:
             if re.match(r"Start Time ", line):
-                print(line.strip("="))
-                pi1_start_time = line.strip("=")
+                line = line.strip().lstrip("Start Time = ")
+                pi1_start_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
             if re.match(r"End Time ", line):
-                print(line.strip("=").lstrip())
-                pi1_end_time = line
+                line = line.strip().lstrip("End Time = ")
+                pi1_start_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
 
     with open("parsl_flux_mpi_pi2_run.out", "r") as pi2: 
         for line in pi2:
             if re.match(r"Start Time ", line):
-                print(line.strip("=").lstrip())
-                pi2_start_time = line
+                line = line.strip().lstrip("Start Time = ")
+                pi2_start_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
             if re.match(r"End Time ", line):
-                print(line.strip("=").lstrip())
-                pi2_end_time = line
+                line = line.strip().lstrip("End Time = ")
+                pi2_start_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
+    assert pi1_start_time < pi2_start_time and pi2_start_time < pi1_end_time
