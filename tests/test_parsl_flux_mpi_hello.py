@@ -196,7 +196,7 @@ def test_run_mpi_pi(load_config):
                 pi1_start_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
             if re.match(r"End Time ", line):
                 line = line.strip().lstrip("End Time = ")
-                pi1_start_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
+                pi1_end_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
 
     with open("parsl_flux_mpi_pi2_run.out", "r") as pi2: 
         for line in pi2:
@@ -205,5 +205,5 @@ def test_run_mpi_pi(load_config):
                 pi2_start_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
             if re.match(r"End Time ", line):
                 line = line.strip().lstrip("End Time = ")
-                pi2_start_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
+                pi2_end_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
     assert pi1_start_time < pi2_start_time and pi2_start_time < pi1_end_time
