@@ -33,6 +33,30 @@ because the Flux scheduler does not support MacOS.  It can be used, however,
 on Macs in a container.  See below for instructions for building and using
 the Docker container.
 
+## Dependencies
+
+Installation and use of Chiltepin requires Python version 3.6 or higher.
+
+Additionally, in order to take advantage of buildcache mirrors for faster
+installation, the boto3 Python package is required.  Installation will work
+without boto3, but will require the Chiltepin dependencies to be built from
+scratch instead of being pulled from the buildcache.
+
+NOTE: For Python 3.6, `botocore 1.25.0` is required:
+
+```
+python3 -m pip install --user boto3==1.23.10 botocore==1.25.0
+```
+
+For Python 3.7+ it should be sufficient to install the latest boto3
+
+```
+python3 -m pip install --user boto3
+```
+
+Alternatively, users can install their own Python using something like
+miniconda3 or make use of virtual environments as appropriate.
+
 ## Install the Chiltepin spack environment
 
 The Flux packages must be installed with Spack.  A convenience installation
