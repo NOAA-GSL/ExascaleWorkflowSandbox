@@ -4,6 +4,6 @@ provider:
   account: ""
 
 environment:
-  - "export FLUX_PMI_LIBRARY_PATH=/opt/views/._view/lfvnahtxguhhjzbyvbk3ozvij43h244n/lib/flux/libpmi.so"
+  - "export FLUX_PMI_LIBRARY_PATH=/opt/view/lib/flux/libpmi.so"
   - "export OMPI_MCA_btl=self,tcp"
   - "export CHILTEPIN_MPIF90=mpif90"
