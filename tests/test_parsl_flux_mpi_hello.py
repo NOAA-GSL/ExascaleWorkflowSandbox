@@ -206,4 +206,4 @@ def test_run_mpi_pi(load_config):
             if re.match(r"End Time ", line):
                 line = line.strip().lstrip("End Time = ")
                 pi2_end_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
-    assert pi1_start_time < pi2_start_time and pi2_start_time < pi1_end_time
+    assert pi1_start_time < pi2_end_time and pi2_start_time < pi1_end_time
