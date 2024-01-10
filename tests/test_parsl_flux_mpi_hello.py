@@ -189,21 +189,17 @@ def test_run_mpi_pi(load_config):
     # Verify each pi test ran on a different set of nodes
     assert set(pi1_hosts).intersection(pi2_hosts) == set()
 
-    with open("parsl_flux_mpi_pi1_run.out", "r") as pi1: 
-        for line in pi1:
-            if re.match(r"Start Time ", line):
-                line = line.strip().lstrip("Start Time = ")
-                pi1_start_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
-            if re.match(r"End Time ", line):
-                line = line.strip().lstrip("End Time = ")
-                pi1_end_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
-
-    with open("parsl_flux_mpi_pi2_run.out", "r") as pi2: 
-        for line in pi2:
-            if re.match(r"Start Time ", line):
-                line = line.strip().lstrip("Start Time = ")
-                pi2_start_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
-            if re.match(r"End Time ", line):
-                line = line.strip().lstrip("End Time = ")
-                pi2_end_time = dt.strptime(line, "%d/%m/%Y %H:%M:%S")
-    assert pi1_start_time < pi2_end_time and pi2_start_time < pi1_end_time
+    # Verify pi tests un concurrently
+    start_time=[]
+    end_time=[]
+    files = ["parsl_flux_mpi_pi1_run.out", "parsl_flux_mpi_pi2_run.out"]
+    for f in files:
+        with open(f, "r") as pi: 
+            for line in pi:
+                if re.match(r"Start Time ", line):
+                    line = line.strip().lstrip("Start Time = ")
+                    start_time.append(dt.strptime(line, "%d/%m/%Y %H:%M:%S"))
+                if re.match(r"End Time ", line):
+                    line = line.strip().lstrip("End Time = ")
+                    end_time.append(dt.strptime(line, "%d/%m/%Y %H:%M:%S"))
+    assert start_time[0] < end_time[1] and start_time[1] < end_time[0]
