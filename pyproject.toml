@@ -2,3 +2,20 @@
 addopts = [
     "--import-mode=importlib",
 ]
+
+
+[tool.flake8.messages_control]
+disable = [
+  "consider-using-f-string",
+  "invalid-name",
+  "missing-module-docstring",
+  "too-few-public-methods",
+  "too-many-arguments",
+  "too-many-branches",
+  "too-many-instance-attributes",
+  "too-many-lines",
+  "too-many-locals",
+  "too-many-public-methods",
+  "unnecessary-lambda-assignment",
+  "use-dict-literal",
+]

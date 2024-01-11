@@ -25,18 +25,21 @@ if [ -n "${S3_BUILD_CACHE_KEY}" ]; then
 fi
 spack mirror list
 
-# Add flux and pytest to chiltepin spack environment
+# Add flux, pytest and flake8 to chiltepin spack environment
 spack add python
 spack add py-pip
 spack add py-pytest
 spack add flux-core@0.53.0
 spack add flux-sched@0.28.0
+spack add style
 
 # Concretize and install the spack packages
 spack install --fail-fast --no-check-signature
 
-# Install parsl
+# Install parsl and flake8
 python -m pip install parsl[monitoring]==2023.12.4
+python -m pip install flake8
+
 
 # Push the packages to the mirror
 if [ "$(spack mirror list | wc -l)" = "3" ]; then
