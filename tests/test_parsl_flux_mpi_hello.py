@@ -1,4 +1,5 @@
 import os
+from datetime import datetime as dt
 import parsl
 from parsl.app.app import python_app, bash_app
 import pytest
@@ -192,3 +193,18 @@ def test_run_mpi_pi(load_config):
                 pi2_hosts.append(line.split()[1])
     # Verify each pi test ran on a different set of nodes
     assert set(pi1_hosts).intersection(pi2_hosts) == set()
+
+    # Verify pi tests un concurrently
+    start_time=[]
+    end_time=[]
+    files = ["parsl_flux_mpi_pi1_run.out", "parsl_flux_mpi_pi2_run.out"]
+    for f in files:
+        with open(f, "r") as pi: 
+            for line in pi:
+                if re.match(r"Start Time ", line):
+                    line = line.strip().lstrip("Start Time = ")
+                    start_time.append(dt.strptime(line, "%d/%m/%Y %H:%M:%S"))
+                if re.match(r"End Time ", line):
+                    line = line.strip().lstrip("End Time = ")
+                    end_time.append(dt.strptime(line, "%d/%m/%Y %H:%M:%S"))
+    assert start_time[0] < end_time[1] and start_time[1] < end_time[0]
