@@ -31,7 +31,7 @@ spack add py-pip
 spack add py-pytest
 spack add flux-core@0.53.0
 spack add flux-sched@0.28.0
-spack add style
+spack add py-flake8
 
 # Concretize and install the spack packages
 spack install --fail-fast --no-check-signature
