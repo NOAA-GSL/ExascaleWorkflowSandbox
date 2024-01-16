@@ -8,16 +8,16 @@ import os
 
 def config_factory(yaml_config={}):
 
+
     # Set FLUX_SSH
     os.environ["FLUX_SSH"] = "ssh"
 
     provider_config = yaml_config["provider"]
-    
-    cores_per_node=provider_config["cores per node"]
-    partition=provider_config["partition"]
-    account=provider_config["account"]
+    cores_per_node = provider_config["cores per node"]
+    partition = provider_config["partition"]
+    account = provider_config["account"]
 
-    env_init="\n".join(yaml_config["environment"])
+    env_init = "\n".join(yaml_config["environment"])
 
     # Update to import config for your machine
     config = Config(
@@ -43,4 +43,3 @@ def config_factory(yaml_config={}):
     )
 
     return config, env_init
-

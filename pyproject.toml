@@ -6,5 +6,9 @@ addopts = [
 
 [tool.flake8.messages_control]
 disable = [
-    " --max-line-length",
+    "--max-line-length",
 ]
+
+[flake8]
+max-line-length = 120
+
