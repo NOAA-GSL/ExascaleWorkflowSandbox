@@ -7,11 +7,8 @@ from parsl.launchers import SimpleLauncher
 import os
 
 def config_factory(yaml_config={}):
-
-
     # Set FLUX_SSH
     os.environ["FLUX_SSH"] = "ssh"
-
     provider_config = yaml_config["provider"]
     cores_per_node = provider_config["cores per node"]
     partition = provider_config["partition"]
