@@ -8,17 +8,6 @@ import yaml
 
 import chiltepin.config
 
-# Define function to parse yaml config
-#def parse_config(filename):
-#    # Open and parse the yaml config
-#    with open(filename, "r") as stream:
-#        try:
-#            yaml_config = yaml.safe_load(stream)
-#        except yaml.YAMLError as e:
-#            print("Invalid taml configuration")
-#            raise(e)
-#    return yaml_config
-
 # Print out resources that Flux sees after it starts
 @bash_app
 def resource_list(stdout=None, stderr=None, env=""):
