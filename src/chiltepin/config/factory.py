@@ -6,6 +6,7 @@ from parsl.launchers import SimpleLauncher
 
 import os
 
+
 def config_factory(yaml_config={}):
     # Set FLUX_SSH
     os.environ["FLUX_SSH"] = "ssh"
@@ -22,7 +23,8 @@ def config_factory(yaml_config={}):
             FluxExecutor(
                 label="flux",
                 # Start Flux with srun and tell it how many cores per node to expect
-                launch_cmd=f'srun --mpi=pmi2 --tasks-per-node=1 -c{cores_per_node} ' + FluxExecutor.DEFAULT_LAUNCH_CMD,
+                launch_cmd=f"srun --mpi=pmi2 --tasks-per-node=1 -c{cores_per_node} "
+                + FluxExecutor.DEFAULT_LAUNCH_CMD,
                 provider=SlurmProvider(
                     channel=LocalChannel(),
                     cores_per_node=cores_per_node,
@@ -30,10 +32,10 @@ def config_factory(yaml_config={}):
                     init_blocks=1,
                     partition=partition,
                     account=account,
-                    walltime='00:10:00',
+                    walltime="00:10:00",
                     launcher=SimpleLauncher(),
-                    worker_init='''
-                    ''',
+                    worker_init="""
+                    """,
                 ),
             )
         ],
