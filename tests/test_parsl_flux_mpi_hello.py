@@ -6,18 +6,7 @@ import pytest
 import re
 import yaml
 
-from chiltepin.config.factory import config_factory
-
-# Define function to parse yaml config
-def parse_config(filename):
-    # Open and parse the yaml config
-    with open(filename, "r") as stream:
-        try:
-            yaml_config = yaml.safe_load(stream)
-        except yaml.YAMLError as e:
-            print("Invalid taml configuration")
-            raise(e)
-    return yaml_config
+import chiltepin.config
 
 # Print out resources that Flux sees after it starts
 @bash_app
@@ -28,7 +17,7 @@ def resource_list(stdout=None, stderr=None, env=""):
     '''.format(env)
 
 # Test Flux PMI launch
-@bash_app
+@bash_app(executors=['compute'])
 def pmi_barrier(stdout=None, stderr=None, env="", parsl_resource_specification={}):
     return '''
     {}
@@ -36,7 +25,7 @@ def pmi_barrier(stdout=None, stderr=None, env="", parsl_resource_specification={
     '''.format(env)
 
 # Compile the hello MPI program with environment passed in
-@bash_app
+@bash_app(executors=['compute'])
 def compile_mpi_hello(dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={"num_tasks": 1}):
     return '''
     {}
@@ -45,7 +34,7 @@ def compile_mpi_hello(dirpath, stdout=None, stderr=None, env="", parsl_resource_
     '''.format(env,dirpath)
 
 # Run the hello MPI program with environment passed in
-@bash_app
+@bash_app(executors=['compute'])
 def run_mpi_hello(dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={}):
     return '''
     {}
@@ -54,7 +43,7 @@ def run_mpi_hello(dirpath, stdout=None, stderr=None, env="", parsl_resource_spec
     '''.format(env, dirpath)
 
 # Compile the pi approximation MPI program with environment passed in
-@bash_app
+@bash_app(executors=['compute'])
 def compile_mpi_pi(dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={"num_tasks": 1}):
     return '''
     {}
@@ -63,7 +52,7 @@ def compile_mpi_pi(dirpath, stdout=None, stderr=None, env="", parsl_resource_spe
     '''.format(env,dirpath)
 
 # Run the pi approximation MPI program with environment passed in
-@bash_app
+@bash_app(executors=['compute'])
 def run_mpi_pi(dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={}):
     return '''
     {}
@@ -74,8 +63,8 @@ def run_mpi_pi(dirpath, stdout=None, stderr=None, env="", parsl_resource_specifi
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
 def load_config(config_file, request):
-    yaml_config = parse_config(config_file)
-    config, environment = config_factory(yaml_config)
+    yaml_config = chiltepin.config.parse_file(config_file)
+    config, environment = chiltepin.config.factory(yaml_config)
     parsl.load(config)
     request.addfinalizer(parsl.clear)
     return {"config": config, "environment": environment}
