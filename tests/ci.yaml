@@ -1,7 +1,11 @@
 provider:
-  cores per node: 2 
-  partition: "slurmpar"
-  account: ""
+  -
+    type: "flux"
+    name: "compute"
+    cores per node: 2
+    nodes per block: 3
+    partition: "slurmpar"
+    account: ""
 
 environment:
   - "export FLUX_PMI_LIBRARY_PATH=/opt/view/lib/flux/libpmi.so"
