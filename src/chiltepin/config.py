@@ -1,11 +1,12 @@
 from parsl.config import Config
 from parsl.channels import LocalChannel
 from parsl.providers import SlurmProvider
-from parsl.executors import FluxExecutor,HighThroughputExecutor
+from parsl.executors import FluxExecutor, HighThroughputExecutor
 from parsl.launchers import SimpleLauncher
 
 import os
 import yaml
+
 
 # Define function to parse yaml config
 def parse_file(filename):
@@ -15,7 +16,7 @@ def parse_file(filename):
             yaml_config = yaml.safe_load(stream)
         except yaml.YAMLError as e:
             print("Invalid yaml configuration")
-            raise(e)
+            raise (e)
     return yaml_config
 
 
@@ -28,11 +29,12 @@ def factory(yaml_config={}):
 
     execs = []
     for pc in provider_config:
-        if (pc["type"] == "flux"):
+        if pc["type"] == "flux":
             e = FluxExecutor(
                 label=pc["name"],
                 # Start Flux with srun and tell it how many cores per node to expect
-                launch_cmd=f'srun --mpi=pmi2 --tasks-per-node=1 -c{pc["cores per node"]} ' + FluxExecutor.DEFAULT_LAUNCH_CMD,
+                launch_cmd=f'srun --mpi=pmi2 --tasks-per-node=1 -c{pc["cores per node"]} '
+                + FluxExecutor.DEFAULT_LAUNCH_CMD,
                 provider=SlurmProvider(
                     channel=LocalChannel(),
                     cores_per_node=pc["cores per node"],
@@ -40,17 +42,17 @@ def factory(yaml_config={}):
                     init_blocks=1,
                     partition=pc["partition"],
                     account=pc["account"],
-                    walltime='08:00:00',
+                    walltime="08:00:00",
                     launcher=SimpleLauncher(),
-                    worker_init='''
-                    ''',
+                    worker_init="""
+                    """,
                 ),
             )
             execs.append(e)
-        if (pc["type"] == "htex"):
+        if pc["type"] == "htex":
             e = HighThroughputExecutor(
                 label=pc["name"],
-                #address=address_by_hostname(),
+                # address=address_by_hostname(),
                 max_workers=1,
                 cores_per_worker=1,
                 provider=SlurmProvider(
@@ -61,13 +63,13 @@ def factory(yaml_config={}):
                     init_blocks=1,
                     partition=pc["partition"],
                     account=pc["account"],
-                    walltime='02:10:00',
+                    walltime="02:10:00",
                     launcher=SimpleLauncher(),
-                    worker_init='''
-                    ''',
+                    worker_init="""
+                    """,
                 ),
             )
             execs.append(e)
-    env_init="\n".join(yaml_config["environment"])
-    config = Config(executors = execs)
+    env_init = "\n".join(yaml_config["environment"])
+    config = Config(executors=execs)
     return config, env_init
