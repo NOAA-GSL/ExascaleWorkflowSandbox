@@ -47,7 +47,7 @@ jobs:
         name: Build spack-stack
         uses: docker/build-push-action@v4
         with:
-          context: ./docker
+          context: ./docker/spack-stack
           file: ./docker/spack-stack/Dockerfile
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
           secrets: |
