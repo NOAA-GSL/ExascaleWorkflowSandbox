@@ -18,22 +18,26 @@ parsl.load(config)
 
 qgmodel = QG(config, environment)
 
-result = qgmodel.clone(environment,
-                       install_path=f"{workdir}",
-                       stdout=f"{workdir}/clone.out",
-                       stderr=f"{workdir}/clone.err",
-                       tag="develop").result()
-
-result = qgmodel.configure(environment,
-                           install_path=f"{workdir}",
-                           stdout=f"{workdir}/configure.out",
-                           stderr=f"{workdir}/configure.err",
-                           tag="develop").result()
-
-result = qgmodel.make(environment,
+clone = qgmodel.clone(environment,
                       install_path=f"{workdir}",
-                      stdout=f"{workdir}/make.out",
-                      stderr=f"{workdir}/make.err",
-                      tag="develop").result()
+                      stdout=f"{workdir}/clone.out",
+                      stderr=f"{workdir}/clone.err",
+                      tag="develop")
+
+configure = qgmodel.configure(environment,
+                              install_path=f"{workdir}",
+                              stdout=f"{workdir}/configure.out",
+                              stderr=f"{workdir}/configure.err",
+                              tag="develop",
+                              clone=clone)
+
+make = qgmodel.make(environment,
+                    install_path=f"{workdir}",
+                    stdout=f"{workdir}/make.out",
+                    stderr=f"{workdir}/make.err",
+                    tag="develop",
+                    configure=configure)
+
+done = make.result()
 
 parsl.clear
