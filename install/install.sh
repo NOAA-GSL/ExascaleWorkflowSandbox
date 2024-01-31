@@ -25,14 +25,16 @@ if [ -n "${S3_BUILD_CACHE_KEY}" ]; then
 fi
 spack mirror list
 
-# Add flux and pytest to chiltepin spack environment
+# Add flux, pytest and flake8 to chiltepin spack environment
 spack add python
 spack add py-pip
 spack add py-pytest
 spack add flux-core@0.53.0
 spack add flux-sched@0.28.0
+spack add py-flake8
+spack add py-pytest-flake8
 
-# Concretize and install the spack packages
+# Concretize and install the spack packages 
 spack install --fail-fast --no-check-signature
 
 # Install parsl

@@ -44,6 +44,11 @@ jobs:
           cat mirrors.in.yaml | envsubst > mirrors.yaml
           ./create_dockerfile.sh
       -
+        name: Make lint
+        run:  |
+          pip install flake8
+          flake8 src tests
+      -
         name: Build spack-stack
         uses: docker/build-push-action@v4
         with:
