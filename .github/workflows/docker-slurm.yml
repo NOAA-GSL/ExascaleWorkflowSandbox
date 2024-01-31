@@ -48,7 +48,6 @@ jobs:
         run:  |
           pip install flake8
           flake8 src tests
-          pip install pytest-flake8
       -
         name: Build spack-stack
         uses: docker/build-push-action@v4
