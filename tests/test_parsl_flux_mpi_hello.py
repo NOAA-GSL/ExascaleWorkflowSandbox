@@ -11,10 +11,10 @@ import chiltepin.config
 # Print out resources that Flux sees after it starts
 @bash_app
 def resource_list(stdout=None, stderr=None, env=""):
-    return """
+    return '''
     {}
     flux resource list
-    """.format(
+    '''.format(
         env
     )
 
