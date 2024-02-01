@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 
-import os
 import parsl
-from parsl.app.app import python_app, bash_app
-import re
 import sys
 
 from chiltepin.config import factory, parse_file
 from chiltepin.jedi.qg import QG
 
-workdir="/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.develop/tests"
+workdir = "/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.develop/tests"
 
 config_file = sys.argv[1]
 yaml_config = parse_file(config_file)
