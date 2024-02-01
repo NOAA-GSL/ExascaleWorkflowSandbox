@@ -52,8 +52,7 @@ jobs:
         name: Format Check
         run:  |
           pip install black
-          black src tests
-          black --check --diff
+          black src tests --check --diff
       -
         name: Build spack-stack
         uses: docker/build-push-action@v4
