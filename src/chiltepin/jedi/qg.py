@@ -1,9 +1,6 @@
-import os
-import parsl
-from parsl.app.app import python_app, bash_app
-import pytest
-import re
+from parsl.app.app import bash_app
 import textwrap
+
 
 class QG:
 
@@ -28,7 +25,6 @@ class QG:
         echo Completed at $(date)
         ''')
 
-
     @bash_app(executors=['service'])
     def configure(env, install_path, tag="develop", stdout=None, stderr=None, clone=None):
         return env + textwrap.dedent(f'''
@@ -39,13 +35,12 @@ class QG:
         mkdir build
         cd build
         # Comment out the parts of the bundle we do not need
-        perl -p -i -e "s/ecbuild_bundle\( PROJECT fv3/#ecbuild_bundle\( PROJECT fv3/g" ../src/CMakeLists.txt
-        perl -p -i -e "s/ecbuild_bundle\( PROJECT femps/#ecbuild_bundle\( PROJECT femps/g" ../src/CMakeLists.txt
-        perl -p -i -e "s/ecbuild_bundle\( PROJECT mom6/#ecbuild_bundle\( PROJECT mom6/g" ../src/CMakeLists.txt
-        perl -p -i -e "s/ecbuild_bundle\( PROJECT soca/#ecbuild_bundle\( PROJECT soca/g" ../src/CMakeLists.txt
-        perl -p -i -e "s/ecbuild_bundle\( PROJECT coupling/#ecbuild_bundle\( PROJECT coupling/g" ../src/CMakeLists.txt
-        perl -p -i -e "s/set\(MPAS/#set\(MPAS/g" ../src/CMakeLists.txt
-        perl -p -i -e "s/ecbuild_bundle\( PROJECT mpas/#ecbuild_bundle\( PROJECT mpas/g" ../src/CMakeLists.txt
+        perl -p -i -e 's/(.* PROJECT fv3)/#\\1/g' ../src/CMakeLists.txt
+        perl -p -i -e 's/(.* PROJECT femps)/#\\1/g' ../src/CMakeLists.txt
+        perl -p -i -e 's/(.* PROJECT soca)/#\\1/g' ../src/CMakeLists.txt
+        perl -p -i -e 's/(.* PROJECT mom6)/#\\1/g' ../src/CMakeLists.txt
+        perl -p -i -e 's/(.* PROJECT coupling)/#\\1/g' ../src/CMakeLists.txt
+        perl -p -i -e 's/(.*mpas)/#\\1/ig' ../src/CMakeLists.txt
         ecbuild -DCMAKE_INSTALL_PREFIX=../ ../src
         echo Completed at $(date)
         ''')
