@@ -2,9 +2,10 @@
 
 import parsl
 import sys
+import yaml
 
 from chiltepin.config import factory, parse_file
-from chiltepin.jedi.qg import QG
+from chiltepin.jedi.qg import forecast, install
 
 workdir = "/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.develop/tests"
 
@@ -13,28 +14,23 @@ yaml_config = parse_file(config_file)
 config, environment = factory(yaml_config)
 parsl.load(config)
 
-qgmodel = QG(config, environment)
-
-clone = qgmodel.clone(environment,
+# Install JEDI bundle
+install = install.run(environment,
                       install_path=f"{workdir}",
-                      stdout=f"{workdir}/clone.out",
-                      stderr=f"{workdir}/clone.err",
+                      stdout=f"{workdir}/install.out",
+                      stderr=f"{workdir}/install.err",
                       tag="develop")
 
-configure = qgmodel.configure(environment,
-                              install_path=f"{workdir}",
-                              stdout=f"{workdir}/configure.out",
-                              stderr=f"{workdir}/configure.err",
-                              tag="develop",
-                              clone=clone)
+# Run a "truth" forecast
+truth = forecast.run(environment,
+                     install_path=f"{workdir}",
+                     workdir=f"{workdir}/experiments/QG/truth",
+                     nx=80, ny=40,
+                     stdout=f"{workdir}/truth.out",
+                     stderr=f"{workdir}/truth.err",
+                     tag="develop",
+                     install=install)
 
-make = qgmodel.make(environment,
-                    install_path=f"{workdir}",
-                    stdout=f"{workdir}/make.out",
-                    stderr=f"{workdir}/make.err",
-                    tag="develop",
-                    configure=configure)
-
-done = make.result()
+done = truth.result()
 
 parsl.clear
