@@ -1,0 +1,20 @@
+forecast length: P2D
+geometry:
+  nx: 40
+  ny: 20
+  depths: [4500.0, 5500.0]
+initial condition:
+  date: "2009-12-31T00:00:00Z"
+  filename: None
+  read_from_file: 0
+model:
+  name: QG
+  tstep: PT10M
+output:
+  datadir: None
+  date: "2009-12-31T00:00:00Z"
+  exp: forecast
+  frequency: PT1H
+  type: fc
+prints:
+  frequency: PT3H
