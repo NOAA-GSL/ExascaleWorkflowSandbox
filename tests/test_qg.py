@@ -2,6 +2,7 @@
 
 import parsl
 import sys
+import textwrap
 import yaml
 
 from chiltepin.config import factory, parse_file
@@ -15,21 +16,31 @@ config, environment = factory(yaml_config)
 parsl.load(config)
 
 # Install JEDI bundle
-install = install.run(environment,
-                      install_path=f"{workdir}",
-                      stdout=f"{workdir}/install.out",
-                      stderr=f"{workdir}/install.err",
-                      tag="develop")
+#install = install.run(environment,
+#                      install_path=f"{workdir}",
+#                      stdout=f"{workdir}/install.out",
+#                      stderr=f"{workdir}/install.err",
+#                      tag="develop")
+install=None
 
 # Run a "truth" forecast
 truth = forecast.run(environment,
                      install_path=f"{workdir}",
-                     workdir=f"{workdir}/experiments/QG/truth",
-                     nx=80, ny=40,
+                     tag="develop",
+                     rundir=f"{workdir}/experiments/QG/truth",
+                     config=yaml.safe_load(textwrap.dedent(f"""
+                     geometry:
+                         nx: 40
+                         ny: 20
+                     initial condition:
+                         read_from_file: 0
+                     output:
+                         datadir: {workdir}/experiments/QG/truth
+                     """).strip()),
                      stdout=f"{workdir}/truth.out",
                      stderr=f"{workdir}/truth.err",
-                     tag="develop",
                      install=install)
+
 
 done = truth.result()
 
