@@ -38,7 +38,6 @@ jobs:
            # Install docker packages
            sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
            # Allow runner use to run docker without sudo
-           sudo groupadd docker
            sudo usermod -aG docker $USER
            sudo apt-get install acl
            sudo setfacl --modify user:$USER:rw /var/run/docker.sock
