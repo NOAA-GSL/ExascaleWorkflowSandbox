@@ -10,7 +10,7 @@ on:
 jobs:
   arm64:
     runs-on: LinuxARM64-4core-16G-150Gb
-    timeout-minutes: 120
+    timeout-minutes: 360
     permissions:
       packages: write
       contents: read
@@ -89,8 +89,8 @@ jobs:
           push: false
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
   amd64:
-    runs-on: ubuntu-latest
-    timeout-minutes: 720
+    runs-on: ubuntu2204-4c-16g-150ssd
+    timeout-minutes: 360
     permissions:
       packages: write
       contents: read
