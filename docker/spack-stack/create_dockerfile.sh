@@ -17,9 +17,9 @@ perl -p -i -e "s/variants: \+internal-hwloc \+two_level_namespace/variants: \+in
 perl -p -i -e "s/build_jobs: 2/build_jobs: 8/g" spack.yaml
 
 # Modify spack.yaml to add flux-core and flux-sched
-perl -p -i -e "s/fms:/flux-core:\n      version: [0.57.0]\n    fms:/g" spack.yaml
+perl -p -i -e "s/fms:/flux-core:\n      version: [0.56.0]\n    fms:/g" spack.yaml
 perl -p -i -e "s/fms:/flux-sched:\n      version: [0.31.0]\n    fms:/g" spack.yaml
-perl -p -i -e "s/fms\@/flux-core\@0.57.0\n  - fms\@/g" spack.yaml
+perl -p -i -e "s/fms\@/flux-core\@0.56.0\n  - fms\@/g" spack.yaml
 perl -p -i -e "s/fms\@/flux-sched\@0.31.0\n  - fms\@/g" spack.yaml
 
 # Modify spack.yaml to adjust boost variants for flux compatibility
