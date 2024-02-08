@@ -41,7 +41,10 @@ perl -p -i -e "s/py-pyyaml\@6.0/py-pytest\@7.3.2\n  - py-pyyaml\@6.0/g" spack.ya
 
 # Create the spack-stack Dockerfile
 spack containerize > ../../../Dockerfile
-mv spack-ext-* ../../../  # This is needed for a COPY into the container at build time
+
+# If necessary move spack-ext-* for use in COPY during container build
+rm -rf ../../../spack-ext-*
+find . -type d -name 'spack-ext-*' -exec mv {} ../../../ \;
 
 # Remove unneeded spack-stack install
 popd
