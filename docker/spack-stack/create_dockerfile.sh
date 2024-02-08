@@ -16,10 +16,10 @@ perl -p -i -e "s/variants: \+internal-hwloc \+two_level_namespace/variants: \+in
 perl -p -i -e "s/build_jobs: 2/build_jobs: 8/g" spack.yaml
 
 # Modify spack.yaml to add flux-core and flux-sched
-perl -p -i -e "s/fms:/flux-core:\n      version: [0.53.0]\n    fms:/g" spack.yaml
-perl -p -i -e "s/fms:/flux-sched:\n      version: [0.28.0]\n    fms:/g" spack.yaml
-perl -p -i -e "s/fms\@/flux-core\@0.53.0\n  - fms\@/g" spack.yaml
-perl -p -i -e "s/fms\@/flux-sched\@0.28.0\n  - fms\@/g" spack.yaml
+perl -p -i -e "s/fms:/flux-core:\n      version: [0.58.0]\n    fms:/g" spack.yaml
+perl -p -i -e "s/fms:/flux-sched:\n      version: [0.32.0]\n    fms:/g" spack.yaml
+perl -p -i -e "s/fms\@/flux-core\@0.58.0\n  - fms\@/g" spack.yaml
+perl -p -i -e "s/fms\@/flux-sched\@0.32.0\n  - fms\@/g" spack.yaml
 
 # Modify spack.yaml to adjust boost variants for flux compatibility
 export boost_variants=$(
@@ -45,6 +45,12 @@ mv spack-ext-* ../../../  # This is needed for a COPY into the container at buil
 # Remove unneeded spack-stack install
 popd
 rm -rf spack-stack
+
+# Modify Dockerfile to grab up-to-date copies of Flux package.py files
+export spack_package_url=https://raw.githubusercontent.com/spack/spack/develop/var/spack/repos/builtin/packages
+export spack_package_path=\$SPACK_ROOT/var/spack/repos/builtin/packages
+perl -p -i -e 's|(    mkdir -p \$SPACK_ROOT/opt/spack)|    curl -L $ENV{spack_package_url}/flux-core/package.py -o $ENV{spack_package_path}/flux-core/package.py && \\\n\1|s' Dockerfile
+perl -p -i -e 's|(    mkdir -p \$SPACK_ROOT/opt/spack)|    curl -L $ENV{spack_package_url}/flux-sched/package.py -o $ENV{spack_package_path}/flux-sched/package.py && \\\n\1|s' Dockerfile
 
 # Create spack build command patch
 export docker_patch=$(
@@ -72,3 +78,13 @@ END_HEREDOC
 
 # Patch the Dockerfile to use buildcache mirrors on AWS S3
 perl -p -i -e 's:RUN cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y:$ENV{docker_patch}:g' Dockerfile
+
+# Create a patched Dockerfile that only includes Flux packages
+# This Dockerfile can be built first so that Flux packages get pushed to binary cache
+# This allows the main Dockerfile to build correctly avoiding Spack Flux build bug
+cp Dockerfile Dockerfile.flux-only
+perl -i -p0e "s|&&   echo '    awscli:'.*&&   echo '    flux-core:'|&&   echo '    flux-core:'|s" Dockerfile.flux-only
+perl -i -p0e "s|&&   echo '    fms:'.*?&&   echo ''|&&   echo ''|s" Dockerfile.flux-only
+perl -i -p0e "s|&&   echo '  - base-env.*&&   echo '  - flux-core|&&   echo '  - flux-core|s" Dockerfile.flux-only
+perl -i -p0e "s|&&   echo '  - fms.*?&&   echo ''|&&   echo ''|s" Dockerfile.flux-only
+perl -i -p -e "s|python -m pip install parsl|#python -m pip install parsl|g" Dockerfile.flux-only
