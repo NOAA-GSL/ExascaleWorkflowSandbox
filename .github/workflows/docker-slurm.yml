@@ -8,7 +8,8 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY_IMAGE: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
+  #REGISTRY_IMAGE: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
+  REGISTRY_IMAGE: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi
 
 jobs:
   build-spack-stack-arm64:
@@ -78,11 +79,6 @@ jobs:
           cd docker/spack-stack
           cat mirrors.in.yaml | envsubst > mirrors.yaml
           ./create_dockerfile.sh
-      -
-        name: Make lint
-        run:  |
-          pip install flake8
-          flake8 src tests
       -
         name: Build spack-stack flux-cache
         uses: docker/build-push-action@v4
