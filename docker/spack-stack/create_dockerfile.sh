@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Clone spack-stack develop branch
-git clone -b develop --recursive https://github.com/JCSDA/spack-stack.git
+# Clone spack-stack
+spack_stack_version=1.6.0
+git clone -b $spack_stack_version --recursive https://github.com/JCSDA/spack-stack.git
 
 # Create the spack-stack spack.yaml file
 pushd spack-stack
