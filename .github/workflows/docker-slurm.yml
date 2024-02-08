@@ -69,7 +69,7 @@ jobs:
           cd docker/spack-stack
           cat mirrors.in.yaml | envsubst > mirrors.yaml
           ./create_dockerfile.sh
-          cp Dockerfile-test Dockerfile  # This is a workaround for Flux build issues
+          #cp Dockerfile-test Dockerfile  # This is a workaround for Flux build issues
       -
         name: Make lint
         run:  |
