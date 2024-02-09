@@ -54,7 +54,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY_IMAGE }}
-          tags: latest
+          tags: |
+            type=raw,value=latest
+          flavor: |
+            latest=true
+            prefix=
+            suffix=
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -108,8 +113,8 @@ jobs:
             "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
           labels: ${{ steps.meta.outputs.labels }}
           #tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache,mode=max
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-arm64:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-arm64:cache,mode=max
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
       -
         name: Export digest
@@ -142,7 +147,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY_IMAGE }}
-          tags: latest
+          tags: |
+            type=raw,value=latest
+          flavor: |
+            latest=true
+            prefix=
+            suffix=
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -206,8 +216,8 @@ jobs:
             "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
           labels: ${{ steps.meta.outputs.labels }}
           #tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache,mode=max
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-amd64:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-amd64:cache,mode=max
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
       -
         name: Export digest
@@ -246,7 +256,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY_IMAGE }}
-          tags: latest
+          tags: |
+            type=raw,value=latest
+          flavor: |
+            latest=true
+            prefix=
+            suffix=
       -
         name: Login to GHCR
         uses: docker/login-action@v3
