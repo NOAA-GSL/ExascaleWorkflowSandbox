@@ -95,7 +95,7 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:cache,mode=max
       -
         name: Build spack-stack and push by digest
-	id: build
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: ./docker/spack-stack
@@ -192,7 +192,7 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:cache,mode=max
       -
         name: Build spack-stack and push by digest
-	id: build
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: ./docker/spack-stack
