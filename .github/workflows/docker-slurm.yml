@@ -95,6 +95,7 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:cache,mode=max
       -
         name: Build spack-stack and push by digest
+	id: build
         uses: docker/build-push-action@v5
         with:
           context: ./docker/spack-stack
@@ -191,6 +192,7 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:cache,mode=max
       -
         name: Build spack-stack and push by digest
+	id: build
         uses: docker/build-push-action@v5
         with:
           context: ./docker/spack-stack
@@ -262,6 +264,8 @@ jobs:
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
 
   build-and-test-chiltepin:
+    needs:
+      - merge-spack-stack
     runs-on: ubuntu2204-4c-16g-150ssd
     timeout-minutes: 360
     permissions:
