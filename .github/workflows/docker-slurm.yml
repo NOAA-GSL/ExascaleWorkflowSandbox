@@ -90,7 +90,7 @@ jobs:
             "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
             "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
           push: true
-          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:latest
+          #tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:cache,mode=max
       -
@@ -105,7 +105,7 @@ jobs:
             "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
             "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
           labels: ${{ steps.meta.outputs.labels }}
-          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
+          #tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache,mode=max
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
