@@ -322,7 +322,6 @@ jobs:
           file: ./docker/frontend/Dockerfile
           push: false
           load: true
-          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
@@ -334,7 +333,6 @@ jobs:
           file: ./docker/master/Dockerfile
           push: false
           load: true
-          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
@@ -346,7 +344,6 @@ jobs:
           file: ./docker/node/Dockerfile
           push: false
           load: true
-          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
@@ -392,6 +389,7 @@ jobs:
           context: ./docker
           file: ./docker/frontend/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
@@ -402,6 +400,7 @@ jobs:
           context: ./docker
           file: ./docker/master/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
@@ -412,6 +411,7 @@ jobs:
           context: ./docker
           file: ./docker/node/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
