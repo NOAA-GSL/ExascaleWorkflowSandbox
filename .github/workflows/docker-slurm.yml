@@ -8,7 +8,6 @@ on:
   workflow_dispatch:
 
 env:
-  #REGISTRY_IMAGE: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
   REGISTRY_IMAGE: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi
 
 jobs:
@@ -20,6 +19,7 @@ jobs:
       contents: read
     steps:
       -
+        # Beta ARM runners do not have Docker installed
         name: Install Docker
         run: |
            # Uninstall incompatible packages
@@ -141,6 +141,16 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v4
       -
+        name: Make lint
+        run:  |
+          pip install flake8
+          flake8 src tests
+      -
+        name: Format Check
+        run:  |
+          pip install black
+          black src tests --check --diff
+      -
         name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -177,16 +187,6 @@ jobs:
           cd docker/spack-stack
           cat mirrors.in.yaml | envsubst > mirrors.yaml
           ./create_dockerfile.sh
-      -
-        name: Make Lint
-        run:  |
-          pip install flake8
-          flake8 src tests
-      -
-        name: Format Check
-        run:  |
-          pip install black
-          black src tests --check --diff
       -
         name: Build spack-stack flux-cache
         uses: docker/build-push-action@v4
