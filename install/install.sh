@@ -33,14 +33,13 @@ spack add flux-core@0.53.0
 spack add flux-sched@0.28.0
 spack add py-flake8
 spack add py-pytest-flake8
-spack add py-black
-spack add py-pytest-black
 
 # Concretize and install the spack packages 
 spack install --fail-fast --no-check-signature
 
 # Install parsl
 python -m pip install parsl[monitoring]==2023.12.4
+python -m pip install pytest-black
 
 # Push the packages to the mirror
 if [ "$(spack mirror list | wc -l)" = "3" ]; then

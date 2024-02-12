@@ -54,6 +54,20 @@ jobs:
           pip install black
           black src tests --check --diff
       -
+        name: Build spack-stack flux-cache
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker/spack-stack
+          file: ./docker/spack-stack/Dockerfile.flux-only
+          secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
+          secrets: |
+            "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
+            "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
+          push: true
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:cache,mode=max
+      -
         name: Build spack-stack
         uses: docker/build-push-action@v4
         with:
