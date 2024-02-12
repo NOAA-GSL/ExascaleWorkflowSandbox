@@ -9,7 +9,7 @@ on:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu2204-4c-16g-150ssd 
     timeout-minutes: 720
     permissions:
       packages: write
