@@ -7,20 +7,62 @@ on:
     branches: [ develop, main ]
   workflow_dispatch:
 
+env:
+  REGISTRY_IMAGE: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi
+
 jobs:
-  docker:
-    runs-on: ubuntu2204-4c-16g-150ssd 
-    timeout-minutes: 720
+  build-spack-stack-arm64:
+    runs-on: LinuxARM64-4core-16G-150Gb
+    timeout-minutes: 360
     permissions:
       packages: write
       contents: read
     steps:
       -
+        # Beta ARM runners do not have Docker installed
+        name: Install Docker
+        run: |
+           # Uninstall incompatible packages
+           for pkg in docker.io containerd runc; do sudo apt-get remove $pkg; done
+           # Add Docker's official GPG key:
+           sudo apt-get update
+           sudo apt-get install ca-certificates curl
+           sudo install -m 0755 -d /etc/apt/keyrings
+           sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+           sudo chmod a+r /etc/apt/keyrings/docker.asc
+           # Add the repository to Apt sources:
+           echo \
+             "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+             $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+             sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+           sudo apt-get update -y
+           # Install docker packages
+           sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+           # Allow runner use to run docker without sudo
+           sudo usermod -aG docker $USER
+           sudo apt-get install acl
+           sudo setfacl --modify user:$USER:rw /var/run/docker.sock
+      -
+        name: Test Docker Installation
+        run: docker run hello-world
+      -
         name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+      -
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=raw,value=latest
+          flavor: |
+            latest=true
+            prefix=
+            suffix=
       -
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       -
         name: Login to GHCR
         uses: docker/login-action@v3
@@ -44,7 +86,62 @@ jobs:
           cat mirrors.in.yaml | envsubst > mirrors.yaml
           ./create_dockerfile.sh
       -
-        name: Make Lint
+        name: Build spack-stack flux-cache
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker/spack-stack
+          file: ./docker/spack-stack/Dockerfile.flux-only
+          secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
+          secrets: |
+            "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
+            "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
+          push: false
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-arm64:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-arm64:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-arm64:cache,mode=max
+      -
+        name: Build spack-stack and push by digest
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker/spack-stack
+          file: ./docker/spack-stack/Dockerfile
+          platforms: linux/arm64
+          secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
+          secrets: |
+            "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
+            "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64:cache,mode=max
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+      -
+        name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+      -
+        name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-linux-arm64
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  build-spack-stack-amd64:
+    runs-on: ubuntu2204-4c-16g-150ssd
+    timeout-minutes: 360
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        name: Make lint
         run:  |
           pip install flake8
           flake8 src tests
@@ -54,8 +151,45 @@ jobs:
           pip install black
           black src tests --check --diff
       -
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=raw,value=latest
+          flavor: |
+            latest=true
+            prefix=
+            suffix=
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      -
+        name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
+      -
+        name: Prune pre-loaded GHA docker images
+        run: |
+          docker images
+          docker image prune -a -f
+          docker images
+      -
+        name: Create spack-stack Dockerfile and mirror
+        run: |
+          export S3_BUILD_CACHE_KEY=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}
+          export S3_BUILD_CACHE_SECRET_KEY=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}
+          cd docker/spack-stack
+          cat mirrors.in.yaml | envsubst > mirrors.yaml
+          ./create_dockerfile.sh
+      -
         name: Build spack-stack flux-cache
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./docker/spack-stack
           file: ./docker/spack-stack/Dockerfile.flux-only
@@ -63,27 +197,126 @@ jobs:
           secrets: |
             "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
             "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
-          push: true
-          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:latest
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache:cache,mode=max
+          push: false
+          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-amd64:latest
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-amd64:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-amd64:cache,mode=max
       -
-        name: Build spack-stack
-        uses: docker/build-push-action@v4
+        name: Build spack-stack and push by digest
+        id: build
+        uses: docker/build-push-action@v5
         with:
           context: ./docker/spack-stack
           file: ./docker/spack-stack/Dockerfile
+          platforms: linux/amd64
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
           secrets: |
             "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
             "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
-          push: true
-          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:cache,mode=max
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64:cache,mode=max
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+      -
+        name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+      -
+        name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-linux-amd64
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge-spack-stack:
+    runs-on: ubuntu-latest
+    needs:
+      - build-spack-stack-amd64
+      - build-spack-stack-arm64
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      -
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=raw,value=latest
+          flavor: |
+            latest=true
+            prefix=
+            suffix=
+      -
+        name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
+      -
+        name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)          	
+      -
+        name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
+
+  build-and-test-chiltepin:
+    needs:
+      - merge-spack-stack
+    runs-on: ubuntu2204-4c-16g-150ssd
+    timeout-minutes: 360
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      -
+        name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
+      -
+        name: Prune pre-loaded GHA docker images
+        run: |
+          docker images
+          docker image prune -a -f
+          docker images
       -
         name: Build frontend
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./docker
           file: ./docker/frontend/Dockerfile
@@ -94,7 +327,7 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
       -
         name: Build master
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./docker
           file: ./docker/master/Dockerfile
@@ -105,7 +338,7 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
       -
         name: Build node
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./docker
           file: ./docker/node/Dockerfile
@@ -151,31 +384,34 @@ jobs:
           docker compose -f docker-compose.yml down
       -
         name: Push frontend
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./docker
           file: ./docker/frontend/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
       -
         name: Push master
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./docker
           file: ./docker/master/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
       -
         name: Push node
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./docker
           file: ./docker/node/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
