@@ -20,15 +20,7 @@ jobs:
         with: 
           package-name: 'exascaleworkflowsandbox/spack-stack-gnu-openmpi'
           package-type: 'container'
-<<<<<<< HEAD
-<<<<<<< HEAD
           min-versions-to-keep: 0
-=======
-          min-versions-to-keep: 1
->>>>>>> 8d44464 (Add GitHub workflow to remove untagged container packages)
-=======
-          min-versions-to-keep: 0
->>>>>>> ac88847 (Don't keep any untagged package versions)
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/frontend
@@ -36,15 +28,7 @@ jobs:
         with: 
           package-name: 'exascaleworkflowsandbox/frontend'
           package-type: 'container'
-<<<<<<< HEAD
-<<<<<<< HEAD
           min-versions-to-keep: 0
-=======
-          min-versions-to-keep: 1
->>>>>>> 8d44464 (Add GitHub workflow to remove untagged container packages)
-=======
-          min-versions-to-keep: 0
->>>>>>> ac88847 (Don't keep any untagged package versions)
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/master
@@ -52,15 +36,7 @@ jobs:
         with: 
           package-name: 'exascaleworkflowsandbox/master'
           package-type: 'container'
-<<<<<<< HEAD
-<<<<<<< HEAD
           min-versions-to-keep: 0
-=======
-          min-versions-to-keep: 1
->>>>>>> 8d44464 (Add GitHub workflow to remove untagged container packages)
-=======
-          min-versions-to-keep: 0
->>>>>>> ac88847 (Don't keep any untagged package versions)
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/node
@@ -68,15 +44,7 @@ jobs:
         with: 
           package-name: 'exascaleworkflowsandbox/node'
           package-type: 'container'
-<<<<<<< HEAD
-<<<<<<< HEAD
           min-versions-to-keep: 0
-=======
-          min-versions-to-keep: 1
->>>>>>> 8d44464 (Add GitHub workflow to remove untagged container packages)
-=======
-          min-versions-to-keep: 0
->>>>>>> ac88847 (Don't keep any untagged package versions)
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/flux-cache-amd64
@@ -84,15 +52,7 @@ jobs:
         with: 
           package-name: 'exascaleworkflowsandbox/flux-cache-amd64'
           package-type: 'container'
-<<<<<<< HEAD
-<<<<<<< HEAD
           min-versions-to-keep: 0
-=======
-          min-versions-to-keep: 1
->>>>>>> 8d44464 (Add GitHub workflow to remove untagged container packages)
-=======
-          min-versions-to-keep: 0
->>>>>>> ac88847 (Don't keep any untagged package versions)
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/flux-cache-arm64
@@ -100,15 +60,7 @@ jobs:
         with: 
           package-name: 'exascaleworkflowsandbox/flux-cache-arm64'
           package-type: 'container'
-<<<<<<< HEAD
-<<<<<<< HEAD
           min-versions-to-keep: 0
-=======
-          min-versions-to-keep: 1
->>>>>>> 8d44464 (Add GitHub workflow to remove untagged container packages)
-=======
-          min-versions-to-keep: 0
->>>>>>> ac88847 (Don't keep any untagged package versions)
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64
@@ -116,15 +68,7 @@ jobs:
         with: 
           package-name: 'exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64'
           package-type: 'container'
-<<<<<<< HEAD
-<<<<<<< HEAD
           min-versions-to-keep: 0
-=======
-          min-versions-to-keep: 1
->>>>>>> 8d44464 (Add GitHub workflow to remove untagged container packages)
-=======
-          min-versions-to-keep: 0
->>>>>>> ac88847 (Don't keep any untagged package versions)
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64
@@ -132,13 +76,5 @@ jobs:
         with: 
           package-name: 'exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64'
           package-type: 'container'
-<<<<<<< HEAD
-<<<<<<< HEAD
           min-versions-to-keep: 0
-=======
-          min-versions-to-keep: 1
->>>>>>> 8d44464 (Add GitHub workflow to remove untagged container packages)
-=======
-          min-versions-to-keep: 0
->>>>>>> ac88847 (Don't keep any untagged package versions)
           delete-only-untagged-versions: 'true'
