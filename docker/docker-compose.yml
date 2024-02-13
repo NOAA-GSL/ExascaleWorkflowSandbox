@@ -23,7 +23,7 @@ services:
         hostname: slurmmaster
         user: admin
         volumes:
-                - shared-vol:/home/admin
+                - shared-vol:/home/admin:nocopy
                 - opt-vol:/opt:ro
                 - ..:/home/admin/chiltepin
         environment:
@@ -41,7 +41,7 @@ services:
         hostname: slurmnode1
         user: admin
         volumes:
-                - shared-vol:/home/admin
+                - shared-vol:/home/admin:nocopy
                 - opt-vol:/opt:ro
                 - ..:/home/admin/chiltepin
         environment:
@@ -58,7 +58,7 @@ services:
         hostname: slurmnode2
         user: admin
         volumes:
-                - shared-vol:/home/admin
+                - shared-vol:/home/admin:nocopy
                 - opt-vol:/opt:ro
                 - ..:/home/admin/chiltepin
         environment:
@@ -75,7 +75,7 @@ services:
         hostname: slurmnode3
         user: admin
         volumes:
-                - shared-vol:/home/admin
+                - shared-vol:/home/admin:nocopy
                 - opt-vol:/opt:ro
                 - ..:/home/admin/chiltepin
         environment:
