@@ -37,7 +37,7 @@ spack add py-pytest-flake8
 # Concretize and install the spack packages 
 spack install --fail-fast --no-check-signature
 
-# Install parsl and black
+# Install parsl, black, and isort
 python -m pip install parsl[monitoring]==2023.12.4
 python -m pip install pytest-black
 python -m pip install pytest-isort

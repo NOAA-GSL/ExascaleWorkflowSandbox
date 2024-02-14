@@ -1,8 +1,8 @@
-from parsl.config import Config
 import os
 
 import yaml
 from parsl.channels import LocalChannel
+from parsl.config import Config
 from parsl.executors import FluxExecutor, HighThroughputExecutor
 from parsl.launchers import SimpleLauncher
 from parsl.providers import SlurmProvider
