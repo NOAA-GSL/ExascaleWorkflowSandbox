@@ -1,11 +1,11 @@
-from parsl.config import Config
+import os
+
+import yaml
 from parsl.channels import LocalChannel
-from parsl.providers import SlurmProvider
+from parsl.config import Config
 from parsl.executors import FluxExecutor, HighThroughputExecutor
 from parsl.launchers import SimpleLauncher
-
-import os
-import yaml
+from parsl.providers import SlurmProvider
 
 
 # Define function to parse yaml config

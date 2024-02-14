@@ -40,6 +40,7 @@ spack install --fail-fast --no-check-signature
 # Install parsl and black
 python -m pip install parsl[monitoring]==2023.12.4
 python -m pip install pytest-black
+python -m pip install pytest-isort
 
 # Push the packages to the mirror
 if [ "$(spack mirror list | wc -l)" = "3" ]; then
