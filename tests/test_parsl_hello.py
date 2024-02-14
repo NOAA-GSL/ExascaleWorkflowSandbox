@@ -1,7 +1,7 @@
 import parsl
-from parsl.app.app import python_app, bash_app
-from parsl.configs.local_threads import config
 import pytest
+from parsl.app.app import bash_app, python_app
+from parsl.configs.local_threads import config
 
 
 # Define a "hello world" Python Parsl App
