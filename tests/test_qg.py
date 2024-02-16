@@ -41,7 +41,24 @@ truth = forecast.run(environment,
                      stderr=f"{workdir}/truth.err",
                      install=install)
 
+# Create obs for 3dvar
+obs = hofx.makeobs3d(environment,
+                     install_path=f"{workdir}",
+                     tag="develop",
+                     rundir=f"{workdir}/experiments/QG/obs",
+                     config=yaml.safe_load(textwrap.dedent(f"""
+                     geometry:
+                     nx: 40
+                     ny: 20
+                     initial condition:
+                     read_from_file: 0
+                     output:
+                     datadir: {workdir}/experiments/QG/obs
+                     """).strip()),
+                     stdout=f"{workdir}/truth.out",
+                     stderr=f"{workdir}/truth.err",
+                     install=install)
 
-done = truth.result()
+done = obs.result()
 
 parsl.clear
