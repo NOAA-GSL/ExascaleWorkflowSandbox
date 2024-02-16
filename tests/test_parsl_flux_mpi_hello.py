@@ -12,23 +12,19 @@ import chiltepin.config
 # Print out resources that Flux sees after it starts
 @bash_app
 def resource_list(stdout=None, stderr=None, env=""):
-    return """
-    {}
+    return f"""
+    {env}
     flux resource list
-    """.format(
-        env
-    )
+    """
 
 
 # Test Flux PMI launch
 @bash_app(executors=["compute"])
 def pmi_barrier(stdout=None, stderr=None, env="", parsl_resource_specification={}):
-    return """
-    {}
+    return f"""
+    {env}
     flux pmi barrier
-    """.format(
-        env
-    )
+    """
 
 
 # Compile the hello MPI program with environment passed in
@@ -40,13 +36,11 @@ def compile_mpi_hello(
     env="",
     parsl_resource_specification={"num_tasks": 1},
 ):
-    return """
-    {}
-    cd {}
+    return f"""
+    {env}
+    cd {dirpath}
     $CHILTEPIN_MPIF90 -o mpi_hello.exe mpi_hello.f90
-    """.format(
-        env, dirpath
-    )
+    """
 
 
 # Run the hello MPI program with environment passed in
@@ -54,13 +48,11 @@ def compile_mpi_hello(
 def run_mpi_hello(
     dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={}
 ):
-    return """
-    {}
-    cd {}
+    return f"""
+    {env}
+    cd {dirpath}
     ./mpi_hello.exe
-    """.format(
-        env, dirpath
-    )
+    """
 
 
 # Compile the pi approximation MPI program with environment passed in
@@ -72,13 +64,11 @@ def compile_mpi_pi(
     env="",
     parsl_resource_specification={"num_tasks": 1},
 ):
-    return """
-    {}
-    cd {}
+    return f"""
+    {env}
+    cd {dirpath}
     $CHILTEPIN_MPIF90 -o mpi_pi.exe mpi_pi.f90
-    """.format(
-        env, dirpath
-    )
+    """
 
 
 # Run the pi approximation MPI program with environment passed in
@@ -86,13 +76,11 @@ def compile_mpi_pi(
 def run_mpi_pi(
     dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={}
 ):
-    return """
-    {}
-    cd {}
+    return f"""
+    {env}
+    cd {dirpath}
     ./mpi_pi.exe
-    """.format(
-        env, dirpath
-    )
+    """
 
 
 # Set up fixture to initialize and cleanup Parsl
