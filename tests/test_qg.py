@@ -16,12 +16,11 @@ config, environment = factory(yaml_config)
 parsl.load(config)
 
 # Install JEDI bundle
-#install = install.run(environment,
-#                      install_path=f"{workdir}",
-#                      stdout=f"{workdir}/install.out",
-#                      stderr=f"{workdir}/install.err",
-#                      tag="develop")
-install=None
+install = install.run(environment,
+                      install_path=f"{workdir}",
+                      stdout=f"{workdir}/install.out",
+                      stderr=f"{workdir}/install.err",
+                      tag="develop")
 
 # Run a "truth" forecast
 truth = forecast.run(environment,
@@ -41,6 +40,8 @@ truth = forecast.run(environment,
                      stderr=f"{workdir}/truth.err",
                      install=install)
 
+truth = None
+
 # Create obs for 3dvar
 obs = hofx.makeobs3d(environment,
                      install_path=f"{workdir}",
@@ -55,9 +56,9 @@ obs = hofx.makeobs3d(environment,
                      output:
                      datadir: {workdir}/experiments/QG/obs
                      """).strip()),
-                     stdout=f"{workdir}/truth.out",
-                     stderr=f"{workdir}/truth.err",
-                     install=install)
+                     stdout=f"{workdir}/makeob.out",
+                     stderr=f"{workdir}/makeob.err",
+                     forecast=truth)
 
 done = obs.result()
 
