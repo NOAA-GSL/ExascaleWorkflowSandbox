@@ -59,7 +59,7 @@ jobs:
         with:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_GITHUB_ROLE }}
-          role-duration-seconds: 1800 # 30 minutes
+          role-duration-seconds: 18000 # 5 hours
           role-session-name: chiltepin-github-actions
       -
         name: Test authentication
@@ -128,8 +128,9 @@ jobs:
           platforms: linux/arm64
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
           secrets: |
-            "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
-            "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
+            "spack_stack_buildcache_key=${{ env.AWS_ACCESS_KEY_ID }}"
+            "spack_stack_buildcache_secret_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
+            "spack_stack_buildcache_token=${{ env.AWS_SESSION_TOKEN }}"
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64:cache,mode=max
@@ -159,6 +160,18 @@ jobs:
       -
         name: Checkout repository
         uses: actions/checkout@v4
+      -
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_GITHUB_ROLE }}
+          role-duration-seconds: 18000 # 5 hours
+          role-session-name: chiltepin-github-actions
+      -
+        name: Test authentication
+        run: |
+          aws sts get-caller-identity
       -
         name: Make lint
         run:  |
@@ -202,8 +215,9 @@ jobs:
       -
         name: Create spack-stack Dockerfile and mirror
         run: |
-          export S3_BUILD_CACHE_KEY=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}
-          export S3_BUILD_CACHE_SECRET_KEY=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}
+          export S3_BUILD_CACHE_KEY=${{ env.AWS_ACCESS_KEY_ID }}
+          export S3_BUILD_CACHE_SECRET_KEY=${{ env.AWS_SECRET_ACCESS_KEY }}
+          export S3_BUILD_CACHE_TOKEN=${{ env.AWS_SESSION_TOKEN }}
           cd docker/spack-stack
           cat mirrors.in.yaml | envsubst > mirrors.yaml
           ./create_dockerfile.sh
@@ -215,8 +229,9 @@ jobs:
           file: ./docker/spack-stack/Dockerfile.flux-only
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
           secrets: |
-            "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
-            "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
+            "spack_stack_buildcache_key=${{ env.AWS_ACCESS_KEY_ID }}"
+            "spack_stack_buildcache_secret_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
+            "spack_stack_buildcache_token=${{ env.AWS_SESSION_TOKEN }}"
           push: false
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-amd64:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-amd64:cache
@@ -231,8 +246,9 @@ jobs:
           platforms: linux/amd64
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
           secrets: |
-            "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
-            "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
+            "spack_stack_buildcache_key=${{ env.AWS_ACCESS_KEY_ID }}"
+            "spack_stack_buildcache_secret_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
+            "spack_stack_buildcache_token=${{ env.AWS_SESSION_TOKEN }}"
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64:cache,mode=max
