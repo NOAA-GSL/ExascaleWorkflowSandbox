@@ -9,6 +9,7 @@ on:
 
 env:
   REGISTRY_IMAGE: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi
+  AWS_REGION: us-east-2
 
 jobs:
   build-spack-stack-arm64:
@@ -17,6 +18,7 @@ jobs:
     permissions:
       packages: write
       contents: read
+      id-token: write
     steps:
       -
         # Beta ARM runners do not have Docker installed
@@ -77,6 +79,17 @@ jobs:
           docker images
           docker image prune -a -f
           docker images
+      -
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_GITHUB_ROLE }}
+          role-duration-seconds: 1800 # 30 minutes
+          role-session-name: chiltepin-github-actions
+      - name: Test authentication
+        run: |
+          aws sts get-caller-identity
       -
         name: Create spack-stack Dockerfile and mirror
         run: |
