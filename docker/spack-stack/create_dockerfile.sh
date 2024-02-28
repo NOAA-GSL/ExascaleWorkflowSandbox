@@ -61,7 +61,8 @@ export docker_patch=$(
 cat<<'END_HEREDOC'
 RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml \
     --mount=type=secret,id=spack_stack_buildcache_key \
-    --mount=type=secret,id=spack_stack_buildcache_secret_key <<EOF
+    --mount=type=secret,id=spack_stack_buildcache_secret_key \
+    --mount=type=secret,id=spack_stack_buildcache_token <<EOF
   set -e
   cd /opt/spack-environment
   . $SPACK_ROOT/share/spack/setup-env.sh
@@ -73,6 +74,7 @@ RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml \
   if [ "$(spack mirror list | wc -l)" = "3" ]; then
     export AWS_ACCESS_KEY_ID=$(cat /run/secrets/spack_stack_buildcache_key)
     export AWS_SECRET_ACCESS_KEY=$(cat /run/secrets/spack_stack_buildcache_secret_key)
+    export AWS_SESSION_TOKEN=$(cat /run/secrets/spack_stack_buildcache_token)
     spack buildcache push --unsigned --update-index s3_spack_stack_buildcache_rw
   fi
   spack gc -y

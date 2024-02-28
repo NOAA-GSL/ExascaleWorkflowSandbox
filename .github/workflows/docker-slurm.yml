@@ -97,8 +97,9 @@ jobs:
       -
         name: Create spack-stack Dockerfile and mirror
         run: |
-          export S3_BUILD_CACHE_KEY=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}
-          export S3_BUILD_CACHE_SECRET_KEY=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}
+          export S3_BUILD_CACHE_KEY=${{ env.AWS_ACCESS_KEY_ID }}
+          export S3_BUILD_CACHE_SECRET_KEY=${{ env.AWS_SECRET_ACCESS_KEY }}
+          export S3_BUILD_CACHE_TOKEN=${{ env.AWS_SESSION_TOKEN }}
           cd docker/spack-stack
           cat mirrors.in.yaml | envsubst > mirrors.yaml
           ./create_dockerfile.sh
@@ -110,8 +111,9 @@ jobs:
           file: ./docker/spack-stack/Dockerfile.flux-only
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
           secrets: |
-            "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
-            "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
+            "spack_stack_buildcache_key=${{ env.AWS_ACCESS_KEY_ID }}"
+            "spack_stack_buildcache_secret_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
+            "spack_stack_buildcache_token=${{ env.AWS_SESSION_TOKEN }}"
           push: false
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-arm64:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-arm64:cache
