@@ -48,6 +48,9 @@ jobs:
         name: Test Docker Installation
         run: docker run hello-world
       -
+        name: Install AWS CLI
+        run: sudo apt install -y awscli
+      -
         name: Checkout repository
         uses: actions/checkout@v4
       -
