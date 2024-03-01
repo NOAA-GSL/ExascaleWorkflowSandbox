@@ -59,10 +59,7 @@ perl -p -i -e 's|(    mkdir -p \$SPACK_ROOT/opt/spack)|    curl -L $ENV{spack_pa
 # Create spack build command patch
 export docker_patch=$(
 cat<<'END_HEREDOC'
-RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml \
-    --mount=type=secret,id=access_key_id \
-    --mount=type=secret,id=secret_access_key \
-    --mount=type=secret,id=session_token <<EOF
+RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml <<EOF
   set -e
   cd /opt/spack-environment
   . $SPACK_ROOT/share/spack/setup-env.sh
@@ -72,9 +69,6 @@ RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml \
   python -m pip install parsl[monitoring]==2023.12.4
   spack mirror list
   if [ "$(spack mirror list | wc -l)" = "3" ]; then
-    export AWS_ACCESS_KEY_ID=$(cat /run/secrets/access_key_id)
-    export AWS_SECRET_ACCESS_KEY=$(cat /run/secrets/secret_access_key)
-    export AWS_SESSION_TOKEN=$(cat /run/secrets/session_token)
     spack buildcache push --unsigned --update-index s3_spack_stack_buildcache_rw
   fi
   spack gc -y
