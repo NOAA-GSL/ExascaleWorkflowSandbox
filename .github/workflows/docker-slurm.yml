@@ -59,7 +59,7 @@ jobs:
         with:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_GITHUB_ROLE }}
-          role-duration-seconds: 18000 # 5 hours
+          role-duration-seconds: 21600 # 6 hours
           role-session-name: chiltepin-github-actions
       -
         name: Test authentication
@@ -156,7 +156,7 @@ jobs:
         with:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_GITHUB_ROLE }}
-          role-duration-seconds: 18000 # 5 hours
+          role-duration-seconds: 21600 # 6 hours
           role-session-name: chiltepin-github-actions
       -
         name: Test authentication
