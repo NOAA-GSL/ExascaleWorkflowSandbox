@@ -1,0 +1,1 @@
+../docker/spack-stack/get_sso_credentials.sh
