@@ -107,6 +107,10 @@ jobs:
           context: ./docker/spack-stack
           file: ./docker/spack-stack/Dockerfile.flux-only
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
+          secrets: |
+            "access_key_id=${{ env.AWS_ACCESS_KEY_ID }}"
+            "secret_access_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
+            "session_token=${{ env.AWS_SESSION_TOKEN }}"
           push: false
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-arm64:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-arm64:cache
@@ -120,6 +124,10 @@ jobs:
           file: ./docker/spack-stack/Dockerfile
           platforms: linux/arm64
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
+          secrets: |
+            "access_key_id=${{ env.AWS_ACCESS_KEY_ID }}"
+            "secret_access_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
+            "session_token=${{ env.AWS_SESSION_TOKEN }}"
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64:cache,mode=max
@@ -215,6 +223,10 @@ jobs:
           context: ./docker/spack-stack
           file: ./docker/spack-stack/Dockerfile.flux-only
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
+          secrets: |
+            "access_key_id=${{ env.AWS_ACCESS_KEY_ID }}"
+            "secret_access_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
+            "session_token=${{ env.AWS_SESSION_TOKEN }}"
           push: false
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-amd64:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-amd64:cache
@@ -228,6 +240,10 @@ jobs:
           file: ./docker/spack-stack/Dockerfile
           platforms: linux/amd64
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
+          secrets: |
+            "access_key_id=${{ env.AWS_ACCESS_KEY_ID }}"
+            "secret_access_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
+            "session_token=${{ env.AWS_SESSION_TOKEN }}"
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64:cache,mode=max
