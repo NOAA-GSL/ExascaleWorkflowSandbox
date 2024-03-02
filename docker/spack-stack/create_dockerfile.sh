@@ -59,7 +59,10 @@ perl -p -i -e 's|(    mkdir -p \$SPACK_ROOT/opt/spack)|    curl -L $ENV{spack_pa
 # Create spack build command patch
 export docker_patch=$(
 cat<<'END_HEREDOC'
-RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml <<EOF
+RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml \
+    --mount=type=secret,id=access_key_id \
+    --mount=type=secret,id=secret_access_key \
+    --mount=type=secret,id=session_token <<EOF
   set -e
   cd /opt/spack-environment
   . $SPACK_ROOT/share/spack/setup-env.sh
