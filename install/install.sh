@@ -1,6 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set -e
+
+profile=$1
 
 export SPACK_VERSION=develop
 
@@ -13,14 +15,21 @@ popd
 # Initialize spack
 . spack/share/spack/setup-env.sh
 
+# Configure spack
+spack config add concretizer:unify:true
+spack config add concretizer:reuse:true
+spack config add config:db_lock_timeout:300
+spack config add config:install_tree:padded_length:128
+
 # Create and activate chiltepin environment
 spack env create chiltepin
 spack env activate chiltepin
 
 # Set up read-only mirror
-spack mirror add --s3-access-key-id "" --s3-access-key-secret "" s3_spack_stack_buildcache_ro s3://chiltepin/spack-stack/
-if [ -n "${S3_BUILD_CACHE_KEY}" ]; then
-  cat mirrors.in.yaml | envsubst > spack/etc/spack/mirrors.yaml
+spack mirror add --s3-access-key-id "" --s3-access-key-secret "" s3_spack_stack_buildcache_ro s3://chiltepin-us-east-2/spack-stack/
+if [ -n "${profile}" ]; then
+  source ./get_sso_credentials.sh $profile
+  cp mirrors.yaml spack/etc/spack/mirrors.yaml
   chmod 600 spack/etc/spack/mirrors.yaml
 fi
 spack mirror list
@@ -29,13 +38,13 @@ spack mirror list
 spack add python
 spack add py-pip
 spack add py-pytest
-spack add flux-core@0.53.0
-spack add flux-sched@0.28.0
+spack add flux-core@0.58.0
+spack add flux-sched@0.32.0
 spack add py-flake8
 spack add py-pytest-flake8
 
 # Concretize and install the spack packages 
-spack install --fail-fast --no-check-signature
+spack install --fail-fast --no-check-signature --deprecated
 
 # Install parsl, black, and isort
 python -m pip install parsl[monitoring]==2023.12.4
@@ -44,7 +53,5 @@ python -m pip install pytest-isort
 
 # Push the packages to the mirror
 if [ "$(spack mirror list | wc -l)" = "3" ]; then
-  export AWS_ACCESS_KEY_ID=${S3_BUILD_CACHE_KEY}
-  export AWS_SECRET_ACCESS_KEY=${S3_BUILD_CACHE_SECRET_KEY}
   spack buildcache push --unsigned --update-index s3_spack_stack_buildcache_rw
 fi

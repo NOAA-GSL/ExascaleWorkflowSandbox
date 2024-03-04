@@ -9,14 +9,16 @@ on:
 
 env:
   REGISTRY_IMAGE: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi
+  AWS_REGION: us-east-2
 
 jobs:
-  build-spack-stack-arm64:
+  build-flux-cache-arm64:
     runs-on: LinuxARM64-4core-16G-150Gb
     timeout-minutes: 360
     permissions:
       packages: write
       contents: read
+      id-token: write
     steps:
       -
         # Beta ARM runners do not have Docker installed
@@ -46,8 +48,23 @@ jobs:
         name: Test Docker Installation
         run: docker run hello-world
       -
+        name: Install AWS CLI
+        run: sudo apt install -y awscli
+      -
         name: Checkout repository
         uses: actions/checkout@v4
+      -
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_GITHUB_ROLE }}
+          role-duration-seconds: 21600 # 6 hours
+          role-session-name: chiltepin-github-actions
+      -
+        name: Test authentication
+        run: |
+          aws sts get-caller-identity
       -
         name: Docker meta
         id: meta
@@ -80,8 +97,6 @@ jobs:
       -
         name: Create spack-stack Dockerfile and mirror
         run: |
-          export S3_BUILD_CACHE_KEY=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}
-          export S3_BUILD_CACHE_SECRET_KEY=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}
           cd docker/spack-stack
           cat mirrors.in.yaml | envsubst > mirrors.yaml
           ./create_dockerfile.sh
@@ -93,53 +108,37 @@ jobs:
           file: ./docker/spack-stack/Dockerfile.flux-only
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
           secrets: |
-            "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
-            "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
+            "access_key_id=${{ env.AWS_ACCESS_KEY_ID }}"
+            "secret_access_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
+            "session_token=${{ env.AWS_SESSION_TOKEN }}"
           push: false
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-arm64:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-arm64:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-arm64:cache,mode=max
-      -
-        name: Build spack-stack and push by digest
-        id: build
-        uses: docker/build-push-action@v5
-        with:
-          context: ./docker/spack-stack
-          file: ./docker/spack-stack/Dockerfile
-          platforms: linux/arm64
-          secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
-          secrets: |
-            "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
-            "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64:cache,mode=max
-          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
-      -
-        name: Export digest
-        run: |
-          mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
-      -
-        name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          name: digests-linux-arm64
-          path: /tmp/digests/*
-          if-no-files-found: error
-          retention-days: 1
 
-  build-spack-stack-amd64:
+  build-flux-cache-amd64:
     runs-on: ubuntu2204-4c-16g-150ssd
     timeout-minutes: 360
     permissions:
       packages: write
       contents: read
+      id-token: write
     steps:
       -
         name: Checkout repository
         uses: actions/checkout@v4
+      -
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_GITHUB_ROLE }}
+          role-duration-seconds: 21600 # 6 hours
+          role-session-name: chiltepin-github-actions
+      -
+        name: Test authentication
+        run: |
+          aws sts get-caller-identity
       -
         name: Make lint
         run:  |
@@ -183,8 +182,6 @@ jobs:
       -
         name: Create spack-stack Dockerfile and mirror
         run: |
-          export S3_BUILD_CACHE_KEY=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}
-          export S3_BUILD_CACHE_SECRET_KEY=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}
           cd docker/spack-stack
           cat mirrors.in.yaml | envsubst > mirrors.yaml
           ./create_dockerfile.sh
@@ -196,12 +193,205 @@ jobs:
           file: ./docker/spack-stack/Dockerfile.flux-only
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
           secrets: |
-            "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
-            "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
+            "access_key_id=${{ env.AWS_ACCESS_KEY_ID }}"
+            "secret_access_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
+            "session_token=${{ env.AWS_SESSION_TOKEN }}"
           push: false
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-amd64:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-amd64:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/flux-cache-amd64:cache,mode=max
+
+  build-spack-stack-arm64:
+    runs-on: LinuxARM64-4core-16G-150Gb
+    needs: build-flux-cache-arm64
+    timeout-minutes: 360
+    permissions:
+      packages: write
+      contents: read
+      id-token: write
+    steps:
+      -
+        # Beta ARM runners do not have Docker installed
+        name: Install Docker
+        run: |
+           # Uninstall incompatible packages
+           for pkg in docker.io containerd runc; do sudo apt-get remove $pkg; done
+           # Add Docker's official GPG key:
+           sudo apt-get update
+           sudo apt-get install ca-certificates curl
+           sudo install -m 0755 -d /etc/apt/keyrings
+           sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+           sudo chmod a+r /etc/apt/keyrings/docker.asc
+           # Add the repository to Apt sources:
+           echo \
+             "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+             $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+             sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+           sudo apt-get update -y
+           # Install docker packages
+           sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+           # Allow runner use to run docker without sudo
+           sudo usermod -aG docker $USER
+           sudo apt-get install acl
+           sudo setfacl --modify user:$USER:rw /var/run/docker.sock
+      -
+        name: Test Docker Installation
+        run: docker run hello-world
+      -
+        name: Install AWS CLI
+        run: sudo apt install -y awscli
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_GITHUB_ROLE }}
+          role-duration-seconds: 21600 # 6 hours
+          role-session-name: chiltepin-github-actions
+      -
+        name: Test authentication
+        run: |
+          aws sts get-caller-identity
+      -
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=raw,value=latest
+          flavor: |
+            latest=true
+            prefix=
+            suffix=
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      -
+        name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
+      -
+        name: Prune pre-loaded GHA docker images
+        run: |
+          docker images
+          docker image prune -a -f
+          docker images
+      -
+        name: Create spack-stack Dockerfile and mirror
+        run: |
+          cd docker/spack-stack
+          cat mirrors.in.yaml | envsubst > mirrors.yaml
+          ./create_dockerfile.sh
+      -
+        name: Build spack-stack and push by digest
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker/spack-stack
+          file: ./docker/spack-stack/Dockerfile
+          platforms: linux/arm64
+          secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
+          secrets: |
+            "access_key_id=${{ env.AWS_ACCESS_KEY_ID }}"
+            "secret_access_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
+            "session_token=${{ env.AWS_SESSION_TOKEN }}"
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64:cache
+          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64:cache,mode=max
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+      -
+        name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+      -
+        name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-linux-arm64
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  build-spack-stack-amd64:
+    runs-on: ubuntu2204-4c-16g-150ssd
+    needs: build-flux-cache-amd64
+    timeout-minutes: 360
+    permissions:
+      packages: write
+      contents: read
+      id-token: write
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_GITHUB_ROLE }}
+          role-duration-seconds: 21600 # 6 hours
+          role-session-name: chiltepin-github-actions
+      -
+        name: Test authentication
+        run: |
+          aws sts get-caller-identity
+      -
+        name: Make lint
+        run:  |
+          pip install flake8
+          flake8 src tests
+      -
+        name: Format Check
+        run:  |
+          pip install black isort
+          black src tests --check --diff
+          isort src tests --check --diff
+      -
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=raw,value=latest
+          flavor: |
+            latest=true
+            prefix=
+            suffix=
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      -
+        name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
+      -
+        name: Prune pre-loaded GHA docker images
+        run: |
+          docker images
+          docker image prune -a -f
+          docker images
+      -
+        name: Create spack-stack Dockerfile and mirror
+        run: |
+          cd docker/spack-stack
+          cat mirrors.in.yaml | envsubst > mirrors.yaml
+          ./create_dockerfile.sh
       -
         name: Build spack-stack and push by digest
         id: build
@@ -212,8 +402,9 @@ jobs:
           platforms: linux/amd64
           secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
           secrets: |
-            "spack_stack_buildcache_key=${{ secrets.SPACK_STACK_BUILDCACHE_KEY }}"
-            "spack_stack_buildcache_secret_key=${{ secrets.SPACK_STACK_BUILDCACHE_SECRET_KEY }}"
+            "access_key_id=${{ env.AWS_ACCESS_KEY_ID }}"
+            "secret_access_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
+            "session_token=${{ env.AWS_SESSION_TOKEN }}"
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64:cache,mode=max
