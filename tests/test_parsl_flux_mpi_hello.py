@@ -10,7 +10,7 @@ import chiltepin.config
 
 
 # Print out resources that Flux sees after it starts
-@bash_app
+@bash_app(executors=["compute"])
 def resource_list(stdout=None, stderr=None, env=""):
     return f"""
     {env}
