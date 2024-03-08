@@ -1,13 +1,50 @@
 #!/usr/bin/env python3
 
+from datetime import datetime, timedelta
 import parsl
 import sys
 import textwrap
 import yaml
 
 from chiltepin.config import factory, parse_file
+from chiltepin.jedi import leadtime
 from chiltepin.jedi.qg import install, forecast, hofx
-from chiltepin.jedi.qg.config import merge_config, forecast_default
+from chiltepin.jedi.qg.config import merge_config, forecast_default, makeobs3d_default
+
+def configure_truth(exp_path, t):
+    truth_config = forecast_default()
+    truth_config["geometry"]["nx"] = 80
+    truth_config["geometry"]["ny"] = 40
+    truth_config["initial condition"]["date"] = t.strftime("%Y-%m-%dT%H:%M:%SZ")
+    truth_config["initial condition"]["read_from_file"] = 0
+    truth_config["output"]["exp"] = "truth"
+    truth_config["output"]["datadir"] = f"{exp_path}/truth"
+    return truth_config
+
+def configure_makeobs(exp_path, t, exp_start, window_offset, window_length):
+    window_begin = t + timedelta(0, leadtime.fcst_to_seconds(window_offset))
+    truth_leadtime = leadtime.seconds_to_fcst(int((window_begin - exp_start).total_seconds()))
+    makeobs_config = makeobs3d_default()
+    makeobs_config["geometry"]["nx"] = 80
+    makeobs_config["geometry"]["ny"] = 40
+    makeobs_config["initial condition"]["date"] = window_begin.strftime("%Y-%m-%dT%H:%M:%SZ")
+    makeobs_config["initial condition"]["filename"] = f"{workdir}/experiments/QG/truth/truth.fc.{exp_start.strftime('%Y-%m-%dT%H:%M:%SZ')}.{truth_leadtime}.nc"
+    makeobs_config["forecast length"] = window_length
+    makeobs_config["time window"]["begin"] = window_begin.strftime("%Y-%m-%dT%H:%M:%SZ")
+    makeobs_config["time window"]["length"] = window_length
+    for observer in makeobs_config["observations"]["observers"]:
+        obsfile = f'{exp_path}/forecast/{t.strftime("%Y-%m-%dT%H:%M:%SZ")}/qg.truth.3d.{t.strftime("%Y-%m-%dT%H:%M:%SZ")}.nc'
+        observer["obs space"]["obsdataout"]["obsfile"] = obsfile
+        if (observer["obs operator"]["obs type"] == "Stream"):
+            observer["obs space"]["generate"]["begin"] = "PT1H"
+            observer["obs space"]["generate"]["obs period"] = "PT30M"
+        elif (observer["obs operator"]["obs type"] == "Wind"):
+            observer["obs space"]["generate"]["begin"] = "PT2H"
+            observer["obs space"]["generate"]["obs period"] = "PT1H"
+        elif (observer["obs operator"]["obs type"] == "WSpeed"):
+            observer["obs space"]["generate"]["begin"] = "PT1H"
+            observer["obs space"]["generate"]["obs period"] = "PT1H"
+    return makeobs_config
 
 workdir = "/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.qg/tests"
 
@@ -16,6 +53,13 @@ yaml_config = parse_file(config_file)
 resource_config, environment = factory(yaml_config)
 parsl.load(resource_config)
 
+# Set up experiment parameters
+exp_start_str = "2024-01-01T00:00:00Z"
+exp_start_date = datetime.strptime(exp_start_str, "%Y-%m-%dT%H:%M:%SZ")
+exp_length = leadtime.fcst_to_seconds("P1D")
+exp_freq = leadtime.fcst_to_seconds("PT6H")
+exp_end_date = exp_start_date + timedelta(0, exp_length) - timedelta(0, exp_freq)
+
 # Install JEDI bundle
 #install = install.run(environment,
 #                      install_path=f"{workdir}",
@@ -23,95 +67,53 @@ parsl.load(resource_config)
 #                      stderr=f"{workdir}/install.err",
 #                      tag="develop")
 
-# Make the "truth" forecast configuration
-#truth_config = yaml.safe_load(textwrap.dedent(f"""
-#               geometry:
-#                   nx: 80
-#                   ny: 40
-#               initial condition:
-#                   read_from_file: 0
-#               output:
-#                   exp: truth
-#                   datadir: {workdir}/experiments/QG/truth
-#  
-#               """).strip())
-#
-#truth = forecast.run(environment,
-#                     install_path=f"{workdir}",
-#                     tag="develop",
-#                     rundir=f"{workdir}/experiments/QG/truth",
-#                     config=truth_config,
-#                     stdout=f"{workdir}/truth.out",
-#                     stderr=f"{workdir}/truth.err",
-#                     install=install)
+install = None
 
-truth = None
-
-# Create obs for 3dvar
-obs = hofx.makeobs3d(environment,
+# Run the "truth" forecast
+truth = forecast.run(environment,
                      install_path=f"{workdir}",
                      tag="develop",
-                     rundir=f"{workdir}/experiments/QG/obs",
-                     config=yaml.safe_load(textwrap.dedent(f"""
-                     geometry:
-                       nx: 80
-                       ny: 40
-                       depths: [4500.0, 5500.0]
-                     initial condition:
-                       date: "2009-12-31T03:00:00Z"
-                       filename: {workdir}/experiments/QG/truth/truth.fc.2009-12-31T00:00:00Z.PT3H.nc
-                     model:
-                       name: QG
-                       tstep: PT10M
-                     forecast length: PT6H
-                     time window:
-                       begin: "2009-12-31T03:00:00Z"
-                       length: PT6H
-                     observations:
-                       observers:
-                       - obs operator:
-                           obs type: Stream
-                         obs space:
-                           obsdataout:
-                             obsfile: {workdir}/experiments/QG/obs/truth.obs3d.nc
-                           obs type: Stream
-                           generate:
-                             begin: PT2H
-                             nval: 1
-                             obs density: 100
-                             obs error: 4.0e6
-                             obs period: PT1H
-                       - obs operator:
-                           obs type: Wind
-                         obs space:
-                           obsdataout:
-                             obsfile: {workdir}/experiments/QG/obs/truth.obs3d.nc
-                           obs type: Wind
-                           generate:
-                             begin: PT3H
-                             nval: 2
-                             obs density: 100
-                             obs error: 6.0
-                             obs period: PT2H
-                       - obs operator:
-                           obs type: WSpeed
-                         obs space:
-                           obsdataout:
-                             obsfile: {workdir}/experiments/QG/obs//truth.obs3d.nc
-                           obs type: WSpeed
-                           generate:
-                             begin: PT4H
-                             nval: 1
-                             obs density: 100
-                             obs error: 12.0
-                             obs period: PT2H
-                     make obs: true
-                     """).strip()),
-                     stdout=f"{workdir}/makeob.out",
-                     stderr=f"{workdir}/makeob.err",
-                     forecast=truth)
+                     rundir=f"{workdir}/experiments/QG/truth",
+                     config=configure_truth(f"{workdir}/experiments/QG", exp_start_date),
+                     stdout=f"{workdir}/truth.out",
+                     stderr=f"{workdir}/truth.err",
+                     install=install)
 
-done = obs.result()
+# Run each cycle of the experiment
+t = exp_start_date
+obs=[]
+while (t <= exp_end_date):
+
+    # Get the cycle date in string format
+    t_str = t.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    print(f"Running cycle: {t_str}")
+
+    # Create obs for 3dvar
+    if (t > exp_start_date):
+        obs.append(hofx.makeobs3d(environment,
+                                  install_path=f"{workdir}",
+                                  tag="develop",
+                                  rundir=f"{workdir}/experiments/QG/forecast/{t.strftime('%Y-%m-%dT%H:%M:%SZ')}",
+                                  config=configure_makeobs(f"{workdir}/experiments/QG", t, exp_start_date, "MT3H", "PT6H"),
+                                  stdout=f"{workdir}/makeobs.2024-01-01T06:00:00Z.out",
+                                  stderr=f"{workdir}/makeobs.2024-01-01T06:00:00Z.err",
+                                  forecast=truth))
+
+# Run 3dvar
+#var3d = variational.var3d(environment,
+#                          install_path=f"{workdir}",
+#                          tag="develop",
+#                          rundir=f"{workdir}/experiments/QG/obs",
+#                          config=configure_var3d(f"{workdir}/experiments/QG", t, exp_start_date, "MT3H", "PT6H")
+#                          stdout=f"{workdir}/makeob.out",
+#                          stderr=f"{workdir}/makeob.err",
+#                          forecast=truth)
+
+    t = t + timedelta(0, exp_freq)
+
+for ob in obs:
+    done = ob.result()
 
 parsl.clear
 
