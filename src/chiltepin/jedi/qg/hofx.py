@@ -21,8 +21,7 @@ def _configure_make_obs3d(rundir,
         os.makedirs(rundir)
 
     # Dump the yaml config for input to makeobs3d execution
-    analysis_date = makeobs3d_config["initial condition"]["date"]
-    config_filename = f"{rundir}/makeobs3d.{analysis_date}.yaml"
+    config_filename = f"{rundir}/makeobs3d.yaml"
     with open(config_filename, "w") as yaml_file:
         yaml.dump(makeobs3d_config, yaml_file, default_flow_style=False)
 
@@ -52,6 +51,7 @@ def makeobs3d(env,
     configure = _configure_make_obs3d(rundir,
                                       config=config,
                                       forecast=forecast)
+
     execute = _execute_make_obs3d(env,
                                   rundir,
                                   install_path,
