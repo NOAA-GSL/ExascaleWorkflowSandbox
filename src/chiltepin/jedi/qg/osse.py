@@ -131,6 +131,7 @@ class Experiment:
         nx = self.config["forecast"]["nx"]
         ny = self.config["forecast"]["ny"]
         dt = self.config["forecast"]["tstep"]
+        fcst_path = f"{self.config['experiment']['path']}/forecast/{t_str}"
         if (t_str == exp_begin_str):
             read_from_file = 0
             analysis_file = "None"
@@ -140,8 +141,7 @@ class Experiment:
             prev_cycle = t - timedelta(0, leadtime.fcst_to_seconds(exp_freq))
             prev_cycle_str = prev_cycle.strftime("%Y-%m-%dT%H:%M:%SZ")
             prev_cycle_path = f"{self.config['experiment']['path']}/forecast/{prev_cycle_str}"
-            analysis_file = f"{prev_cycle_path}/forecast.fc.{prev_cycle_str}.{exp_freq}.nc"
-        fcst_path = f"{self.config['experiment']['path']}/forecast/{t_str}"
+            analysis_file = f"{fcst_path}/3dvar.an.{t_str}.nc"
         fcst_config = forecast_default()
         merge_config_str(fcst_config, textwrap.dedent(f"""
         forecast length: {fcst_length}
