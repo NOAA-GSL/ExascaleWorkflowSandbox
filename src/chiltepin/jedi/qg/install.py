@@ -55,22 +55,22 @@ def run(environment, install_path, tag="develop", stdout=None, stderr=None):
 
     clone = _clone(environment,
                    install_path=install_path,
+                   tag=tag,
                    stdout=stdout,
-                   stderr=stderr,
-                   tag=tag)
+                   stderr=stderr)
 
     configure = _configure(environment,
                            install_path=install_path,
+                           tag=tag,
                            stdout=stdout,
                            stderr=stderr,
-                           tag=tag,
                            clone=clone)
 
     make = _make(environment,
                  install_path=install_path,
+                 tag=tag,
                  stdout=stdout,
                  stderr=stderr,
-                 tag=tag,
                  configure=configure)
 
     return(make)

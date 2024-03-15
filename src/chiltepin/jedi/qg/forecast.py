@@ -3,23 +3,22 @@ import os
 import shutil
 import textwrap
 import yaml
-from chiltepin.jedi.qg.config import merge_config, forecast_default
+from chiltepin.jedi.qg.config import merge_config_dict, forecast_default
 
 @python_app(executors=['serial'])
 def _configure(rundir,
                config,
                install=None,
-               assimilation=None):
+               analysis=None):
     # Set forecast configuration to the default
     forecast_config = forecast_default()
 
     # Merge input configuration overrides into default
-    merge_config(forecast_config, config)
+    merge_config_dict(forecast_config, config)
 
     # Make an empty forecast run directory
-    if (os.path.exists(rundir)):
-        shutil.rmtree(rundir)
-    os.makedirs(rundir)
+    if (not os.path.exists(rundir)):
+        os.makedirs(rundir)
 
     # Dump the yaml config for input to forecast execution
     config_filename = f"{rundir}/forecast.yaml"
@@ -30,7 +29,7 @@ def _configure(rundir,
     return config_filename
 
 @bash_app(executors=['parallel'])
-def _execute(env, rundir, install_path, config_file, tag="develop", stdout=None, stderr=None, assimilation=None):
+def _execute(env, rundir, install_path, config_file, tag="develop", stdout=None, stderr=None, analysis=None):
     # Run the forecast executable
     return env + textwrap.dedent(f'''
     echo Started at $(date)
@@ -48,12 +47,12 @@ def run(env,
         stdout=None,
         stderr=None,
         install=None,
-        assimilation=None):
+        analysis=None):
 
     configure = _configure(rundir,
                            config=config,
                            install=install,
-                           assimilation=assimilation)
+                           analysis=analysis)
     execute = _execute(env,
                        rundir,
                        install_path,
@@ -61,5 +60,5 @@ def run(env,
                        tag=tag,
                        stdout=stdout,
                        stderr=stderr,
-                       assimilation=assimilation)
+                       analysis=analysis)
     return(execute)

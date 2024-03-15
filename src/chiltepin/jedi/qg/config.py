@@ -1,13 +1,16 @@
 import textwrap
 import yaml
 
-def merge_config(d1, d2):
+def merge_config_dict(d1, d2):
     for key, value in d2.items():
         if key in d1 and isinstance(d1[key], dict) and isinstance(value, dict):
-            merge_config(d1[key], value)
+            merge_config_dict(d1[key], value)
         else:
             d1[key] = value
 
+def merge_config_str(d1, s1):
+    d2 = yaml.safe_load(s1.strip())
+    merge_config_dict(d1, d2)
 
 def forecast_default():
     return yaml.safe_load(textwrap.dedent(f"""
@@ -33,7 +36,7 @@ def forecast_default():
       frequency: PT3H
     """).strip())
 
-def makeobs3d_default():
+def make_obs3d_default():
     return yaml.safe_load(textwrap.dedent(f"""
     geometry:
       nx: 40
