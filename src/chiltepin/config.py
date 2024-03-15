@@ -63,7 +63,7 @@ def factory(yaml_config={}):
                     init_blocks=1,
                     partition=pc["partition"],
                     account=pc["account"],
-                    walltime="02:10:00",
+                    walltime="08:00:00",
                     launcher=SimpleLauncher(),
                     worker_init="""
                     """,
