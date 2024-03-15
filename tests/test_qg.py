@@ -61,8 +61,6 @@ install = install.run(environment,
                       stdout=f"{experiment.path}/install_jedi.out",
                       stderr=f"{experiment.path}/install_jedi.err")
 
-install = None
-
 # Run the "truth" forecast
 truth = experiment.make_truth(environment, install)
 
