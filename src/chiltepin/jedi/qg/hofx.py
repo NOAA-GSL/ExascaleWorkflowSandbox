@@ -1,9 +1,9 @@
 from parsl.app.app import bash_app, python_app, join_app
 import os
-import shutil
 import textwrap
 import yaml
 from chiltepin.jedi.qg.config import merge_config_dict, make_obs3d_default
+
 
 @python_app(executors=['serial'])
 def _configure_make_obs3d(rundir,
@@ -15,7 +15,7 @@ def _configure_make_obs3d(rundir,
 
     # Merge input configuration overrides into default
     merge_config_dict(make_obs3d_config, config)
-    
+
     # Make makeobs3d run directory if necessary
     if (not os.path.exists(rundir)):
         os.makedirs(rundir)
@@ -28,6 +28,7 @@ def _configure_make_obs3d(rundir,
     # Return the configuration file path
     return config_filename
 
+
 @bash_app(executors=['parallel'])
 def _execute_make_obs3d(env, rundir, install_path, config_file, tag="develop", stdout=None, stderr=None):
     # Run the hofx executable
@@ -37,6 +38,7 @@ def _execute_make_obs3d(env, rundir, install_path, config_file, tag="develop", s
     {install_path}/jedi-bundle/{tag}/build/bin/qg_hofx.x {config_file}
     echo Completed at $(date)
     """)
+
 
 @join_app
 def makeobs3d(env,
@@ -60,4 +62,4 @@ def makeobs3d(env,
                                   stdout=stdout,
                                   stderr=stderr)
 
-    return(execute)
+    return execute

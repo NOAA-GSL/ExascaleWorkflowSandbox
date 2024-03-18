@@ -1,9 +1,9 @@
 from parsl.app.app import bash_app, python_app, join_app
 import os
-import shutil
 import textwrap
 import yaml
 from chiltepin.jedi.qg.config import merge_config_dict, var3d_default
+
 
 @python_app(executors=['serial'])
 def _configure_var3d(rundir,
@@ -16,7 +16,7 @@ def _configure_var3d(rundir,
 
     # Merge input configuration overrides into default
     merge_config_dict(var3d_config, config)
-    
+
     # Make var3d run directory if necessary
     if (not os.path.exists(rundir)):
         os.makedirs(rundir)
@@ -29,6 +29,7 @@ def _configure_var3d(rundir,
     # Return the configuration file path
     return config_filename
 
+
 @bash_app(executors=['parallel'])
 def _execute_var3d(env, rundir, install_path, config_file, tag="develop", stdout=None, stderr=None):
     # Run the 3dvar executable
@@ -38,6 +39,7 @@ def _execute_var3d(env, rundir, install_path, config_file, tag="develop", stdout
     {install_path}/jedi-bundle/{tag}/build/bin/qg_4dvar.x {config_file}
     echo Completed at $(date)
     """)
+
 
 @join_app
 def run_3dvar(env,
@@ -63,4 +65,4 @@ def run_3dvar(env,
                              stdout=stdout,
                              stderr=stderr)
 
-    return(execute)
+    return execute

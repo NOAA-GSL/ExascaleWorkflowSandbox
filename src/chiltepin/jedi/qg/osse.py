@@ -2,17 +2,30 @@ from datetime import datetime, timedelta
 import textwrap
 import yaml
 
+
 from chiltepin.jedi import leadtime
 from chiltepin.jedi.qg.config import merge_config_str, forecast_default, make_obs3d_default, var3d_default
-from chiltepin.jedi.qg import forecast, hofx, variational
+from chiltepin.jedi.qg import install, forecast, hofx, variational
+
 
 class Experiment:
-    
+
     def __init__(self, config):
         # Parse the experiment configuration
         config_yaml = yaml.safe_load(config)
         self.config = config_yaml
-        
+
+    def install_jedi(self, environment):
+        jedi_path = self.config["jedi"]["install path"]
+        jedi_tag = self.config["jedi"]["tag"]
+        log_path = f"{self.config['experiment']['path']}/log"
+        jedi = install.run(environment,
+                           install_path=jedi_path,
+                           tag=jedi_tag,
+                           stdout=f"{log_path}/install_jedi.out",
+                           stderr=f"{log_path}/install_jedi.err")
+        return jedi
+
     def _make_truth_config(self):
         exp_length = leadtime.fcst_to_seconds(self.config["experiment"]["length"])
         exp_freq = leadtime.fcst_to_seconds(self.config["experiment"]["frequency"])
@@ -111,7 +124,6 @@ class Experiment:
         jedi_tag = self.config["jedi"]["tag"]
         obs_path = f"{self.config['experiment']['path']}/forecast/{t_str}"
         log_path = f"{self.config['experiment']['path']}/log"
-        cfg = self._make_obs_config(t)
         obs = hofx.makeobs3d(environment,
                              install_path=jedi_path,
                              tag=jedi_tag,
@@ -125,7 +137,6 @@ class Experiment:
     def _make_forecast_config(self, t):
         t_str = t.strftime("%Y-%m-%dT%H:%M:%SZ")
         exp_begin_str = self.config["experiment"]["begin"]
-        exp_freq = self.config["experiment"]["frequency"]
         fcst_length = self.config["forecast"]["length"]
         fcst_freq = self.config["forecast"]["frequency"]
         nx = self.config["forecast"]["nx"]
@@ -137,10 +148,11 @@ class Experiment:
             analysis_file = "None"
         else:
             read_from_file = 1
-            exp_freq = self.config['experiment']['frequency']
-            prev_cycle = t - timedelta(0, leadtime.fcst_to_seconds(exp_freq))
-            prev_cycle_str = prev_cycle.strftime("%Y-%m-%dT%H:%M:%SZ")
-            prev_cycle_path = f"{self.config['experiment']['path']}/forecast/{prev_cycle_str}"
+            # These commented lines needed for cycling without DA from a prev cycle fcst
+            # exp_freq = self.config['experiment']['frequency']
+            # prev_cycle = t - timedelta(0, leadtime.fcst_to_seconds(exp_freq))
+            # prev_cycle_str = prev_cycle.strftime("%Y-%m-%dT%H:%M:%SZ")
+            # prev_cycle_path = f"{self.config['experiment']['path']}/forecast/{prev_cycle_str}"
             analysis_file = f"{fcst_path}/3dvar.an.{t_str}.nc"
         fcst_config = forecast_default()
         merge_config_str(fcst_config, textwrap.dedent(f"""
@@ -161,7 +173,7 @@ class Experiment:
           datadir: {fcst_path}
         """).strip())
         return fcst_config
-        
+
     def run_forecast(self, environment, t, install=None, analysis=None):
         t_str = t.strftime("%Y-%m-%dT%H:%M:%SZ")
         jedi_path = self.config["jedi"]["install path"]
@@ -188,11 +200,11 @@ class Experiment:
         window_begin_str = window_begin.strftime("%Y-%m-%dT%H:%M:%SZ")
         window_length = self.config["assimilation"]["window"]["length"]
         bkg_offset = leadtime.fcst_to_seconds(self.config["assimilation"]["window"]["begin"]) + \
-                     leadtime.fcst_to_seconds(self.config["experiment"]["frequency"]) +          \
-                     (leadtime.fcst_to_seconds(window_length) // 2)
+            leadtime.fcst_to_seconds(self.config["experiment"]["frequency"]) + \
+            (leadtime.fcst_to_seconds(window_length) // 2)
         bkg_date = t - \
-                   timedelta(0, leadtime.fcst_to_seconds(self.config["experiment"]["frequency"])) + \
-                   timedelta(0, bkg_offset)
+            timedelta(0, leadtime.fcst_to_seconds(self.config["experiment"]["frequency"])) + \
+            timedelta(0, bkg_offset)
         bkg_date_str = bkg_date.strftime("%Y-%m-%dT%H:%M:%SZ")
         prev_cycle = t - timedelta(0, leadtime.fcst_to_seconds(exp_freq))
         prev_cycle_str = prev_cycle.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -233,9 +245,8 @@ class Experiment:
             iteration["geometry"]["ny"] = ny
             iteration["online diagnostics"]["increment"]["state component"]["datadir"] = var3d_path
             iteration["online diagnostics"]["increment"]["state component"]["date"] = var3d_path
-            
-        return var3d_config
 
+        return var3d_config
 
     def run_3dvar(self, environment, t, obs, background):
         t_str = t.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -243,7 +254,6 @@ class Experiment:
         jedi_tag = self.config["jedi"]["tag"]
         var3d_path = f"{self.config['experiment']['path']}/forecast/{t_str}"
         log_path = f"{self.config['experiment']['path']}/log"
-        cfg = self._make_obs_config(t)
         var3d = variational.run_3dvar(environment,
                                       install_path=jedi_path,
                                       tag=jedi_tag,
