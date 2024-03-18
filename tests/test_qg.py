@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 
-from datetime import datetime, timedelta
-import parsl
 import sys
 import textwrap
+from datetime import datetime, timedelta
+
+import parsl
 
 from chiltepin.config import factory, parse_file
 from chiltepin.jedi import leadtime
 from chiltepin.jedi.qg.osse import Experiment
 
 workdir = "/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.qg/tests"
-experiment = Experiment(textwrap.dedent(f"""
+experiment = Experiment(
+    textwrap.dedent(
+        f"""
 jedi:
   install path: {workdir}
   tag: develop
@@ -43,10 +46,16 @@ forecast:
   tstep: PT1H
   length: P2D
   frequency: PT1H
-""").strip())
+"""
+    ).strip()
+)
 
-exp_begin = datetime.strptime(experiment.config["experiment"]["begin"], "%Y-%m-%dT%H:%M:%SZ")
-exp_end = exp_begin + timedelta(0, leadtime.fcst_to_seconds(experiment.config["experiment"]["length"]))
+exp_begin = datetime.strptime(
+    experiment.config["experiment"]["begin"], "%Y-%m-%dT%H:%M:%SZ"
+)
+exp_end = exp_begin + timedelta(
+    0, leadtime.fcst_to_seconds(experiment.config["experiment"]["length"])
+)
 
 config_file = sys.argv[1]
 yaml_config = parse_file(config_file)
@@ -54,7 +63,8 @@ resource_config, environment = factory(yaml_config)
 parsl.load(resource_config)
 
 # Install JEDI bundle
-install = experiment.install_jedi(environment)
+#install = experiment.install_jedi(environment)
+install = None
 
 # Run the "truth" forecast
 truth = experiment.make_truth(environment, install)
@@ -63,14 +73,14 @@ truth = experiment.make_truth(environment, install)
 background = None
 analysis = None
 t = exp_begin
-while (t <= exp_end):
+while t <= exp_end:
     # Get the cycle date in string format
     t_str = t.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     print(f"Running cycle: {t_str}")
 
     # Run the assimilation (except for first cycle)
-    if (t > exp_begin):
+    if t > exp_begin:
 
         # Create observations for this cycle
         obs = experiment.make_obs(environment, t, truth)
@@ -85,7 +95,9 @@ while (t <= exp_end):
     background = fcst
 
     # Increment experiment cycle
-    t = t + timedelta(0, leadtime.fcst_to_seconds(experiment.config["experiment"]["frequency"]))
+    t = t + timedelta(
+        0, leadtime.fcst_to_seconds(experiment.config["experiment"]["frequency"])
+    )
 
 # Wait for the experiment to finish
 fcst.result()
