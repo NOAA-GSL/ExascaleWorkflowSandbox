@@ -149,7 +149,7 @@ jobs:
         run:  |
           pip install black isort
           black src tests --check --diff
-          isort src tests --check --diff
+          isort src tests --check --diff --profile black
       -
         name: Docker meta
         id: meta
@@ -356,7 +356,7 @@ jobs:
         run:  |
           pip install black isort
           black src tests --check --diff
-          isort src tests --check --diff
+          isort src tests --check --diff --profile black
       -
         name: Docker meta
         id: meta
