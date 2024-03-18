@@ -63,8 +63,7 @@ resource_config, environment = factory(yaml_config)
 parsl.load(resource_config)
 
 # Install JEDI bundle
-#install = experiment.install_jedi(environment)
-install = None
+install = experiment.install_jedi(environment)
 
 # Run the "truth" forecast
 truth = experiment.make_truth(environment, install)
