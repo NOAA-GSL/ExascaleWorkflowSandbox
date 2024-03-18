@@ -103,4 +103,5 @@ perl -i -p0e "s|&&   echo '    awscli:'.*&&   echo '    flux-core:'|&&   echo ' 
 perl -i -p0e "s|&&   echo '    fms:'.*?&&   echo ''|&&   echo ''|s" Dockerfile.flux-only
 perl -i -p0e "s|&&   echo '  - base-env.*&&   echo '  - flux-core|&&   echo '  - flux-core|s" Dockerfile.flux-only
 perl -i -p0e "s|&&   echo '  - fms.*?&&   echo ''|&&   echo ''|s" Dockerfile.flux-only
-perl -i -p -e "s|python -m pip install parsl|#python -m pip install parsl|g" Dockerfile.flux-only
+perl -i -p -e "s|python -m pip install|#python -m pip install|g" Dockerfile.flux-only
+perl -i -p -e "s|python -m pip uninstall|#python -m pip uninstall|g" Dockerfile.flux-only
