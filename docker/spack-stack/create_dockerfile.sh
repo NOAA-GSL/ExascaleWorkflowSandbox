@@ -35,9 +35,13 @@ BOOST_EOF
 )
 perl -i -p0e 's/      variants\:.*visibility=hidden/$ENV{boost_variants}/s' spack.yaml
 
-# Modify spack.yaml to install py-pytest
+# Modify spack.yaml to install py-pytest, py-flake8, and py-pytest-flake8
 perl -p -i -e "s/# To avoid/py-pytest:\n      require: ['\@7.3.2']\n    # To avoid/g" spack.yaml
+perl -p -i -e "s/# To avoid/py-flake8:\n      version: [6.1.0]\n    # To avoid/g" spack.yaml
+perl -p -i -e "s/# To avoid/py-pytest-flake8:\n      version: [0.8.1]\n    # To avoid/g" spack.yaml
 perl -p -i -e "s/py-pyyaml\@6.0/py-pytest\@7.3.2\n  - py-pyyaml\@6.0/g" spack.yaml
+perl -p -i -e "s/py-pyyaml\@6.0/py-flake8\@6.1.0\n  - py-pyyaml\@6.0/g" spack.yaml
+perl -p -i -e "s/py-pyyaml\@6.0/py-pytest-flake8\@0.8.1\n  - py-pyyaml\@6.0/g" spack.yaml
 
 # Create the spack-stack Dockerfile
 spack containerize > ../../../Dockerfile
@@ -69,7 +73,13 @@ RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml \
   spack env activate .
   spack mirror add --s3-access-key-id "" --s3-access-key-secret "" s3_spack_stack_buildcache_ro s3://chiltepin-us-east-2/spack-stack/
   spack install --fail-fast --no-check-signature
-  python -m pip install parsl[monitoring]==2023.12.4
+  python -m pip install globus-compute-sdk
+  python -m pip install globus-compute-endpoint
+  python -m pip uninstall -y dill
+  python -m pip install dill==0.3.8
+  python -m pip install parsl[monitoring]==2024.3.4
+  python -m pip install pytest-black
+  python -m pip install pytest-isort
   spack mirror list
   if [ "$(spack mirror list | wc -l)" = "3" ]; then
     export AWS_ACCESS_KEY_ID=$(cat /run/secrets/access_key_id)
@@ -93,4 +103,5 @@ perl -i -p0e "s|&&   echo '    awscli:'.*&&   echo '    flux-core:'|&&   echo ' 
 perl -i -p0e "s|&&   echo '    fms:'.*?&&   echo ''|&&   echo ''|s" Dockerfile.flux-only
 perl -i -p0e "s|&&   echo '  - base-env.*&&   echo '  - flux-core|&&   echo '  - flux-core|s" Dockerfile.flux-only
 perl -i -p0e "s|&&   echo '  - fms.*?&&   echo ''|&&   echo ''|s" Dockerfile.flux-only
-perl -i -p -e "s|python -m pip install parsl|#python -m pip install parsl|g" Dockerfile.flux-only
+perl -i -p -e "s|python -m pip install|#python -m pip install|g" Dockerfile.flux-only
+perl -i -p -e "s|python -m pip uninstall|#python -m pip uninstall|g" Dockerfile.flux-only
