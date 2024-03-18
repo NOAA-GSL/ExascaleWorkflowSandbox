@@ -40,14 +40,18 @@ spack add py-pip
 spack add py-pytest@7.3.2
 spack add flux-core@0.58.0
 spack add flux-sched@0.32.0
-spack add py-flake8
-spack add py-pytest-flake8
+spack add py-flake8@6.1.0
+spack add py-pytest-flake8@0.8.1
 
 # Concretize and install the spack packages 
 spack install --fail-fast --no-check-signature --deprecated
 
 # Install parsl, black, and isort
-python -m pip install parsl[monitoring]==2023.12.4
+python -m pip install globus-compute-sdk
+python -m pip install globus-compute-endpoint
+python -m pip uninstall -y dill
+python -m pip install dill==0.3.8
+python -m pip install parsl[monitoring]==2024.3.4
 python -m pip install pytest-black
 python -m pip install pytest-isort
 
