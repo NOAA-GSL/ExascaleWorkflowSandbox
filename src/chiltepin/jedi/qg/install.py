@@ -1,10 +1,12 @@
-from parsl.app.app import bash_app, join_app
 import textwrap
 
+from parsl.app.app import bash_app, join_app
 
-@bash_app(executors=['service'])
+
+@bash_app(executors=["service"])
 def _clone(env, install_path, tag="develop", stdout=None, stderr=None):
-    return env + textwrap.dedent(f'''
+    return env + textwrap.dedent(
+        f"""
     echo Started at $(date)
     echo Executing on $(hostname)
     git lfs install --skip-repo
@@ -13,12 +15,14 @@ def _clone(env, install_path, tag="develop", stdout=None, stderr=None):
     cd {install_path}/jedi-bundle/{tag}
     git clone --branch {tag} https://github.com/JCSDA/jedi-bundle.git src
     echo Completed at $(date)
-    ''')
+    """
+    )
 
 
-@bash_app(executors=['service'])
+@bash_app(executors=["service"])
 def _configure(env, install_path, tag="develop", stdout=None, stderr=None, clone=None):
-    return env + textwrap.dedent(f'''
+    return env + textwrap.dedent(
+        f"""
     echo Started at $(date)
     echo Executing on $(hostname)
     cd {install_path}/jedi-bundle/{tag}
@@ -34,12 +38,14 @@ def _configure(env, install_path, tag="develop", stdout=None, stderr=None, clone
     perl -p -i -e 's/(.*mpas)/#\\1/ig' ../src/CMakeLists.txt
     ecbuild -DCMAKE_INSTALL_PREFIX=../ ../src
     echo Completed at $(date)
-    ''')
+    """
+    )
 
 
-@bash_app(executors=['serial'])
+@bash_app(executors=["serial"])
 def _make(env, install_path, tag="develop", stdout=None, stderr=None, configure=None):
-    return env + textwrap.dedent(f'''
+    return env + textwrap.dedent(
+        f"""
     echo Started at $(date)
     echo Executing on $(hostname)
     spack env list
@@ -47,30 +53,33 @@ def _make(env, install_path, tag="develop", stdout=None, stderr=None, configure=
     cd {install_path}/jedi-bundle/{tag}/build
     make -j16 VERBOSE=1
     make install
-    echo Completed at $(date)    ''')
+    echo Completed at $(date)    """
+    )
 
 
 @join_app
 def run(environment, install_path, tag="develop", stdout=None, stderr=None):
 
-    clone = _clone(environment,
-                   install_path=install_path,
-                   tag=tag,
-                   stdout=stdout,
-                   stderr=stderr)
+    clone = _clone(
+        environment, install_path=install_path, tag=tag, stdout=stdout, stderr=stderr
+    )
 
-    configure = _configure(environment,
-                           install_path=install_path,
-                           tag=tag,
-                           stdout=stdout,
-                           stderr=stderr,
-                           clone=clone)
+    configure = _configure(
+        environment,
+        install_path=install_path,
+        tag=tag,
+        stdout=stdout,
+        stderr=stderr,
+        clone=clone,
+    )
 
-    make = _make(environment,
-                 install_path=install_path,
-                 tag=tag,
-                 stdout=stdout,
-                 stderr=stderr,
-                 configure=configure)
+    make = _make(
+        environment,
+        install_path=install_path,
+        tag=tag,
+        stdout=stdout,
+        stderr=stderr,
+        configure=configure,
+    )
 
     return make

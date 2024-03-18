@@ -1,4 +1,5 @@
 import textwrap
+
 import yaml
 
 
@@ -16,7 +17,9 @@ def merge_config_str(d1, s1):
 
 
 def forecast_default():
-    return yaml.safe_load(textwrap.dedent("""
+    return yaml.safe_load(
+        textwrap.dedent(
+            """
     forecast length: P2D
     geometry:
       nx: 40
@@ -37,11 +40,15 @@ def forecast_default():
       type: fc
     prints:
       frequency: PT3H
-    """).strip())
+    """
+        ).strip()
+    )
 
 
 def make_obs3d_default():
-    return yaml.safe_load(textwrap.dedent("""
+    return yaml.safe_load(
+        textwrap.dedent(
+            """
     geometry:
       nx: 40
       ny: 20
@@ -95,11 +102,15 @@ def make_obs3d_default():
             obs error: 12.0
             obs period: PT2H
     make obs: true
-    """).strip())
+    """
+        ).strip()
+    )
 
 
 def var3d_default():
-    return yaml.safe_load(textwrap.dedent("""
+    return yaml.safe_load(
+        textwrap.dedent(
+            """
     cost function:
       cost type: 3D-Var
       time window:
@@ -208,4 +219,6 @@ def var3d_default():
       exp: 3dvar
       frequency: PT6H
       type: an
-    """).strip())
+    """
+        ).strip()
+    )

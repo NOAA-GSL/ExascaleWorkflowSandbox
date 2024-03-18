@@ -5,7 +5,7 @@ def fcst_to_seconds(fcst):
     seconds = 0
     p = re.compile(r"\D+(\d+)S")
     m = p.search(fcst)
-    if (m):
+    if m:
         seconds += int(m.group(1))
     p = re.compile(r"/\D+(\d+)M")
     m = p.search(fcst)
