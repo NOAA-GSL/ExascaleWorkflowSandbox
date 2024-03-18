@@ -7,10 +7,9 @@ import textwrap
 
 from chiltepin.config import factory, parse_file
 from chiltepin.jedi import leadtime
-from chiltepin.jedi.qg import install, forecast
 from chiltepin.jedi.qg.osse import Experiment
 
-workdir="/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.qg/tests"
+workdir = "/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.qg/tests"
 experiment = Experiment(textwrap.dedent(f"""
 jedi:
   install path: {workdir}
@@ -18,7 +17,7 @@ jedi:
 experiment:
   path: {workdir}/experiments/QG
   begin: "2024-01-01T00:00:00Z"
-  length: P1D
+  length: PT6H
   frequency: PT6H
 truth:
   nx: 80
@@ -55,11 +54,7 @@ resource_config, environment = factory(yaml_config)
 parsl.load(resource_config)
 
 # Install JEDI bundle
-install = install.run(environment,
-                      install_path=experiment.jedi_path,
-                      tag=experiment.jedi_tag,
-                      stdout=f"{experiment.path}/install_jedi.out",
-                      stderr=f"{experiment.path}/install_jedi.err")
+install = experiment.install_jedi(environment)
 
 # Run the "truth" forecast
 truth = experiment.make_truth(environment, install)

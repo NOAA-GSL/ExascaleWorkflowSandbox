@@ -1,8 +1,6 @@
-from parsl.app.app import bash_app, python_app, join_app
-import os
-import shutil
+from parsl.app.app import bash_app, join_app
 import textwrap
-import yaml
+
 
 @bash_app(executors=['service'])
 def _clone(env, install_path, tag="develop", stdout=None, stderr=None):
@@ -16,6 +14,7 @@ def _clone(env, install_path, tag="develop", stdout=None, stderr=None):
     git clone --branch {tag} https://github.com/JCSDA/jedi-bundle.git src
     echo Completed at $(date)
     ''')
+
 
 @bash_app(executors=['service'])
 def _configure(env, install_path, tag="develop", stdout=None, stderr=None, clone=None):
@@ -36,6 +35,7 @@ def _configure(env, install_path, tag="develop", stdout=None, stderr=None, clone
     ecbuild -DCMAKE_INSTALL_PREFIX=../ ../src
     echo Completed at $(date)
     ''')
+
 
 @bash_app(executors=['serial'])
 def _make(env, install_path, tag="develop", stdout=None, stderr=None, configure=None):
@@ -73,4 +73,4 @@ def run(environment, install_path, tag="develop", stdout=None, stderr=None):
                  stderr=stderr,
                  configure=configure)
 
-    return(make)
+    return make

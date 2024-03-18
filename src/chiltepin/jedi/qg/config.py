@@ -1,6 +1,7 @@
 import textwrap
 import yaml
 
+
 def merge_config_dict(d1, d2):
     for key, value in d2.items():
         if key in d1 and isinstance(d1[key], dict) and isinstance(value, dict):
@@ -8,12 +9,14 @@ def merge_config_dict(d1, d2):
         else:
             d1[key] = value
 
+
 def merge_config_str(d1, s1):
     d2 = yaml.safe_load(s1.strip())
     merge_config_dict(d1, d2)
 
+
 def forecast_default():
-    return yaml.safe_load(textwrap.dedent(f"""
+    return yaml.safe_load(textwrap.dedent("""
     forecast length: P2D
     geometry:
       nx: 40
@@ -36,8 +39,9 @@ def forecast_default():
       frequency: PT3H
     """).strip())
 
+
 def make_obs3d_default():
-    return yaml.safe_load(textwrap.dedent(f"""
+    return yaml.safe_load(textwrap.dedent("""
     geometry:
       nx: 40
       ny: 20
@@ -93,8 +97,9 @@ def make_obs3d_default():
     make obs: true
     """).strip())
 
+
 def var3d_default():
-    return yaml.safe_load(textwrap.dedent(f"""
+    return yaml.safe_load(textwrap.dedent("""
     cost function:
       cost type: 3D-Var
       time window:

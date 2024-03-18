@@ -1,9 +1,9 @@
 from parsl.app.app import bash_app, python_app, join_app
 import os
-import shutil
 import textwrap
 import yaml
 from chiltepin.jedi.qg.config import merge_config_dict, forecast_default
+
 
 @python_app(executors=['serial'])
 def _configure(rundir,
@@ -28,6 +28,7 @@ def _configure(rundir,
     # Return the configuration yaml
     return config_filename
 
+
 @bash_app(executors=['parallel'])
 def _execute(env, rundir, install_path, config_file, tag="develop", stdout=None, stderr=None, analysis=None):
     # Run the forecast executable
@@ -35,8 +36,9 @@ def _execute(env, rundir, install_path, config_file, tag="develop", stdout=None,
     echo Started at $(date)
     echo Executing on $(hostname)
     {install_path}/jedi-bundle/{tag}/build/bin/qg_forecast.x {config_file}
-    echo Completed at $(date)        
+    echo Completed at $(date)
     ''')
+
 
 @join_app
 def run(env,
@@ -61,4 +63,4 @@ def run(env,
                        stdout=stdout,
                        stderr=stderr,
                        analysis=analysis)
-    return(execute)
+    return execute
