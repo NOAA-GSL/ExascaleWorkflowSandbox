@@ -54,6 +54,7 @@ def factory(yaml_config={}):
                 label=pc["name"],
                 # address=address_by_hostname(),
                 cores_per_worker=1,
+                max_workers_per_node=pc["cores per node"],
                 provider=SlurmProvider(
                     channel=LocalChannel(),
                     exclusive=False,
