@@ -49,8 +49,8 @@ spack install --fail-fast --no-check-signature --deprecated
 # Install parsl, black, and isort
 python -m pip install globus-compute-sdk
 python -m pip install globus-compute-endpoint
-python -m pip uninstall -y dill
-python -m pip install dill==0.3.8
+python -m pip uninstall -y dill pyzmq
+python -m pip install dill==0.3.8 pyzmq==25.1.2
 python -m pip install parsl[monitoring]==2024.3.4
 python -m pip install pytest-black
 python -m pip install pytest-isort
