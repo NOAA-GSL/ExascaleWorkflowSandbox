@@ -1,7 +1,5 @@
-import re
-
-
 def fcst_to_seconds(fcst):
+    import re
     seconds = 0
     p = re.compile(r"\D+(\d+)S")
     m = p.search(fcst)
