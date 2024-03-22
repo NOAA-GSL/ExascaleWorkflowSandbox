@@ -2,16 +2,23 @@
 
 import sys
 import textwrap
-from datetime import datetime, timedelta
 
-import parsl
 
 from chiltepin.config import factory, parse_file
-from chiltepin.jedi import leadtime
-from chiltepin.jedi.qg.osse import Experiment
 
+from globus_compute_sdk import Client, Executor
+from globus_compute_sdk.serialize import CombinedCode
 
-def runExperiment(resource_cfg, exp_config):
+def runExperiment(resource_config, exp_config, platform):
+
+  from datetime import datetime, timedelta
+  from chiltepin.config import factory
+  import parsl
+  from chiltepin.jedi import leadtime
+  from chiltepin.jedi.qg.osse import Experiment
+
+  resource_config, environments = factory(resource_config, platform)
+  environment = environments[platform]
 
   parsl.load(resource_config)
 
@@ -25,8 +32,8 @@ def runExperiment(resource_cfg, exp_config):
   )
 
   # Install JEDI bundle
-  #install = experiment.install_jedi(environment)
-  install = None
+  install = experiment.install_jedi(environment)
+  #install = None
 
   # Run the "truth" forecast
   truth = experiment.make_truth(environment, install)
@@ -68,14 +75,16 @@ def runExperiment(resource_cfg, exp_config):
 
 
 # Configure the resources
-platform = "hercules"
+#platform = "hercules"
+platform = "hera"
 config_file = sys.argv[1]
 yaml_config = parse_file(config_file)
-resource_config, environments = factory(yaml_config, platform)
-environment = environments[platform]
+hera_default = "37fbbb9e-d676-4615-8bc6-02237c0fd777"
+hercules_default = "75056f35-0523-487b-bb90-037dad5756d3"
 
 # Configure the experiment
-workdir = "/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.qg/tests"
+#workdir = "/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.qg/tests"
+workdir = "/scratch2/BMC/gsd-hpcs/Christopher.W.Harrop/SENA/ExascaleWorkflowSandbox.qg/tests"
 exp_config = textwrap.dedent(
     f"""
 jedi:
@@ -114,4 +123,8 @@ forecast:
 ).strip()
 
 # Run the experiment
-runExperiment(resource_config, exp_config)
+#runExperiment(resource_config, exp_config)
+with Executor(endpoint_id=hera_default) as gce:
+    future = gce.submit(runExperiment, yaml_config, exp_config, platform)
+    #future = gce.submit(runExperiment, resource_config, exp_config)
+    future.result()
