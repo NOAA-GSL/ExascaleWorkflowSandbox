@@ -20,12 +20,12 @@ def parse_file(filename):
     return yaml_config
 
 
-def factory(yaml_config={}):
+def factory(yaml_config, platform):
 
     # Set FLUX_SSH
     os.environ["FLUX_SSH"] = "ssh"
 
-    provider_config = yaml_config["provider"]
+    provider_config = yaml_config[platform]["providers"]
 
     execs = []
     for pc in provider_config:
@@ -71,6 +71,9 @@ def factory(yaml_config={}):
                 ),
             )
             execs.append(e)
-    env_init = "\n".join(yaml_config["environment"])
     config = Config(executors=execs)
+    env_init = {}
+    for p in yaml_config:
+        env_init[p] = "\n".join(yaml_config[p]["environment"])
+
     return config, env_init
