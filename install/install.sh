@@ -35,7 +35,7 @@ fi
 spack mirror list
 
 # Add flux, pytest and flake8 to chiltepin spack environment
-spack add python
+spack add python@3.10.13  # Match the python version used in spack-stack
 spack add py-pip
 spack add py-pytest@7.3.2
 spack add flux-core@0.58.0
