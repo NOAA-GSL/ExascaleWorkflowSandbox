@@ -75,16 +75,19 @@ def runExperiment(resource_config, exp_config, platform):
 
 
 # Configure the resources
-#platform = "hercules"
-platform = "hera"
+platform = "hercules"
+#platform = "hera"
+#platform = "chiltepin"
 config_file = sys.argv[1]
 yaml_config = parse_file(config_file)
-hera_default = "37fbbb9e-d676-4615-8bc6-02237c0fd777"
 hercules_default = "75056f35-0523-487b-bb90-037dad5756d3"
+#hera_default = "37fbbb9e-d676-4615-8bc6-02237c0fd777"
+#chiltepin_default = "8b0221c4-f104-4278-8efe-7d0fb4ddf313"
 
 # Configure the experiment
-#workdir = "/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.qg/tests"
-workdir = "/scratch2/BMC/gsd-hpcs/Christopher.W.Harrop/SENA/ExascaleWorkflowSandbox.qg/tests"
+workdir = "/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.qg/tests"
+#workdir = "/scratch2/BMC/gsd-hpcs/Christopher.W.Harrop/SENA/ExascaleWorkflowSandbox.qg/tests"
+#workdir = "/home/admin/chiltepin/tests"
 exp_config = textwrap.dedent(
     f"""
 jedi:
@@ -126,5 +129,4 @@ forecast:
 #runExperiment(resource_config, exp_config)
 with Executor(endpoint_id=hera_default) as gce:
     future = gce.submit(runExperiment, yaml_config, exp_config, platform)
-    #future = gce.submit(runExperiment, resource_config, exp_config)
     future.result()

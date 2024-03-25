@@ -76,3 +76,33 @@ hera:
     - "module load soca-env"
     - "unset I_MPI_PMI_LIBRARY"
     - "export CHILTEPIN_MPIF90=$MPIF90"
+
+chiltepin:
+  providers:
+    -
+      type: "flux"
+      name: "parallel"
+      cores per node: 8
+      nodes per block: 1
+      partition: "slurmpar"
+      account: ""
+    -
+      type: "htex"
+      name: "service"
+      cores per node: 1
+      nodes per block: 1
+      partition: "slurmpar"
+      account: ""
+    -
+      type: "htex"
+      name: "serial"
+      cores per node: 8
+      nodes per block: 1
+      partition: "slurmpar"
+      account: ""
+
+  environment:
+    - "export FLUX_PMI_LIBRARY_PATH=/opt/view/lib/flux/libpmi.so"
+    - "export OMPI_MCA_btl=self,tcp"
+    - "export CHILTEPIN_MPIF90=mpif90"
+    - "export jedi_cmake_ROOT=/opt/views/view"

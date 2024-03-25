@@ -30,6 +30,7 @@ def _configure(env, install_path, tag="develop", stdout=None, stderr=None, clone
     mkdir build
     cd build
     # Comment out the parts of the bundle we do not need
+    perl -p -i -e 's/(.* PROJECT gsw)/#\\1/g' ../src/CMakeLists.txt
     perl -p -i -e 's/(.* PROJECT fv3)/#\\1/g' ../src/CMakeLists.txt
     perl -p -i -e 's/(.* PROJECT femps)/#\\1/g' ../src/CMakeLists.txt
     perl -p -i -e 's/(.* PROJECT soca)/#\\1/g' ../src/CMakeLists.txt
