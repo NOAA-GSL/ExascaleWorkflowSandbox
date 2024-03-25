@@ -25,8 +25,8 @@ def runExperiment(resource_cfg, exp_config):
   )
 
   # Install JEDI bundle
-  #install = experiment.install_jedi(environment)
-  install = None
+  install = experiment.install_jedi(environment)
+  #install = None
 
   # Run the "truth" forecast
   truth = experiment.make_truth(environment, install)
