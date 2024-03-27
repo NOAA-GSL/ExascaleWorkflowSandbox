@@ -20,7 +20,7 @@ def runExperiment(resource_cfg, exp_config):
         experiment.config["experiment"]["begin"], "%Y-%m-%dT%H:%M:%SZ"
     )
     exp_end = exp_begin + timedelta(
-        0, leadtime.fcst_to_seconds(experiment.config["experiment"]["length"])
+        0, leadtime.leadtime_to_seconds(experiment.config["experiment"]["length"])
     )
 
     # Install JEDI bundle
@@ -58,7 +58,7 @@ def runExperiment(resource_cfg, exp_config):
             # Increment experiment cycle
             t = t + timedelta(
                 0,
-                leadtime.fcst_to_seconds(experiment.config["experiment"]["frequency"]),
+                leadtime.leadtime_to_seconds(experiment.config["experiment"]["frequency"]),
             )
 
     # Wait for the experiment to finish
