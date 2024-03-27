@@ -5,7 +5,6 @@ import textwrap
 
 from chiltepin.config import parse_file
 from globus_compute_sdk import Client, Executor
-from globus_compute_sdk.serialize import CombinedCode
 
 
 def runExperiment(resource_config, exp_config, platform):
