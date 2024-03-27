@@ -3,7 +3,7 @@
 import sys
 import textwrap
 
-from chiltepin.config import factory, parse_file
+from chiltepin.config import parse_file
 from globus_compute_sdk import Client, Executor
 from globus_compute_sdk.serialize import CombinedCode
 
