@@ -2,6 +2,7 @@
 
 import argparse
 import os
+
 import globus_sdk
 from globus_sdk.scopes import TransferScopes
 from globus_sdk.tokenstorage import SimpleJSONFileAdapter
@@ -11,11 +12,11 @@ parser.add_argument("SRC")
 parser.add_argument("DST")
 args = parser.parse_args()
 
-#CLIENT_ID = "61338d24-54d5-408f-a10d-66c06b59f6d2"
 CLIENT_ID = "c6c061a0-e8df-48aa-b830-823c5f6a67f0"
 auth_client = globus_sdk.NativeAppAuthClient(CLIENT_ID)
 
 file_adapter = SimpleJSONFileAdapter(os.path.expanduser("~/.chiltepin/tokens.json"))
+
 
 # we will need to do the login flow potentially twice, so define it as a
 # function
@@ -30,7 +31,7 @@ def login_and_get_transfer_client(*, scopes=TransferScopes.all):
         auth_client.oauth2_start_flow(requested_scopes=scopes, refresh_tokens=True)
         authorize_url = auth_client.oauth2_get_authorize_url()
         print(f"Please go to this URL and login:\n\n{authorize_url}\n")
-    
+
         auth_code = input("Please enter the code here: ").strip()
         tokens = auth_client.oauth2_exchange_code_for_tokens(auth_code)
         file_adapter.store(tokens)
@@ -44,10 +45,13 @@ def login_and_get_transfer_client(*, scopes=TransferScopes.all):
 
     # return the TransferClient object, as the result of doing a login
     return globus_sdk.TransferClient(
-        #authorizer=globus_sdk.AccessTokenAuthorizer(transfer_tokens["access_token"])
-         authorizer = globus_sdk.RefreshTokenAuthorizer(
-             transfer_rt, auth_client, access_token=transfer_at, expires_at=expires_at_s, on_refresh=file_adapter.on_refresh,
-         )
+        authorizer=globus_sdk.RefreshTokenAuthorizer(
+            transfer_rt,
+            auth_client,
+            access_token=transfer_at,
+            expires_at=expires_at_s,
+            on_refresh=file_adapter.on_refresh,
+        )
     )
 
 
@@ -61,11 +65,11 @@ def check_for_consent_required(target):
             consent_required_scopes.extend(err.info.consent_required.required_scopes)
 
 
-
 def do_submit(client):
     task_doc = client.submit_transfer(task_data)
     task_id = task_doc["task_id"]
     print(f"submitted transfer, task_id={task_id}")
+
 
 # get an initial client to try with, which requires a login flow
 transfer_client = login_and_get_transfer_client()
@@ -99,13 +103,8 @@ task_data = globus_sdk.TransferData(
 )
 task_data.add_item(
     "/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.qg/tests/foobar.data",  # source
-    #"/scratch2/BMC/gsd-hpcs/Christopher.W.Harrop/SENA/ExascaleWorkflowSandbox.qg/tests/foobar.data",  # source
-    #"/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.qg/tests/binbaz.data",  # dest
-    #"/scratch2/BMC/gsd-hpcs/Christopher.W.Harrop/SENA/ExascaleWorkflowSandbox.qg/tests/binbaz.data",  # dest
-    "/Users/christopher.w.harrop/work/SENA/ExascaleWorkflowSandbox.qg/tests/binbaz.data", #dest
+    "/Users/christopher.w.harrop/work/SENA/ExascaleWorkflowSandbox.qg/tests/binbaz.data",  # dest
 )
-
-
 
 
 try:

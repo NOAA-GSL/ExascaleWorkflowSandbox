@@ -2,7 +2,6 @@ import textwrap
 from datetime import datetime, timedelta
 
 import yaml
-
 from chiltepin.jedi import leadtime
 from chiltepin.jedi.qg import forecast, hofx, install, variational
 from chiltepin.jedi.qg.config import (

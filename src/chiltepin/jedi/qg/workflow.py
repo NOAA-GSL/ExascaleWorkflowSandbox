@@ -5,7 +5,6 @@ import textwrap
 from datetime import datetime, timedelta
 
 import parsl
-
 from chiltepin.config import factory, parse_file
 from chiltepin.jedi import leadtime
 from chiltepin.jedi.qg.osse import Experiment
@@ -13,58 +12,59 @@ from chiltepin.jedi.qg.osse import Experiment
 
 def runExperiment(resource_cfg, exp_config):
 
-  parsl.load(resource_config)
+    parsl.load(resource_config)
 
-  experiment = Experiment(exp_config)
+    experiment = Experiment(exp_config)
 
-  exp_begin = datetime.strptime(
-      experiment.config["experiment"]["begin"], "%Y-%m-%dT%H:%M:%SZ"
-  )
-  exp_end = exp_begin + timedelta(
-      0, leadtime.fcst_to_seconds(experiment.config["experiment"]["length"])
-  )
+    exp_begin = datetime.strptime(
+        experiment.config["experiment"]["begin"], "%Y-%m-%dT%H:%M:%SZ"
+    )
+    exp_end = exp_begin + timedelta(
+        0, leadtime.fcst_to_seconds(experiment.config["experiment"]["length"])
+    )
 
-  # Install JEDI bundle
-  install = experiment.install_jedi(environment)
-  #install = None
+    # Install JEDI bundle
+    install = experiment.install_jedi(environment)
+    # install = None
 
-  # Run the "truth" forecast
-  truth = experiment.make_truth(environment, install)
+    # Run the "truth" forecast
+    truth = experiment.make_truth(environment, install)
 
-  # Cycle through experiment analysis times
-  background = None
-  analysis = None
-  t = exp_begin
-  while t <= exp_end:
-      # Get the cycle date in string format
-      t_str = t.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Cycle through experiment analysis times
+    background = None
+    analysis = None
+    t = exp_begin
+    while t <= exp_end:
+        # Get the cycle date in string format
+        t_str = t.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-      print(f"Running cycle: {t_str}")
+        print(f"Running cycle: {t_str}")
 
-      # Run the assimilation (except for first cycle)
-      if t > exp_begin:
+        # Run the assimilation (except for first cycle)
+        if t > exp_begin:
 
-          # Create observations for this cycle
-          obs = experiment.make_obs(environment, t, truth)
+            # Create observations for this cycle
+            obs = experiment.make_obs(environment, t, truth)
 
-          # Run assimilation for this cycle
-          analysis = experiment.run_3dvar(environment, t, obs, background)
+            # Run assimilation for this cycle
+            analysis = experiment.run_3dvar(environment, t, obs, background)
 
-      # Run the forecast
-      fcst = experiment.run_forecast(environment, t, install, analysis)
+            # Run the forecast
+            fcst = experiment.run_forecast(environment, t, install, analysis)
 
-      # Set analysis dependency for next cycle
-      background = fcst
+            # Set analysis dependency for next cycle
+            background = fcst
 
-      # Increment experiment cycle
-      t = t + timedelta(
-          0, leadtime.fcst_to_seconds(experiment.config["experiment"]["frequency"])
-      )
+            # Increment experiment cycle
+            t = t + timedelta(
+                0,
+                leadtime.fcst_to_seconds(experiment.config["experiment"]["frequency"]),
+            )
 
-  # Wait for the experiment to finish
-  fcst.result()
+    # Wait for the experiment to finish
+    fcst.result()
 
-  parsl.clear
+    parsl.clear
 
 
 # Configure the resources

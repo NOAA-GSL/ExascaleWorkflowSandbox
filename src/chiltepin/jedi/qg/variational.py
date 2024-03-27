@@ -2,9 +2,8 @@ import os
 import textwrap
 
 import yaml
-from parsl.app.app import bash_app, join_app, python_app
-
 from chiltepin.jedi.qg.config import merge_config_dict, var3d_default
+from parsl.app.app import bash_app, join_app, python_app
 
 
 @python_app(executors=["serial"])

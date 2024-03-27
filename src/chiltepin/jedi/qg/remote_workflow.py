@@ -3,91 +3,91 @@
 import sys
 import textwrap
 
-
 from chiltepin.config import factory, parse_file
-
 from globus_compute_sdk import Client, Executor
 from globus_compute_sdk.serialize import CombinedCode
 
+
 def runExperiment(resource_config, exp_config, platform):
 
-  from datetime import datetime, timedelta
-  from chiltepin.config import factory
-  import parsl
-  from chiltepin.jedi import leadtime
-  from chiltepin.jedi.qg.osse import Experiment
+    from datetime import datetime, timedelta
 
-  resource_config, environments = factory(resource_config, platform)
-  environment = environments[platform]
+    import parsl
+    from chiltepin.config import factory
+    from chiltepin.jedi import leadtime
+    from chiltepin.jedi.qg.osse import Experiment
 
-  parsl.load(resource_config)
+    resource_config, environments = factory(resource_config, platform)
+    environment = environments[platform]
 
-  experiment = Experiment(exp_config)
+    parsl.load(resource_config)
 
-  exp_begin = datetime.strptime(
-      experiment.config["experiment"]["begin"], "%Y-%m-%dT%H:%M:%SZ"
-  )
-  exp_end = exp_begin + timedelta(
-      0, leadtime.fcst_to_seconds(experiment.config["experiment"]["length"])
-  )
+    experiment = Experiment(exp_config)
 
-  # Install JEDI bundle
-  install = experiment.install_jedi(environment)
-  #install = None
+    exp_begin = datetime.strptime(
+        experiment.config["experiment"]["begin"], "%Y-%m-%dT%H:%M:%SZ"
+    )
+    exp_end = exp_begin + timedelta(
+        0, leadtime.fcst_to_seconds(experiment.config["experiment"]["length"])
+    )
 
-  # Run the "truth" forecast
-  truth = experiment.make_truth(environment, install)
+    # Install JEDI bundle
+    install = experiment.install_jedi(environment)
+    # install = None
 
-  # Cycle through experiment analysis times
-  background = None
-  analysis = None
-  t = exp_begin
-  while t <= exp_end:
-      # Get the cycle date in string format
-      t_str = t.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Run the "truth" forecast
+    truth = experiment.make_truth(environment, install)
 
-      print(f"Running cycle: {t_str}")
+    # Cycle through experiment analysis times
+    background = None
+    analysis = None
+    t = exp_begin
+    while t <= exp_end:
+        # Get the cycle date in string format
+        t_str = t.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-      # Run the assimilation (except for first cycle)
-      if t > exp_begin:
+        print(f"Running cycle: {t_str}")
 
-          # Create observations for this cycle
-          obs = experiment.make_obs(environment, t, truth)
+        # Run the assimilation (except for first cycle)
+        if t > exp_begin:
 
-          # Run assimilation for this cycle
-          analysis = experiment.run_3dvar(environment, t, obs, background)
+            # Create observations for this cycle
+            obs = experiment.make_obs(environment, t, truth)
 
-      # Run the forecast
-      fcst = experiment.run_forecast(environment, t, install, analysis)
+            # Run assimilation for this cycle
+            analysis = experiment.run_3dvar(environment, t, obs, background)
 
-      # Set analysis dependency for next cycle
-      background = fcst
+        # Run the forecast
+        fcst = experiment.run_forecast(environment, t, install, analysis)
 
-      # Increment experiment cycle
-      t = t + timedelta(
-          0, leadtime.fcst_to_seconds(experiment.config["experiment"]["frequency"])
-      )
+        # Set analysis dependency for next cycle
+        background = fcst
 
-  # Wait for the experiment to finish
-  fcst.result()
+        # Increment experiment cycle
+        t = t + timedelta(
+            0, leadtime.fcst_to_seconds(experiment.config["experiment"]["frequency"])
+        )
 
-  parsl.clear
+    # Wait for the experiment to finish
+    fcst.result()
+
+    parsl.clear
 
 
 # Configure the resources
-platform = "hercules"
-#platform = "hera"
-#platform = "chiltepin"
+# platform = "hercules"
+# platform = "hera"
+platform = "chiltepin"
 config_file = sys.argv[1]
 yaml_config = parse_file(config_file)
-hercules_default = "75056f35-0523-487b-bb90-037dad5756d3"
-#hera_default = "37fbbb9e-d676-4615-8bc6-02237c0fd777"
-#chiltepin_default = "8b0221c4-f104-4278-8efe-7d0fb4ddf313"
+# hercules_default = "75056f35-0523-487b-bb90-037dad5756d3"
+# hera_default = "37fbbb9e-d676-4615-8bc6-02237c0fd777"
+chiltepin_default = "c42e4a3c-7f13-40ab-a270-f997b5f2c1fa"
 
 # Configure the experiment
-workdir = "/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.qg/tests"
-#workdir = "/scratch2/BMC/gsd-hpcs/Christopher.W.Harrop/SENA/ExascaleWorkflowSandbox.qg/tests"
-#workdir = "/home/admin/chiltepin/tests"
+# workdir = "/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.qg/tests"
+# workdir = "/scratch2/BMC/gsd-hpcs/Christopher.W.Harrop/SENA/ExascaleWorkflowSandbox.qg/tests"
+workdir = "/home/admin/chiltepin/tests"
 exp_config = textwrap.dedent(
     f"""
 jedi:
@@ -126,7 +126,6 @@ forecast:
 ).strip()
 
 # Run the experiment
-#runExperiment(resource_config, exp_config)
-with Executor(endpoint_id=hera_default) as gce:
+with Executor(endpoint_id=chiltepin_default) as gce:
     future = gce.submit(runExperiment, yaml_config, exp_config, platform)
     future.result()
