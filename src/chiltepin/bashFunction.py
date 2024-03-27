@@ -105,6 +105,7 @@ class BashFunction(object):
                 missing.extend([outputfile])
 
         if missing:
+            func_name = "foobar"
             raise pe.MissingOutputs(f"Missing outputs from app {func_name}", missing)
 
         return returncode
