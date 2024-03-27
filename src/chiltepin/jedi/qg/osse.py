@@ -2,6 +2,7 @@ import textwrap
 from datetime import datetime, timedelta
 
 import yaml
+
 from chiltepin.jedi import leadtime
 from chiltepin.jedi.qg import forecast, hofx, install, variational
 from chiltepin.jedi.qg.config import (
@@ -89,7 +90,10 @@ class Experiment:
         ny = self.config["truth"]["ny"]
         dt = self.config["truth"]["tstep"]
         window_begin = t + timedelta(
-            0, leadtime.leadtime_to_seconds(self.config["assimilation"]["window"]["begin"])
+            0,
+            leadtime.leadtime_to_seconds(
+                self.config["assimilation"]["window"]["begin"]
+            ),
         )
         window_begin_str = window_begin.strftime("%Y-%m-%dT%H:%M:%SZ")
         window_length = self.config["assimilation"]["window"]["length"]
@@ -228,7 +232,10 @@ class Experiment:
         nx = self.config["forecast"]["nx"]
         ny = self.config["forecast"]["ny"]
         window_begin = t + timedelta(
-            0, leadtime.leadtime_to_seconds(self.config["assimilation"]["window"]["begin"])
+            0,
+            leadtime.leadtime_to_seconds(
+                self.config["assimilation"]["window"]["begin"]
+            ),
         )
         window_begin_str = window_begin.strftime("%Y-%m-%dT%H:%M:%SZ")
         window_length = self.config["assimilation"]["window"]["length"]
