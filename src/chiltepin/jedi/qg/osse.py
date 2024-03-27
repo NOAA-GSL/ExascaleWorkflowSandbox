@@ -33,9 +33,9 @@ class Experiment:
         return jedi
 
     def _make_truth_config(self):
-        exp_length = leadtime.fcst_to_seconds(self.config["experiment"]["length"])
-        exp_freq = leadtime.fcst_to_seconds(self.config["experiment"]["frequency"])
-        forecast_length = leadtime.seconds_to_fcst(exp_length + exp_freq)
+        exp_length = leadtime.leadtime_to_seconds(self.config["experiment"]["length"])
+        exp_freq = leadtime.leadtime_to_seconds(self.config["experiment"]["frequency"])
+        forecast_length = leadtime.seconds_to_leadtime(exp_length + exp_freq)
         nx = self.config["truth"]["nx"]
         ny = self.config["truth"]["ny"]
         init_date = self.config["experiment"]["begin"]
@@ -89,11 +89,11 @@ class Experiment:
         ny = self.config["truth"]["ny"]
         dt = self.config["truth"]["tstep"]
         window_begin = t + timedelta(
-            0, leadtime.fcst_to_seconds(self.config["assimilation"]["window"]["begin"])
+            0, leadtime.leadtime_to_seconds(self.config["assimilation"]["window"]["begin"])
         )
         window_begin_str = window_begin.strftime("%Y-%m-%dT%H:%M:%SZ")
         window_length = self.config["assimilation"]["window"]["length"]
-        truth_leadtime = leadtime.seconds_to_fcst(
+        truth_leadtime = leadtime.seconds_to_leadtime(
             int((window_begin - exp_begin).total_seconds())
         )
         truth_path = f"{self.config['experiment']['path']}/truth"
@@ -174,7 +174,7 @@ class Experiment:
             read_from_file = 1
             # These commented lines needed for cycling without DA from a prev cycle fcst
             # exp_freq = self.config['experiment']['frequency']
-            # prev_cycle = t - timedelta(0, leadtime.fcst_to_seconds(exp_freq))
+            # prev_cycle = t - timedelta(0, leadtime.leadtime_to_seconds(exp_freq))
             # prev_cycle_str = prev_cycle.strftime("%Y-%m-%dT%H:%M:%SZ")
             # prev_cycle_path = f"{self.config['experiment']['path']}/forecast/{prev_cycle_str}"
             analysis_file = f"{fcst_path}/3dvar.an.{t_str}.nc"
@@ -228,24 +228,24 @@ class Experiment:
         nx = self.config["forecast"]["nx"]
         ny = self.config["forecast"]["ny"]
         window_begin = t + timedelta(
-            0, leadtime.fcst_to_seconds(self.config["assimilation"]["window"]["begin"])
+            0, leadtime.leadtime_to_seconds(self.config["assimilation"]["window"]["begin"])
         )
         window_begin_str = window_begin.strftime("%Y-%m-%dT%H:%M:%SZ")
         window_length = self.config["assimilation"]["window"]["length"]
         bkg_offset = (
-            leadtime.fcst_to_seconds(self.config["assimilation"]["window"]["begin"])
-            + leadtime.fcst_to_seconds(self.config["experiment"]["frequency"])
-            + (leadtime.fcst_to_seconds(window_length) // 2)
+            leadtime.leadtime_to_seconds(self.config["assimilation"]["window"]["begin"])
+            + leadtime.leadtime_to_seconds(self.config["experiment"]["frequency"])
+            + (leadtime.leadtime_to_seconds(window_length) // 2)
         )
         bkg_date = (
             t
             - timedelta(
-                0, leadtime.fcst_to_seconds(self.config["experiment"]["frequency"])
+                0, leadtime.leadtime_to_seconds(self.config["experiment"]["frequency"])
             )
             + timedelta(0, bkg_offset)
         )
         bkg_date_str = bkg_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-        prev_cycle = t - timedelta(0, leadtime.fcst_to_seconds(exp_freq))
+        prev_cycle = t - timedelta(0, leadtime.leadtime_to_seconds(exp_freq))
         prev_cycle_str = prev_cycle.strftime("%Y-%m-%dT%H:%M:%SZ")
         prev_cycle_path = (
             f"{self.config['experiment']['path']}/forecast/{prev_cycle_str}"
@@ -266,7 +266,7 @@ class Experiment:
             ny: {ny}
           background:
             date: "{bkg_date_str}"
-            filename: {prev_cycle_path}/forecast.fc.{prev_cycle_str}.{leadtime.seconds_to_fcst(bkg_offset)}.nc
+            filename: {prev_cycle_path}/forecast.fc.{prev_cycle_str}.{leadtime.seconds_to_leadtime(bkg_offset)}.nc
         output:
           datadir: {var3d_path}
         final:
