@@ -1,4 +1,4 @@
-def fcst_to_seconds(fcst):
+def leadtime_to_seconds(fcst):
     import re
 
     seconds = 0
@@ -25,7 +25,7 @@ def fcst_to_seconds(fcst):
     return seconds
 
 
-def seconds_to_fcst(s):
+def seconds_to_leadtime(s):
     seconds = s
     fcst = ""
     if seconds < 0:
