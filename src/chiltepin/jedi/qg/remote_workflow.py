@@ -3,8 +3,9 @@
 import sys
 import textwrap
 
-from chiltepin.config import parse_file
 from globus_compute_sdk import Executor
+
+from chiltepin.config import parse_file
 
 
 def runExperiment(resource_config, exp_config, platform):
@@ -12,6 +13,7 @@ def runExperiment(resource_config, exp_config, platform):
     from datetime import datetime, timedelta
 
     import parsl
+
     from chiltepin.config import factory
     from chiltepin.jedi import leadtime
     from chiltepin.jedi.qg.osse import Experiment
@@ -64,7 +66,8 @@ def runExperiment(resource_config, exp_config, platform):
 
         # Increment experiment cycle
         t = t + timedelta(
-            0, leadtime.leadtime_to_seconds(experiment.config["experiment"]["frequency"])
+            0,
+            leadtime.leadtime_to_seconds(experiment.config["experiment"]["frequency"]),
         )
 
     # Wait for the experiment to finish

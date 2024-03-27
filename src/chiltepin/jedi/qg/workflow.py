@@ -5,6 +5,7 @@ import textwrap
 from datetime import datetime, timedelta
 
 import parsl
+
 from chiltepin.config import factory, parse_file
 from chiltepin.jedi import leadtime
 from chiltepin.jedi.qg.osse import Experiment
@@ -58,7 +59,9 @@ def runExperiment(resource_cfg, exp_config):
             # Increment experiment cycle
             t = t + timedelta(
                 0,
-                leadtime.leadtime_to_seconds(experiment.config["experiment"]["frequency"]),
+                leadtime.leadtime_to_seconds(
+                    experiment.config["experiment"]["frequency"]
+                ),
             )
 
     # Wait for the experiment to finish

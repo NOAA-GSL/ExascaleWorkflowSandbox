@@ -2,8 +2,9 @@ import os
 import textwrap
 
 import yaml
-from chiltepin.jedi.qg.config import forecast_default, merge_config_dict
 from parsl.app.app import bash_app, join_app, python_app
+
+from chiltepin.jedi.qg.config import forecast_default, merge_config_dict
 
 
 @python_app(executors=["serial"])
