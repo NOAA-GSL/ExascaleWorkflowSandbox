@@ -30,10 +30,10 @@ def test_seconds_to_leadtime():
     assert seconds_to_leadtime(90000) == "P1DT1H"
     assert seconds_to_leadtime(91800) == "P1DT1H30M"
 
-    #assert seconds_to_leadtime(-0) == "MT0S"
-    #assert seconds_to_leadtime(-60) == "MT1H"
-    #assert seconds_to_leadtime(-3600) == "MT1H30M"
+    # assert seconds_to_leadtime(-0) == "MT0S"
+    # assert seconds_to_leadtime(-60) == "MT1H"
+    # assert seconds_to_leadtime(-3600) == "MT1H30M"
 
-    #assert seconds_to_leadtime(-86400) == "M1D"
-    #assert seconds_to_leadtime(-90000) == "M1DT1H"
-    #assert seconds_to_leadtime(-98100) == "M1DT1H30M"
+    # assert seconds_to_leadtime(-86400) == "M1D"
+    # assert seconds_to_leadtime(-90000) == "M1DT1H"
+    # assert seconds_to_leadtime(-98100) == "M1DT1H30M"
