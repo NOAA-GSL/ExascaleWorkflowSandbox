@@ -6,10 +6,10 @@ def leadtime_to_seconds(leadtime):
     m = p.search(leadtime)
     if m:
         seconds += int(m.group(1))
-    p = re.compile(r"/\D+(\d+)M")
+    p = re.compile(r"\D+(\d+)M")
     m = p.search(leadtime)
     if m:
-        seconds += int(m.group(1) * 60)
+        seconds += int(m.group(1)) * 60
     p = re.compile(r"\D+(\d+)H")
     m = p.search(leadtime)
     if m:
@@ -26,12 +26,13 @@ def leadtime_to_seconds(leadtime):
 
 
 def seconds_to_leadtime(s):
-    seconds = s
     leadtime = ""
-    if seconds < 0:
+    if s < 0:
         leadtime = "M"
+        seconds = s * -1
     else:
         leadtime = "P"
+        seconds = s
     days = seconds // (3600 * 24)
     if days > 0:
         leadtime = leadtime + f"{days}D"

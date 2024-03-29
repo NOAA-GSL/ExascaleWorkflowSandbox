@@ -2,11 +2,10 @@ import os
 import re
 from datetime import datetime as dt
 
+import chiltepin.config
 import parsl
 import pytest
 from parsl.app.app import bash_app
-
-import chiltepin.config
 
 
 # Print out resources that Flux sees after it starts
@@ -85,12 +84,13 @@ def run_mpi_pi(
 
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
-def load_config(config_file, request):
+def load_config(config_file, platform, request):
     yaml_config = chiltepin.config.parse_file(config_file)
-    config, environment = chiltepin.config.factory(yaml_config)
-    parsl.load(config)
+    resource_config, environments = chiltepin.config.factory(yaml_config, platform)
+    environment = environments[platform]
+    parsl.load(resource_config)
     request.addfinalizer(parsl.clear)
-    return {"config": config, "environment": environment}
+    return {"config": resource_config, "environment": environment}
 
 
 # Test Flux resource list
