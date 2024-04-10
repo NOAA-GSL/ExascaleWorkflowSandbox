@@ -559,10 +559,11 @@ jobs:
         run: docker exec frontend bash -l -c "cd work ; pip install -e ."
       -
         name: Run test suite
-        run: docker exec frontend bash -l -c "cd work/tests ; pytest --assert=plain --config=config.yaml --platform=ci test_leadtime.py"
-        run: docker exec frontend bash -l -c "cd work/tests ; pytest --assert=plain --config=config.yaml --platform=ci test_parsl_hello.py"
-        run: docker exec frontend bash -l -c "cd work/tests ; pytest --assert=plain --config=config.yaml --platform=ci test_parsl_flux_mpi_hello.py"
-        run: docker exec frontend bash -l -c "cd work/tests ; pytest --assert=plain --config=config.yaml --platform=ci test_qg_install.py"
+        run: |
+          docker exec frontend bash -l -c "cd work/tests ; pytest --assert=plain --config=config.yaml --platform=ci test_leadtime.py"
+          docker exec frontend bash -l -c "cd work/tests ; pytest --assert=plain --config=config.yaml --platform=ci test_parsl_hello.py"
+          docker exec frontend bash -l -c "cd work/tests ; pytest --assert=plain --config=config.yaml --platform=ci test_parsl_flux_mpi_hello.py"
+          docker exec frontend bash -l -c "cd work/tests ; pytest --assert=plain --config=config.yaml --platform=ci test_qg_install.py"
       -
         name: Debug session
         if: ${{ failure() }}
