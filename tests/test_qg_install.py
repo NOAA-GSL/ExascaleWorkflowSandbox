@@ -27,3 +27,6 @@ def test_qg_install(load_config):
         environment=load_config["environment"],
     ).result()
     assert install_future == 0
+    assert os.path.exists("jedi-bundle-test/jedi-bundle/develop/bin/qg_forecast.x")
+    assert os.path.exists("jedi-bundle-test/jedi-bundle/develop/bin/qg_hofx.x")
+    assert os.path.exists("jedi-bundle-test/jedi-bundle/develop/bin/qg_4dvar.x")
