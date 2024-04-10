@@ -51,7 +51,7 @@ python -m pip install globus-compute-sdk
 python -m pip install globus-compute-endpoint
 python -m pip uninstall -y dill pyzmq
 python -m pip install dill==0.3.8 pyzmq==25.1.2
-python -m pip install parsl[monitoring]==2024.3.4
+python -m pip install parsl[monitoring]==2024.3.18
 python -m pip install pytest-black
 python -m pip install pytest-isort
 

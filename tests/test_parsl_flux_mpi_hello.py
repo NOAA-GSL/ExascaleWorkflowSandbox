@@ -10,7 +10,7 @@ import chiltepin.config
 
 
 # Print out resources that Flux sees after it starts
-@bash_app(executors=["compute"])
+@bash_app(executors=["parallel"])
 def resource_list(stdout=None, stderr=None, env=""):
     return f"""
     {env}
@@ -19,7 +19,7 @@ def resource_list(stdout=None, stderr=None, env=""):
 
 
 # Test Flux PMI launch
-@bash_app(executors=["compute"])
+@bash_app(executors=["parallel"])
 def pmi_barrier(stdout=None, stderr=None, env="", parsl_resource_specification={}):
     return f"""
     {env}
@@ -28,7 +28,7 @@ def pmi_barrier(stdout=None, stderr=None, env="", parsl_resource_specification={
 
 
 # Compile the hello MPI program with environment passed in
-@bash_app(executors=["compute"])
+@bash_app(executors=["parallel"])
 def compile_mpi_hello(
     dirpath,
     stdout=None,
@@ -44,7 +44,7 @@ def compile_mpi_hello(
 
 
 # Run the hello MPI program with environment passed in
-@bash_app(executors=["compute"])
+@bash_app(executors=["parallel"])
 def run_mpi_hello(
     dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={}
 ):
@@ -56,7 +56,7 @@ def run_mpi_hello(
 
 
 # Compile the pi approximation MPI program with environment passed in
-@bash_app(executors=["compute"])
+@bash_app(executors=["parallel"])
 def compile_mpi_pi(
     dirpath,
     stdout=None,
@@ -72,7 +72,7 @@ def compile_mpi_pi(
 
 
 # Run the pi approximation MPI program with environment passed in
-@bash_app(executors=["compute"])
+@bash_app(executors=["parallel"])
 def run_mpi_pi(
     dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={}
 ):
@@ -85,12 +85,13 @@ def run_mpi_pi(
 
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
-def load_config(config_file, request):
+def load_config(config_file, platform, request):
     yaml_config = chiltepin.config.parse_file(config_file)
-    config, environment = chiltepin.config.factory(yaml_config)
-    parsl.load(config)
+    resource_config, environments = chiltepin.config.factory(yaml_config, platform)
+    environment = environments[platform]
+    parsl.load(resource_config)
     request.addfinalizer(parsl.clear)
-    return {"config": config, "environment": environment}
+    return {"config": resource_config, "environment": environment}
 
 
 # Test Flux resource list
