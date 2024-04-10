@@ -112,7 +112,7 @@ ci:
     -
       type: "flux"
       name: "parallel"
-      cores per node: 2
+      cores per node: 8
       nodes per block: 1
       partition: "slurmpar"
       account: ""
@@ -126,7 +126,7 @@ ci:
     -
       type: "htex"
       name: "serial"
-      cores per node: 2
+      cores per node: 8
       nodes per block: 1
       partition: "slurmpar"
       account: ""
