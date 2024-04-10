@@ -83,7 +83,7 @@ chiltepin:
       type: "flux"
       name: "parallel"
       cores per node: 8
-      nodes per block: 1
+      nodes per block: 3
       partition: "slurmpar"
       account: ""
     -
@@ -113,7 +113,7 @@ ci:
       type: "flux"
       name: "parallel"
       cores per node: 8
-      nodes per block: 1
+      nodes per block: 3
       partition: "slurmpar"
       account: ""
     -
