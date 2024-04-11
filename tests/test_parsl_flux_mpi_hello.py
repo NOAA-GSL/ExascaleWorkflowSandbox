@@ -1,6 +1,6 @@
 import os
 import re
-#from datetime import datetime as dt
+# from datetime import datetime as dt
 
 import parsl
 import pytest
@@ -218,7 +218,7 @@ def test_compile_mpi_pi(conf):
 #                 pi2_hosts.append(line.split()[1])
 #     # Verify each pi test ran on a different set of nodes
 #     assert set(pi1_hosts).intersection(pi2_hosts) == set()
-# 
+#
 #     # Verify pi tests un concurrently
 #     start_time = []
 #     end_time = []
