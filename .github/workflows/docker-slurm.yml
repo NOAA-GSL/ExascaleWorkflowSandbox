@@ -560,10 +560,7 @@ jobs:
       -
         name: Run test suite
         run: |
-          docker exec frontend bash -l -c "cd work/tests ; timeout --signal=INT 10 pytest -s -v --full-trace --assert=plain --config=config.yaml --platform=ci test_leadtime.py"
-          docker exec frontend bash -l -c "cd work/tests ; timeout --signal=INT 10 pytest -s -v --full-trace --assert=plain --config=config.yaml --platform=ci test_parsl_hello.py"
-          docker exec frontend bash -l -c "cd work/tests ; timeout --signal=INT 500 pytest -s -v --full-trace --assert=plain --config=config.yaml --platform=ci test_parsl_flux_mpi_hello.py"
-          docker exec frontend bash -l -c "cd work/tests ; timeout --signal=INT 1200 pytest -s -v --full-trace --assert=plain --config=config.yaml --platform=ci test_qg_install.py"
+          docker exec frontend bash -l -c "cd work/tests ; timeout --signal=INT 1800 pytest -s -v --full-trace --assert=plain --config=config.yaml --platform=ci"
       -
         name: Debug session
         if: ${{ failure() }}
