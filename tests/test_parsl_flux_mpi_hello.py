@@ -1,11 +1,10 @@
 import os
 import re
 
+import chiltepin.config
 import parsl
 import pytest
 from parsl.app.app import bash_app
-
-import chiltepin.config
 
 # from datetime import datetime as dt
 
@@ -177,60 +176,62 @@ def test_compile_mpi_pi(conf):
     assert os.stat("parsl_flux_mpi_pi_compile.out").st_size == 0
 
 
-# def test_run_mpi_pi(conf):
-#     shared_dir = "./"
-#     # Remove any previous output if necessary
-#     if os.path.exists("parsl_flux_mpi_pi1_run.out"):
-#         os.remove("parsl_flux_mpi_pi1_run.out")
-#     if os.path.exists("parsl_flux_mpi_pi1_run.err"):
-#         os.remove("parsl_flux_mpi_pi1_run.err")
-#     if os.path.exists("parsl_flux_mpi_pi2_run.out"):
-#         os.remove("parsl_flux_mpi_pi2_run.out")
-#     if os.path.exists("parsl_flux_mpi_pi2_run.err"):
-#         os.remove("parsl_flux_mpi_pi2_run.err")
-#     cores_per_node = conf["config"].executors[0].provider.cores_per_node
-#     pi1 = run_mpi_pi(
-#         dirpath=shared_dir,
-#         stdout=os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.out"),
-#         stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.err"),
-#         env=conf["environment"],
-#         parsl_resource_specification={"num_tasks": cores_per_node * 2, "num_nodes": 2},
-#     )
-#     pi2 = run_mpi_pi(
-#         dirpath=shared_dir,
-#         stdout=os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.out"),
-#         stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.err"),
-#         env=conf["environment"],
-#         parsl_resource_specification={"num_tasks": cores_per_node, "num_nodes": 1},
-#     )
-#     assert pi1.result() == 0
-#     assert pi2.result() == 0
-#     # Extract the hostnames used by pi1
-#     with open("parsl_flux_mpi_pi1_run.out", "r") as f:
-#         pi1_hosts = []
-#         for line in f:
-#             if re.match(r"Host ", line):
-#                 pi1_hosts.append(line.split()[1])
-#     # Extract the hostnames used by pi2
-#     with open("parsl_flux_mpi_pi2_run.out", "r") as f:
-#         pi2_hosts = []
-#         for line in f:
-#             if re.match(r"Host ", line):
-#                 pi2_hosts.append(line.split()[1])
-#     # Verify each pi test ran on a different set of nodes
-#     assert set(pi1_hosts).intersection(pi2_hosts) == set()
-#
-#     # Verify pi tests un concurrently
-#     start_time = []
-#     end_time = []
-#     files = ["parsl_flux_mpi_pi1_run.out", "parsl_flux_mpi_pi2_run.out"]
-#     for f in files:
-#         with open(f, "r") as pi:
-#             for line in pi:
-#                 if re.match(r"Start Time ", line):
-#                     line = line.strip().lstrip("Start Time = ")
-#                     start_time.append(dt.strptime(line, "%d/%m/%Y %H:%M:%S"))
-#                 if re.match(r"End Time ", line):
-#                     line = line.strip().lstrip("End Time = ")
-#                     end_time.append(dt.strptime(line, "%d/%m/%Y %H:%M:%S"))
-#     assert start_time[0] < end_time[1] and start_time[1] < end_time[0]
+def test_run_mpi_pi(conf):
+    # shared_dir = "./"
+    # Remove any previous output if necessary
+    if os.path.exists("parsl_flux_mpi_pi1_run.out"):
+        os.remove("parsl_flux_mpi_pi1_run.out")
+    if os.path.exists("parsl_flux_mpi_pi1_run.err"):
+        os.remove("parsl_flux_mpi_pi1_run.err")
+    if os.path.exists("parsl_flux_mpi_pi2_run.out"):
+        os.remove("parsl_flux_mpi_pi2_run.out")
+    if os.path.exists("parsl_flux_mpi_pi2_run.err"):
+        os.remove("parsl_flux_mpi_pi2_run.err")
+    cores_per_node = conf["config"].executors[0].provider.cores_per_node
+    assert cores_per_node == 8
+    assert conf["config"].executors[0].label == "parallel"
+    # pi1 = run_mpi_pi(
+    #     dirpath=shared_dir,
+    #     stdout=os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.out"),
+    #     stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.err"),
+    #     env=conf["environment"],
+    #     parsl_resource_specification={"num_tasks": cores_per_node * 2, "num_nodes": 2},
+    # )
+    # pi2 = run_mpi_pi(
+    #     dirpath=shared_dir,
+    #     stdout=os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.out"),
+    #     stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.err"),
+    #     env=conf["environment"],
+    #     parsl_resource_specification={"num_tasks": cores_per_node, "num_nodes": 1},
+    # )
+    # assert pi1.result() == 0
+    # assert pi2.result() == 0
+    # # Extract the hostnames used by pi1
+    # with open("parsl_flux_mpi_pi1_run.out", "r") as f:
+    #     pi1_hosts = []
+    #     for line in f:
+    #         if re.match(r"Host ", line):
+    #             pi1_hosts.append(line.split()[1])
+    # # Extract the hostnames used by pi2
+    # with open("parsl_flux_mpi_pi2_run.out", "r") as f:
+    #     pi2_hosts = []
+    #     for line in f:
+    #         if re.match(r"Host ", line):
+    #             pi2_hosts.append(line.split()[1])
+    # # Verify each pi test ran on a different set of nodes
+    # assert set(pi1_hosts).intersection(pi2_hosts) == set()
+    #
+    # # Verify pi tests un concurrently
+    # start_time = []
+    # end_time = []
+    # files = ["parsl_flux_mpi_pi1_run.out", "parsl_flux_mpi_pi2_run.out"]
+    # for f in files:
+    #     with open(f, "r") as pi:
+    #         for line in pi:
+    #             if re.match(r"Start Time ", line):
+    #                 line = line.strip().lstrip("Start Time = ")
+    #                 start_time.append(dt.strptime(line, "%d/%m/%Y %H:%M:%S"))
+    #             if re.match(r"End Time ", line):
+    #                 line = line.strip().lstrip("End Time = ")
+    #                 end_time.append(dt.strptime(line, "%d/%m/%Y %H:%M:%S"))
+    # assert start_time[0] < end_time[1] and start_time[1] < end_time[0]
