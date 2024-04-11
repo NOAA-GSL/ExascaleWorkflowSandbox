@@ -1,8 +1,9 @@
 import os
 
-import chiltepin.config
 import parsl
 import pytest
+
+import chiltepin.config
 from chiltepin.jedi.qg import install
 
 

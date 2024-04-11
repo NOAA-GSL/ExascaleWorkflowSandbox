@@ -1,10 +1,11 @@
 import os
 import re
 
-import chiltepin.config
 import parsl
 import pytest
 from parsl.app.app import bash_app
+
+import chiltepin.config
 
 # from datetime import datetime as dt
 
