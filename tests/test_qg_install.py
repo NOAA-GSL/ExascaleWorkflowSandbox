@@ -13,7 +13,7 @@ def conf(config_file, platform):
     yaml_config = chiltepin.config.parse_file(config_file)
     resource_config, environments = chiltepin.config.factory(yaml_config, platform)
     environment = environments[platform]
-    with parsl.load(resource_config) as _mod_dfk:
+    with parsl.load(resource_config):
         yield {"config": resource_config, "environment": environment}
     parsl.clear()
 
