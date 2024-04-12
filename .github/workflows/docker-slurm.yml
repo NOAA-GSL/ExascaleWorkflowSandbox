@@ -478,7 +478,8 @@ jobs:
     needs:
       - merge-spack-stack
     #runs-on: ubuntu2204-8c-32g-300ssd
-    runs-on: ubuntu2204-32c-128g-1200ssd
+    runs-on: ubuntu2204-16c-64g-600ssd
+    #runs-on: ubuntu2204-32c-128g-1200ssd
     timeout-minutes: 360
     permissions:
       packages: write
@@ -561,8 +562,7 @@ jobs:
       -
         name: Run test suite
         run: |
-          exit 1
-          # docker exec frontend bash -l -c "cd work/tests ; pytest -s -v --assert=plain --config=config.yaml --platform=ci"
+          docker exec frontend bash -l -c "cd work/tests ; pytest -s -v --assert=plain --config=config.yaml --platform=ci"
       -
         name: Debug session
         if: ${{ failure() }}
