@@ -477,7 +477,8 @@ jobs:
   build-and-test-chiltepin:
     needs:
       - merge-spack-stack
-    runs-on: ubuntu2204-8c-32g-300ssd
+    #runs-on: ubuntu2204-8c-32g-300ssd
+    runs-on: ubuntu2204-32c-128g-1200ssd
     timeout-minutes: 360
     permissions:
       packages: write
