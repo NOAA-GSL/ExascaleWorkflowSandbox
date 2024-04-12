@@ -177,6 +177,7 @@ def test_compile_mpi_pi(conf):
 
 
 def test_run_mpi_pi(conf):
+    assert True == False
     shared_dir = "./"
     # Remove any previous output if necessary
     if os.path.exists("parsl_flux_mpi_pi1_run.out"):
