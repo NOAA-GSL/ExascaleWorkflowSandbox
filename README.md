@@ -109,7 +109,7 @@ Once in the container, you can install Chiltepin in editable mode, and run the t
 cd chiltepin
 pip install -e .
 cd tests
-pytest --assert=plain --config=config.yaml --platform=ci
+pytest --assert=plain --config=config.yaml --platform=chiltepin
 ```
 
 NOTE: Depending on how many cores your machine has and how many you've allocated to Docker,
