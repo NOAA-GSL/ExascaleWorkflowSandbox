@@ -20,12 +20,12 @@ def parse_file(filename):
     return yaml_config
 
 
-def factory(yaml_config={}):
+def factory(yaml_config, platform):
 
     # Set FLUX_SSH
     os.environ["FLUX_SSH"] = "ssh"
 
-    provider_config = yaml_config["provider"]
+    provider_config = yaml_config[platform]["providers"]
 
     execs = []
     for pc in provider_config:
@@ -53,23 +53,27 @@ def factory(yaml_config={}):
             e = HighThroughputExecutor(
                 label=pc["name"],
                 # address=address_by_hostname(),
-                max_workers=1,
                 cores_per_worker=1,
+                max_workers_per_node=pc["cores per node"],
                 provider=SlurmProvider(
                     channel=LocalChannel(),
                     exclusive=False,
                     cores_per_node=pc["cores per node"],
                     nodes_per_block=pc["nodes per block"],
                     init_blocks=1,
+                    min_blocks=1,
                     partition=pc["partition"],
                     account=pc["account"],
-                    walltime="02:10:00",
+                    walltime="08:00:00",
                     launcher=SimpleLauncher(),
                     worker_init="""
                     """,
                 ),
             )
             execs.append(e)
-    env_init = "\n".join(yaml_config["environment"])
-    config = Config(executors=execs)
-    return config, env_init
+    resources = Config(executors=execs)
+    environments = {}
+    for p in yaml_config:
+        environments[p] = "\n".join(yaml_config[p]["environment"])
+
+    return resources, environments

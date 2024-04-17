@@ -83,6 +83,40 @@ services:
                 - SLURM_CPUS_ON_NODE=8
         links:
                 - slurmmaster
+  slurmnode4:
+        build:
+          context: .
+          dockerfile: ./node/Dockerfile
+        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
+        container_name: node4
+        hostname: slurmnode4
+        user: admin
+        volumes:
+                - shared-vol:/home/admin:nocopy
+                - opt-vol:/opt:ro
+                - ..:/home/admin/chiltepin
+        environment:
+                - SLURM_NODENAME=slurmnode4
+                - SLURM_CPUS_ON_NODE=8
+        links:
+                - slurmmaster
+  slurmnode5:
+        build:
+          context: .
+          dockerfile: ./node/Dockerfile
+        image: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
+        container_name: node5
+        hostname: slurmnode5
+        user: admin
+        volumes:
+                - shared-vol:/home/admin:nocopy
+                - opt-vol:/opt:ro
+                - ..:/home/admin/chiltepin
+        environment:
+                - SLURM_NODENAME=slurmnode5
+                - SLURM_CPUS_ON_NODE=8
+        links:
+                - slurmmaster
 volumes:
         shared-vol:
         opt-vol:

@@ -1,0 +1,127 @@
+hercules:
+  providers:
+    -
+      type: "flux"
+      name: "parallel"
+      cores per node: 80
+      nodes per block: 3
+      partition: "hercules"
+      account: "gsd-hpcs"
+    -
+      type: "htex"
+      name: "service"
+      cores per node: 1
+      nodes per block: 1
+      partition: "service"
+      account: "gsd-hpcs"
+    -
+      type: "htex"
+      name: "serial"
+      cores per node: 80
+      nodes per block: 1
+      partition: "hercules"
+      account: "gsd-hpcs"
+  
+  environment:
+    - "module purge"
+    - "module use /work/noaa/epic/role-epic/spack-stack/hercules/spack-stack-1.6.0/envs/unified-env/install/modulefiles/Core"
+    - "module load stack-intel/2021.9.0"
+    - "module load stack-intel-oneapi-mpi/2021.9.0"
+    - "module load stack-python/3.10.13"
+    - "module load jedi-fv3-env"
+    - "unset I_MPI_PMI_LIBRARY"
+    - "export CHILTEPIN_MPIF90=$MPIF90"
+
+hera:
+  providers:
+    -
+      type: "flux"
+      name: "parallel"
+      cores per node: 40
+      nodes per block: 3
+      partition: "hera"
+      account: "gsd-hpcs"
+    -
+      type: "htex"
+      name: "service"
+      cores per node: 1
+      nodes per block: 1
+      partition: "service"
+      account: "gsd-hpcs"
+    -
+      type: "htex"
+      name: "serial"
+      cores per node: 40
+      nodes per block: 1
+      partition: "hera"
+      account: "gsd-hpcs"
+  
+  environment:
+    - "module purge"
+    - "module use /scratch1/NCEPDEV/nems/role.epic/spack-stack/spack-stack-1.6.0/envs/unified-env/install/modulefiles/Core"
+    - "module load stack-intel/2021.5.0"
+    - "module load stack-intel-oneapi-mpi/2021.5.1"
+    - "module load stack-python/3.10.13"
+    - "module load jedi-fv3-env"
+    - "unset I_MPI_PMI_LIBRARY"
+    - "export CHILTEPIN_MPIF90=$MPIF90"
+
+chiltepin:
+  providers:
+    -
+      type: "flux"
+      name: "parallel"
+      cores per node: 8
+      nodes per block: 3
+      partition: "slurmpar"
+      account: ""
+    -
+      type: "htex"
+      name: "service"
+      cores per node: 1
+      nodes per block: 1
+      partition: "slurmpar"
+      account: ""
+    -
+      type: "htex"
+      name: "serial"
+      cores per node: 8
+      nodes per block: 1
+      partition: "slurmpar"
+      account: ""
+
+  environment:
+    - "export FLUX_PMI_LIBRARY_PATH=/opt/view/lib/flux/libpmi.so"
+    - "export OMPI_MCA_btl=self,tcp"
+    - "export CHILTEPIN_MPIF90=mpif90"
+    - "export jedi_cmake_ROOT=/opt/views/view"
+
+ci:
+  providers:
+    -
+      type: "flux"
+      name: "parallel"
+      cores per node: 8
+      nodes per block: 3
+      partition: "slurmpar"
+      account: ""
+    -
+      type: "htex"
+      name: "service"
+      cores per node: 1
+      nodes per block: 1
+      partition: "slurmpar"
+      account: ""
+    -
+      type: "htex"
+      name: "serial"
+      cores per node: 8
+      nodes per block: 1
+      partition: "slurmpar"
+      account: ""
+
+  environment:
+    - "export FLUX_PMI_LIBRARY_PATH=/opt/view/lib/flux/libpmi.so"
+    - "export OMPI_MCA_btl=self,tcp"
+    - "export CHILTEPIN_MPIF90=mpif90"
+    - "export jedi_cmake_ROOT=/opt/views/view"
