@@ -149,7 +149,7 @@ jobs:
         run:  |
           pip install black isort
           black src tests --check --diff
-          isort src tests --check --diff
+          isort src tests --check --diff --profile black
       -
         name: Docker meta
         id: meta
@@ -356,7 +356,7 @@ jobs:
         run:  |
           pip install black isort
           black src tests --check --diff
-          isort src tests --check --diff
+          isort src tests --check --diff --profile black
       -
         name: Docker meta
         id: meta
@@ -477,7 +477,7 @@ jobs:
   build-and-test-chiltepin:
     needs:
       - merge-spack-stack
-    runs-on: ubuntu2204-4c-16g-150ssd
+    runs-on: ubuntu2204-16c-64g-600ssd
     timeout-minutes: 360
     permissions:
       packages: write
@@ -559,7 +559,8 @@ jobs:
         run: docker exec frontend bash -l -c "cd work ; pip install -e ."
       -
         name: Run test suite
-        run: docker exec frontend bash -l -c "cd work/tests ; pytest --assert=plain --config=ci.yaml"
+        run: |
+          docker exec frontend bash -l -c "cd work/tests ; pytest -s -v --assert=plain --config=config.yaml --platform=ci"
       -
         name: Debug session
         if: ${{ failure() }}

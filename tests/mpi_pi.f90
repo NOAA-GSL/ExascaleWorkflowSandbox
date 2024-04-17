@@ -2,17 +2,16 @@ program calculatePi
 
   use mpi
 
-  integer*8, parameter :: nSamples = 1000000000
-
   integer :: error
   integer :: worldSize, worldRank, nameLen
   character(len=MPI_MAX_PROCESSOR_NAME) :: hostname
-  character(len=6) :: rank
-  character(len=6) :: size
+  character(len=6) :: rank, size
+  character(len=10) :: samples
   integer*8 :: i
   integer*8 :: nCircle, nSquare, sumCircle, sumSquare
   real*8    :: randX, randY, distance, pi
   integer   :: timeValues(8)
+  real*4    :: start_time, current_time
   
   ! Initialize the MPI environment
   call MPI_Init(error)
@@ -40,7 +39,11 @@ program calculatePi
   nCircle = 0
   nSquare = 0
   pi = 0.0
-  do i=1, nSamples
+  call cpu_time(start_time)
+  call cpu_time(current_time)
+  i = 0
+  do while ((current_time - start_time) < 30)
+    i = i + 1
     call random_number(randX)
     call random_number(randY)
 
@@ -51,13 +54,17 @@ program calculatePi
     end if
     nSquare = nSquare + 1
 
+    call cpu_time(current_time)
+
   end do
 
   pi = 4.0 * nCircle / nSquare
 
-  write(*,"(A,A,A,A,A,A,A,F15.13)") "Host ", TRIM(hostname), " rank ", &
+  write(samples,'(I10)') i
+  write(*,"(A,A,A,A,A,A,A,F15.13,A,A)") "Host ", TRIM(hostname), " rank ", &
           TRIM(ADJUSTL(rank)), " of ", TRIM(ADJUSTL(size)), &
-          " local approximation of pi = ", pi
+          " local approximation of pi = ", pi, " after ", &
+          TRIM(ADJUSTL(samples)), "samples"
 
   call MPI_Reduce(nCircle, sumCircle, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD, error)
   call MPI_Reduce(nSquare, sumSquare, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD, error)

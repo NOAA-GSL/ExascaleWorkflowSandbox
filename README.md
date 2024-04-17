@@ -109,7 +109,7 @@ Once in the container, you can install Chiltepin in editable mode, and run the t
 cd chiltepin
 pip install -e .
 cd tests
-pytest --assert=plain --config=chiltepin.yaml
+pytest --assert=plain --config=config.yaml --platform=chiltepin
 ```
 
 NOTE: Depending on how many cores your machine has and how many you've allocated to Docker,
@@ -140,13 +140,12 @@ pip install -e .
 Once Chiltepin has been installed with `pip`, the tests can be run with:
 
 ```
-pytest --assert=plain --config=<config.yaml>
+pytest --assert=plain --config=config.yaml --platform=<platform>
 ```
 
-Where `<config.yaml>` is a configuration file specific to the test platform.  For examples,
-look in one of the following:
+Where `<platform>` is the specific platform where you are running the tests:
 
-1. `tests/chiltepin.yaml`
-2. `tests/ci.yaml`
-3. `tests/hercules.yaml`
-3. `tests/hera.yaml`
+1. `ci`         #  Platform used in CI testing
+2. `chiltepin`  #  Platform used for the container
+3. `hercules`
+3. `hera`
