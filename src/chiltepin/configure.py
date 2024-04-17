@@ -71,9 +71,9 @@ def factory(yaml_config, platform):
                 ),
             )
             execs.append(e)
-    config = Config(executors=execs)
-    env_init = {}
+    resources = Config(executors=execs)
+    environments = {}
     for p in yaml_config:
-        env_init[p] = "\n".join(yaml_config[p]["environment"])
+        environments[p] = "\n".join(yaml_config[p]["environment"])
 
-    return config, env_init
+    return resources, environments

@@ -4,7 +4,13 @@ from parsl.app.app import bash_app, join_app
 
 
 @bash_app(executors=["service"])
-def _clone(env, install_path, tag="develop", stdout=None, stderr=None):
+def _clone(
+    env,
+    install_path,
+    tag="develop",
+    stdout=None,
+    stderr=None,
+):
     return env + textwrap.dedent(
         f"""
     echo Started at $(date)
@@ -20,7 +26,14 @@ def _clone(env, install_path, tag="develop", stdout=None, stderr=None):
 
 
 @bash_app(executors=["service"])
-def _configure(env, install_path, tag="develop", stdout=None, stderr=None, clone=None):
+def _configure(
+    env,
+    install_path,
+    tag="develop",
+    stdout=None,
+    stderr=None,
+    clone=None,
+):
     return env + textwrap.dedent(
         f"""
     echo Started at $(date)
@@ -68,15 +81,27 @@ def _make(
     cd {install_path}/jedi-bundle/{tag}/build
     make -j{jobs} VERBOSE=1
     make install
-    echo Completed at $(date)    """
+    echo Completed at $(date)
+    """
     )
 
 
 @join_app
-def run(environment, install_path, tag="develop", jobs=8, stdout=None, stderr=None):
+def run(
+    environment,
+    install_path,
+    tag="develop",
+    jobs=8,
+    stdout=None,
+    stderr=None,
+):
 
     clone = _clone(
-        environment, install_path=install_path, tag=tag, stdout=stdout, stderr=stderr
+        environment,
+        install_path=install_path,
+        tag=tag,
+        stdout=stdout,
+        stderr=stderr,
     )
 
     configure = _configure(

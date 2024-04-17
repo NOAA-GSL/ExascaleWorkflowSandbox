@@ -6,7 +6,7 @@ import parsl
 import pytest
 from parsl.app.app import bash_app
 
-import chiltepin.config
+import chiltepin.configure
 
 
 # Print out resources that Flux sees after it starts
@@ -85,21 +85,21 @@ def run_mpi_pi(
 
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
-def conf(config_file, platform):
-    yaml_config = chiltepin.config.parse_file(config_file)
-    resource_config, environments = chiltepin.config.factory(yaml_config, platform)
+def config(config_file, platform):
+    yaml_config = chiltepin.configure.parse_file(config_file)
+    resources, environments = chiltepin.configure.factory(yaml_config, platform)
     environment = environments[platform]
-    with parsl.load(resource_config):
-        yield {"config": resource_config, "environment": environment}
+    with parsl.load(resources):
+        yield {"resources": resources, "environment": environment}
     parsl.clear()
 
 
 # Test Flux resource list
-def test_flux_resource_list(conf):
+def test_flux_resource_list(config):
     r = resource_list(
         stdout=("parsl_flux_resource_list.out", "w"),
         stderr=("parsl_flux_resource_list.err", "w"),
-        env=conf["environment"],
+        env=config["environment"],
     ).result()
     assert r == 0
 
@@ -116,11 +116,11 @@ def test_flux_resource_list(conf):
 
 
 # Test Flux pmi barrier
-def test_flux_pmi(conf):
+def test_flux_pmi(config):
     p = pmi_barrier(
         stdout=("parsl_flux_pmi_barrier.out", "w"),
         stderr=("parsl_flux_pmi_barrier.err", "w"),
-        env=conf["environment"],
+        env=config["environment"],
         parsl_resource_specification={"num_tasks": 6, "num_nodes": 3},
     ).result()
     assert p == 0
@@ -130,20 +130,20 @@ def test_flux_pmi(conf):
         )
 
 
-def test_compile_mpi_hello(conf):
+def test_compile_mpi_hello(config):
     shared_dir = "./"
     c = compile_mpi_hello(
         dirpath=shared_dir,
         stdout=(os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.out"), "w"),
         stderr=(os.path.join(shared_dir, "parsl_flux_mpi_hello_compile.err"), "w"),
-        env=conf["environment"],
+        env=config["environment"],
     ).result()
     assert c == 0
     assert os.path.isfile("mpi_hello.exe")
     assert os.stat("parsl_flux_mpi_hello_compile.out").st_size == 0
 
 
-def test_run_mpi_hello(conf):
+def test_run_mpi_hello(config):
     shared_dir = "./"
     # Remove any previous output if necessary
     if os.path.exists("parsl_flux_mpi_hello_run.out"):
@@ -154,7 +154,7 @@ def test_run_mpi_hello(conf):
         dirpath=shared_dir,
         stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
         stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err"),
-        env=conf["environment"],
+        env=config["environment"],
         parsl_resource_specification={"num_tasks": 6, "num_nodes": 3},
     ).result()
     assert hello == 0
@@ -163,20 +163,20 @@ def test_run_mpi_hello(conf):
             assert re.match(r"Hello world from host \S+, rank \d+ out of 6", line)
 
 
-def test_compile_mpi_pi(conf):
+def test_compile_mpi_pi(config):
     shared_dir = "./"
     c = compile_mpi_pi(
         dirpath=shared_dir,
         stdout=(os.path.join(shared_dir, "parsl_flux_mpi_pi_compile.out"), "w"),
         stderr=(os.path.join(shared_dir, "parsl_flux_mpi_pi_compile.err"), "w"),
-        env=conf["environment"],
+        env=config["environment"],
     ).result()
     assert c == 0
     assert os.path.isfile("mpi_pi.exe")
     assert os.stat("parsl_flux_mpi_pi_compile.out").st_size == 0
 
 
-def test_run_mpi_pi(conf):
+def test_run_mpi_pi(config):
     shared_dir = "./"
     # Remove any previous output if necessary
     if os.path.exists("parsl_flux_mpi_pi1_run.out"):
@@ -187,21 +187,20 @@ def test_run_mpi_pi(conf):
         os.remove("parsl_flux_mpi_pi2_run.out")
     if os.path.exists("parsl_flux_mpi_pi2_run.err"):
         os.remove("parsl_flux_mpi_pi2_run.err")
-    cores_per_node = conf["config"].executors[0].provider.cores_per_node
-    assert cores_per_node == 8
-    assert conf["config"].executors[0].label == "parallel"
+    cores_per_node = config["resources"].executors[0].provider.cores_per_node
+    assert config["resources"].executors[0].label == "parallel"
     pi1 = run_mpi_pi(
         dirpath=shared_dir,
         stdout=os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.out"),
         stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.err"),
-        env=conf["environment"],
+        env=config["environment"],
         parsl_resource_specification={"num_tasks": cores_per_node * 2, "num_nodes": 2},
     )
     pi2 = run_mpi_pi(
         dirpath=shared_dir,
         stdout=os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.out"),
         stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.err"),
-        env=conf["environment"],
+        env=config["environment"],
         parsl_resource_specification={"num_tasks": cores_per_node, "num_nodes": 1},
     )
     assert pi1.result() == 0
