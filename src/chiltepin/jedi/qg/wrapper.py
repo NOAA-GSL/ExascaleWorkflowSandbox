@@ -5,12 +5,20 @@ from parsl.app.app import bash_app, join_app
 
 class QG:
 
-    def __init__(self, environment="", install_path="./", tag="develop"):
+    def __init__(
+        self,
+        environment="",
+        install_path="./",
+        tag="develop",
+    ):
         self.environment = environment
         self.install_path = install_path
         self.tag = tag
 
-    def get_clone_task(self, executors=["service"]):
+    def get_clone_task(
+        self,
+        executors=["service"],
+    ):
         def clone(
             stdout=None,
             stderr=None,
@@ -31,7 +39,10 @@ class QG:
 
         return bash_app(clone, executors=executors)
 
-    def get_configure_task(self, executors=["service"]):
+    def get_configure_task(
+        self,
+        executors=["service"],
+    ):
         def configure(
             stdout=None,
             stderr=None,
@@ -65,7 +76,10 @@ class QG:
 
         return bash_app(configure, executors=executors)
 
-    def get_make_task(self, executors=["serial"]):
+    def get_make_task(
+        self,
+        executors=["serial"],
+    ):
         def make(
             stdout=None,
             stderr=None,
@@ -122,12 +136,28 @@ class QG:
 
         return join_app(install)
 
-    def clone(self, stdout=None, stderr=None, executors=["service"]):
-        return self.get_clone_task(executors)(stdout=stdout, stderr=stderr)
+    def clone(
+        self,
+        stdout=None,
+        stderr=None,
+        executors=["service"],
+    ):
+        return self.get_clone_task(executors)(
+            stdout=stdout,
+            stderr=stderr,
+        )
 
-    def configure(self, clone=None, stdout=None, stderr=None, executors=["service"]):
+    def configure(
+        self,
+        clone=None,
+        stdout=None,
+        stderr=None,
+        executors=["service"],
+    ):
         return self.get_configure_task(executors)(
-            stdout=stdout, stderr=stderr, clone=clone
+            stdout=stdout,
+            stderr=stderr,
+            clone=clone,
         )
 
     def make(
