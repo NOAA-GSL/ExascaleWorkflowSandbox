@@ -142,7 +142,7 @@ class QG:
         stderr=None,
         executors=["service"],
     ):
-        return self.get_clone_task(executors)(
+        return self.get_clone_task(executors=executors)(
             stdout=stdout,
             stderr=stderr,
         )
@@ -154,7 +154,7 @@ class QG:
         stderr=None,
         executors=["service"],
     ):
-        return self.get_configure_task(executors)(
+        return self.get_configure_task(executors=executors)(
             stdout=stdout,
             stderr=stderr,
             clone=clone,
@@ -169,7 +169,7 @@ class QG:
         executors=["serial"],
         parsl_resource_specification={"num_nodes": 1},
     ):
-        return self.get_make_task(executors)(
+        return self.get_make_task(executors=executors)(
             configure=configure,
             jobs=jobs,
             stdout=stdout,
