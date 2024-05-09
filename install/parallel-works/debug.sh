@@ -45,6 +45,7 @@ perl -i -p0e 's/      variants\:.*visibility=hidden/$ENV{boost_variants}/s' comm
 
 spack env activate -p .
 
+spack add py-pip
 spack add py-pytest@7.3.2
 spack add flux-core@0.58.0
 spack add flux-sched@0.32.0
@@ -91,6 +92,21 @@ spack concretize
 
 spack install --no-check-signature --fail-fast
 
+spack buildcache push --unsigned --update-index s3_spack_stack_buildcache_rw 
+
+# Create tcl module files (replace tcl with lmod?)
+spack module tcl refresh -y
+
+# Create meta-modules for compiler, MPI, Python
+spack stack setup-meta-modules
+
+# Load modules
+module use /home/Christopher.W.Harrop/spack-stack/envs/unified-dev.mylinux/install/modulefiles/Core
+module load stack-gcc/11.2.1
+module load stack-openmpi/4.1.6
+module load stack-python/3.10.13
+module load pip
+
 # Install parsl, black, and isort
 python -m pip install globus-compute-sdk
 python -m pip install globus-compute-endpoint
@@ -99,11 +115,3 @@ python -m pip install dill==0.3.8 pyzmq==25.1.2
 python -m pip install parsl[monitoring]==2024.3.4
 python -m pip install pytest-black
 python -m pip install pytest-isort
-
-spack buildcache push --unsigned --update-index s3_spack_stack_buildcache_rw 
-
-# Create tcl module files (replace tcl with lmod?)
-spack module tcl refresh -y
-
-# Create meta-modules for compiler, MPI, Python
-spack stack setup-meta-modules
