@@ -105,13 +105,13 @@ module use /home/Christopher.W.Harrop/spack-stack/envs/unified-dev.mylinux/insta
 module load stack-gcc/11.2.1
 module load stack-openmpi/4.1.6
 module load stack-python/3.10.13
-module load pip
+module load py-pip
 
 # Install parsl, black, and isort
 python -m pip install globus-compute-sdk
 python -m pip install globus-compute-endpoint
 python -m pip uninstall -y dill pyzmq
 python -m pip install dill==0.3.8 pyzmq==25.1.2
-python -m pip install parsl[monitoring]==2024.3.4
+python -m pip install parsl[monitoring]==2024.4.8
 python -m pip install pytest-black
 python -m pip install pytest-isort
