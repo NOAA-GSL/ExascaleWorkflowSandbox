@@ -36,7 +36,6 @@ BOOST_EOF
 perl -i -p0e 's/      variants\:.*visibility=hidden/$ENV{boost_variants}/s' spack.yaml
 
 # Modify spack.yaml to install py-pytest, py-flake8, and py-pytest-flake8
-perl -p -i -e "s/# To avoid/py-pytest:\n      require: ['\@7.3.2']\n    # To avoid/g" spack.yaml
 perl -p -i -e "s/# To avoid/py-flake8:\n      version: [6.1.0]\n    # To avoid/g" spack.yaml
 perl -p -i -e "s/# To avoid/py-pytest-flake8:\n      version: [0.8.1]\n    # To avoid/g" spack.yaml
 perl -p -i -e "s/py-pyyaml\@6.0/py-pytest\@7.3.2\n  - py-pyyaml\@6.0/g" spack.yaml
@@ -80,6 +79,8 @@ RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml \
   python -m pip install parsl[monitoring]==2024.4.8
   python -m pip install pytest-black
   python -m pip install pytest-isort
+  python -m pip install 'uwtools @ git+https://github.com/ufs-community/uwtools@main#subdirectory=src'
+  python -m pip install pytest==7.3.2
   spack mirror list
   if [ "$(spack mirror list | wc -l)" = "3" ]; then
     export AWS_ACCESS_KEY_ID=$(cat /run/secrets/access_key_id)
