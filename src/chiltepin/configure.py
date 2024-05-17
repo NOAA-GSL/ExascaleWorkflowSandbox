@@ -45,18 +45,16 @@ def factory(yaml_config, platform):
                     walltime="08:00:00",
                     launcher=SimpleLauncher(),
                     worker_init="""
-module purge
-module unuse /usr/share/Modules/modulefiles
-module unuse /usr/share/modulefiles
-module use /home/Christopher.W.Harrop/spack-stack/envs/unified-dev.mylinux/install/modulefiles/Core
-module load stack-gcc
-module load stack-openmpi
-module load stack-python
-module load jedi-fv3-env
-module load flux-core
-module load flux-sched
-module list
-echo FLUX_MODULE_PATH=$FLUX_MODULE_PATH
+module --silent purge
+module --silent unuse /usr/share/Modules/modulefiles
+module --silent unuse /usr/share/modulefiles
+module --silent use /home/Christopher.W.Harrop/spack-stack/envs/unified-dev.mylinux/install/modulefiles/Core
+module --silent load stack-gcc
+module --silent load stack-openmpi
+module --silent load stack-python
+module --silent load jedi-fv3-env
+module --silent load flux-core
+module --silent load flux-sched
                     """,
                 ),
             )
@@ -79,6 +77,16 @@ echo FLUX_MODULE_PATH=$FLUX_MODULE_PATH
                     walltime="08:00:00",
                     launcher=SimpleLauncher(),
                     worker_init="""
+module --silent purge
+module --silent unuse /usr/share/Modules/modulefiles
+module --silent unuse /usr/share/modulefiles
+module --silent use /home/Christopher.W.Harrop/spack-stack/envs/unified-dev.mylinux/install/modulefiles/Core
+module --silent load stack-gcc
+module --silent load stack-openmpi
+module --silent load stack-python
+module --silent load jedi-fv3-env
+module --silent load flux-core
+module --silent load flux-sched
                     """,
                 ),
             )

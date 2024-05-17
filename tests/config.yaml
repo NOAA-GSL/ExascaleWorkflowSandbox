@@ -91,22 +91,18 @@ pw:
       account: ""
 
   environment:
-    - "module purge"
-    - "module unuse /usr/share/Modules/modulefiles"
-    - "module unuse /usr/share/modulefiles"
-    - "module use /home/Christopher.W.Harrop/spack-stack/envs/unified-dev.mylinux/install/modulefiles/Core"
-    - "module load stack-gcc"
-    - "module load stack-openmpi"
-    - "module load stack-python"
-    - "module load jedi-fv3-env"
-    - "module load flux-sched"
-    - "module load flux-core"
-    - "module list"
+    - "module --silent purge"
+    - "module --silent use /home/Christopher.W.Harrop/spack-stack/envs/unified-dev.mylinux/install/modulefiles/Core"
+    - "module --silent load stack-gcc"
+    - "module --silent load stack-openmpi"
+    - "module --silent load stack-python"
+    - "module --silent load jedi-fv3-env"
+    - "module --silent load flux-sched"
+    - "module --silent load flux-core"
     - "unset I_MPI_PMI_LIBRARY"
     - "export CHILTEPIN_MPIF90=$MPIF90"
-    - "export FLUX_PMI_LIBRARY_PATH=/home/Christopher.W.Harrop/spack-stack/envs/unified-dev.mylinux/install/gcc/11.2.1/flux-core-0.58.0-ixdubhz/lib/flux/libpmi.so"
+    - "export FLUX_PMI_LIBRARY_PATH=/home/Christopher.W.Harrop/spack-stack/envs/unified-dev.mylinux/install/gcc/11.2.1/flux-core-0.58.0-ixdubhz/lib/flux/libpmi2.so"
     - "export OMPI_MCA_btl=self,tcp"
-    - "echo FLUX_MODULE_PATH=$FLUX_MODULE_PATH"
 
 chiltepin:
   providers:
