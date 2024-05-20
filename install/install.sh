@@ -54,7 +54,7 @@ python -m pip install parsl[monitoring]==2024.4.8
 python -m pip install pytest-black
 python -m pip install pytest-isort
 python -m pip install 'uwtools @ git+https://github.com/ufs-community/uwtools@main#subdirectory=src'
-python -m pip install pytest=7.3.2
+python -m pip install pytest==7.3.2
 
 # Push the packages to the mirror
 if [ "$(spack mirror list | wc -l)" = "3" ]; then
