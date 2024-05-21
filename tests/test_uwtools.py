@@ -1,2 +1,2 @@
 def test_uwtools_install():
-    assert "uw --version"
+    assert uw --version
