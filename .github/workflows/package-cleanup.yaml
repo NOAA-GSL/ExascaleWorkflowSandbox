@@ -21,7 +21,6 @@ jobs:
           package-name: 'exascaleworkflowsandbox/spack-stack-gnu-openmpi'
           package-type: 'container'
           min-versions-to-keep: 0
-          num-old-versions-to-delete: 10
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/frontend
@@ -30,7 +29,6 @@ jobs:
           package-name: 'exascaleworkflowsandbox/frontend'
           package-type: 'container'
           min-versions-to-keep: 0
-          num-old-versions-to-delete: 10
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/master
@@ -39,7 +37,6 @@ jobs:
           package-name: 'exascaleworkflowsandbox/master'
           package-type: 'container'
           min-versions-to-keep: 0
-          num-old-versions-to-delete: 10
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/node
@@ -48,7 +45,6 @@ jobs:
           package-name: 'exascaleworkflowsandbox/node'
           package-type: 'container'
           min-versions-to-keep: 0
-          num-old-versions-to-delete: 10
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/flux-cache-amd64
@@ -57,7 +53,6 @@ jobs:
           package-name: 'exascaleworkflowsandbox/flux-cache-amd64'
           package-type: 'container'
           min-versions-to-keep: 0
-          num-old-versions-to-delete: 10
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/flux-cache-arm64
@@ -66,7 +61,6 @@ jobs:
           package-name: 'exascaleworkflowsandbox/flux-cache-arm64'
           package-type: 'container'
           min-versions-to-keep: 0
-          num-old-versions-to-delete: 10
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64
@@ -75,7 +69,6 @@ jobs:
           package-name: 'exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64'
           package-type: 'container'
           min-versions-to-keep: 0
-          num-old-versions-to-delete: 10
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64
@@ -84,5 +77,4 @@ jobs:
           package-name: 'exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64'
           package-type: 'container'
           min-versions-to-keep: 0
-          num-old-versions-to-delete: 10
           delete-only-untagged-versions: 'true'
