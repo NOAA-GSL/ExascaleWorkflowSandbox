@@ -12,8 +12,20 @@ env:
   AWS_REGION: us-east-2
 
 jobs:
+  lint-check:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Format Check
+        run:  |
+          pip install flake8 black isort
+          flake8 src tests
+          black src tests --check --diff
+          isort src tests --check --diff --profile black
+
   build-flux-cache-arm64:
     runs-on: LinuxARM64-4core-16G-150Gb
+    needs: lint-check
     timeout-minutes: 360
     permissions:
       packages: write
@@ -118,6 +130,7 @@ jobs:
 
   build-flux-cache-amd64:
     runs-on: ubuntu2204-4c-16g-150ssd
+    needs: lint-check
     timeout-minutes: 360
     permissions:
       packages: write
@@ -139,17 +152,6 @@ jobs:
         name: Test authentication
         run: |
           aws sts get-caller-identity
-      -
-        name: Make lint
-        run:  |
-          pip install flake8
-          flake8 src tests
-      -
-        name: Format Check
-        run:  |
-          pip install black isort
-          black src tests --check --diff
-          isort src tests --check --diff --profile black
       -
         name: Docker meta
         id: meta
@@ -346,17 +348,6 @@ jobs:
         name: Test authentication
         run: |
           aws sts get-caller-identity
-      -
-        name: Make lint
-        run:  |
-          pip install flake8
-          flake8 src tests
-      -
-        name: Format Check
-        run:  |
-          pip install black isort
-          black src tests --check --diff
-          isort src tests --check --diff --profile black
       -
         name: Docker meta
         id: meta
