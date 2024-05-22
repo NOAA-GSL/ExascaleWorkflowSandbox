@@ -1,4 +1,4 @@
-name: ExascaleSandboxTests
+name: PackageCleanup
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
     steps:
       -
         name: Remove untagged versions of exascaleworkflowsandbox/spack-stack-gnu-openmpi
-        uses: actions/delete-package-versions@v4
+        uses: actions/delete-package-versions@v5
         with: 
           package-name: 'exascaleworkflowsandbox/spack-stack-gnu-openmpi'
           package-type: 'container'
@@ -24,7 +24,7 @@ jobs:
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/frontend
-        uses: actions/delete-package-versions@v4
+        uses: actions/delete-package-versions@v5
         with: 
           package-name: 'exascaleworkflowsandbox/frontend'
           package-type: 'container'
@@ -32,7 +32,7 @@ jobs:
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/master
-        uses: actions/delete-package-versions@v4
+        uses: actions/delete-package-versions@v5
         with: 
           package-name: 'exascaleworkflowsandbox/master'
           package-type: 'container'
@@ -40,7 +40,7 @@ jobs:
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/node
-        uses: actions/delete-package-versions@v4
+        uses: actions/delete-package-versions@v5
         with: 
           package-name: 'exascaleworkflowsandbox/node'
           package-type: 'container'
@@ -48,7 +48,7 @@ jobs:
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/flux-cache-amd64
-        uses: actions/delete-package-versions@v4
+        uses: actions/delete-package-versions@v5
         with: 
           package-name: 'exascaleworkflowsandbox/flux-cache-amd64'
           package-type: 'container'
@@ -56,7 +56,7 @@ jobs:
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/flux-cache-arm64
-        uses: actions/delete-package-versions@v4
+        uses: actions/delete-package-versions@v5
         with: 
           package-name: 'exascaleworkflowsandbox/flux-cache-arm64'
           package-type: 'container'
@@ -64,7 +64,7 @@ jobs:
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64
-        uses: actions/delete-package-versions@v4
+        uses: actions/delete-package-versions@v5
         with: 
           package-name: 'exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64'
           package-type: 'container'
@@ -72,7 +72,7 @@ jobs:
           delete-only-untagged-versions: 'true'
       -
         name: Remove untagged versions of exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64
-        uses: actions/delete-package-versions@v4
+        uses: actions/delete-package-versions@v5
         with: 
           package-name: 'exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64'
           package-type: 'container'
