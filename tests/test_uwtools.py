@@ -1,2 +1,5 @@
+from subprocess import check_output
+
+
 def test_uwtools_install():
-    assert uw --version
+    check_output(["uw --version"], shell=True)
