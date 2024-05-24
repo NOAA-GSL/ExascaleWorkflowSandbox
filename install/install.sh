@@ -37,7 +37,6 @@ spack mirror list
 # Add flux, pytest and flake8 to chiltepin spack environment
 spack add python@3.10.13
 spack add py-pip
-spack add py-pytest@7.3.2
 spack add flux-core@0.58.0
 spack add flux-sched@0.32.0
 spack add py-flake8@6.1.0
@@ -54,6 +53,8 @@ python -m pip install dill==0.3.8 pyzmq==25.1.2
 python -m pip install parsl[monitoring]==2024.4.8
 python -m pip install pytest-black
 python -m pip install pytest-isort
+python -m pip install 'uwtools @ git+https://github.com/ufs-community/uwtools@main#subdirectory=src'
+python -m pip install pytest==7.3.2
 
 # Push the packages to the mirror
 if [ "$(spack mirror list | wc -l)" = "3" ]; then
