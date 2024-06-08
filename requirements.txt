@@ -1,0 +1,10 @@
+pytest<=7.4.0
+pytest-flake8
+pytest-black
+pytest-isort
+globus-compute-sdk
+globus-compute-endpoint
+parsl[monitoring]==2024.06.03
+dill==0.3.8
+jsonschema==4.22.*
+uwtools @ git+https://github.com/ufs-community/uwtools@main#subdirectory=src

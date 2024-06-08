@@ -33,7 +33,7 @@ def test_qg_install(config):
         stderr="qg_install.err",
         clone_executors=["service"],
         configure_executors=["service"],
-        make_executors=["serial"],
+        make_executors=["compute"],
     ).result()
 
     assert install_result == 0
