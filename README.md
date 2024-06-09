@@ -33,6 +33,10 @@ because the Flux scheduler does not support MacOS.  It can be used, however,
 on Macs in a container.  See below for instructions for building and using
 the Docker container.
 
+```
+python3 -m pip --use-deprecated=legacy-resolver install -r requirements.txt
+```
+
 ## Dependencies
 
 Installation and use of Chiltepin requires Python version 3.6 or higher.
