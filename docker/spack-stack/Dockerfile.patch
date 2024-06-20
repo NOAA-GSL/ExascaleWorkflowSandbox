@@ -1,4 +1,4 @@
---- Dockerfile	2024-06-19 17:54:19
+--- Dockerfile	2024-06-20 13:37:42
 +++ Dockerfile.update	2024-06-19 18:55:46
 @@ -1,4 +1,4 @@
 -FROM ubuntu:20.04 as bootstrap
@@ -71,7 +71,14 @@
  # What we want to install and how we want to install it
  # is specified in a manifest file (spack.yaml)
  RUN mkdir -p /opt/spack-environment && \
-@@ -100,14 +141,14 @@
+@@ -94,20 +135,20 @@
+ &&   echo '' \
+ &&   echo '  config:' \
+ &&   echo '    checksum: false' \
+-&&   echo '    build_jobs: 2' \
++&&   echo '    build_jobs: 8' \
+ &&   echo '    connect_timeout: 60' \
+ &&   echo '' \
  &&   echo '    install_tree: /opt/software' \
  &&   echo '  compilers:' \
  &&   echo '  - compiler:' \
@@ -114,7 +121,40 @@
  &&   echo '    # Pin openssl to avoid duplicate packages being built' \
  &&   echo '    openssl:' \
  &&   echo '      variants: +shared' \
-@@ -529,7 +576,7 @@
+@@ -492,7 +539,31 @@
+ &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
+ 
+ # Install the software, remove unnecessary deps
+-RUN cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y
++RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml     --mount=type=secret,id=access_key_id     --mount=type=secret,id=secret_access_key     --mount=type=secret,id=session_token <<EOF
++  set -e
++  cd /opt/spack-environment
++  . $SPACK_ROOT/share/spack/setup-env.sh
++  spack env activate .
++  spack mirror add --s3-access-key-id "" --s3-access-key-secret "" s3_spack_stack_buildcache_ro s3://chiltepin-us-east-2/spack-stack/
++  spack install --fail-fast --no-check-signature
++  #python -m pip install globus-compute-sdk
++  #python -m pip install globus-compute-endpoint
++  #python -m pip uninstall -y dill pyzmq
++  #python -m pip install dill==0.3.8 pyzmq==25.1.2
++  #python -m pip install parsl[monitoring]==2024.6.3
++  #python -m pip install pytest-black
++  #python -m pip install pytest-isort
++  #python -m pip install 'uwtools @ git+https://github.com/ufs-community/uwtools@main#subdirectory=src'
++  #python -m pip install pytest==7.4.0
++  spack mirror list
++  if [ "$(spack mirror list | wc -l)" = "3" ]; then
++    export AWS_ACCESS_KEY_ID=$(cat /run/secrets/access_key_id)
++    export AWS_SECRET_ACCESS_KEY=$(cat /run/secrets/secret_access_key)
++    export AWS_SESSION_TOKEN=$(cat /run/secrets/session_token)
++    spack buildcache push --unsigned --update-index s3_spack_stack_buildcache_rw
++  fi
++  spack gc -y
++EOF
+ 
+ # Modifications to the environment that are necessary to run
+ RUN cd /opt/spack-environment && \
+@@ -505,7 +576,7 @@
  
  
  # Bare OS image to run the installed executables
@@ -123,7 +163,7 @@
  
  COPY --from=builder /opt/spack-environment /opt/spack-environment
  COPY --from=builder /opt/software /opt/software
-@@ -555,7 +602,7 @@
+@@ -531,7 +602,7 @@
  
  
  RUN apt-get -yqq update && apt-get -yqq upgrade \
