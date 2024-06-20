@@ -23,4 +23,4 @@ popd
 rm -rf spack-stack
 
 # Patch the Dockerfile to add our customizations
-patch -p1 < Dockerfile.patch
+patch -p0 < Dockerfile.patch
