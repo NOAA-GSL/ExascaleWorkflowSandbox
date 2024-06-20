@@ -1,5 +1,5 @@
---- Dockerfile	2024-06-20 13:37:42
-+++ Dockerfile.update	2024-06-19 18:55:46
+--- Dockerfile	2024-06-20 14:23:40
++++ Dockerfile.update	2024-06-20 14:21:55
 @@ -1,4 +1,4 @@
 -FROM ubuntu:20.04 as bootstrap
 +FROM ubuntu:22.04 as bootstrap
@@ -133,15 +133,15 @@
 +  spack env activate .
 +  spack mirror add --s3-access-key-id "" --s3-access-key-secret "" s3_spack_stack_buildcache_ro s3://chiltepin-us-east-2/spack-stack/
 +  spack install --fail-fast --no-check-signature
-+  #python -m pip install globus-compute-sdk
-+  #python -m pip install globus-compute-endpoint
-+  #python -m pip uninstall -y dill pyzmq
-+  #python -m pip install dill==0.3.8 pyzmq==25.1.2
-+  #python -m pip install parsl[monitoring]==2024.6.3
-+  #python -m pip install pytest-black
-+  #python -m pip install pytest-isort
-+  #python -m pip install 'uwtools @ git+https://github.com/ufs-community/uwtools@main#subdirectory=src'
-+  #python -m pip install pytest==7.4.0
++  python -m pip install globus-compute-sdk
++  python -m pip install globus-compute-endpoint
++  python -m pip uninstall -y dill pyzmq
++  python -m pip install dill==0.3.8 pyzmq==25.1.2
++  python -m pip install parsl[monitoring]==2024.6.3
++  python -m pip install pytest-black
++  python -m pip install pytest-isort
++  python -m pip install 'uwtools @ git+https://github.com/ufs-community/uwtools@main#subdirectory=src'
++  python -m pip install pytest
 +  spack mirror list
 +  if [ "$(spack mirror list | wc -l)" = "3" ]; then
 +    export AWS_ACCESS_KEY_ID=$(cat /run/secrets/access_key_id)
