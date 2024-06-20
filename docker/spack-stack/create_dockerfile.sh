@@ -10,14 +10,15 @@ pushd spack-stack
 spack stack create ctr --container=docker-ubuntu-gcc-openmpi --specs=jedi-ci
 
 # Create the spack-stack Dockerfile
-cd envs/docker-ubuntu-gcc-openmpi
+pushd envs/docker-ubuntu-gcc-openmpi
 spack containerize > ../../../Dockerfile
 
 # If necessary move spack-ext-* for use in COPY during container build
 rm -rf ../../../spack-ext-*
-find . -type d -name 'spack-ext-*' -exec mv {} ../../../ \;
+mv spack-ext-* ../../../
 
 # Remove unneeded spack-stack install
+popd
 popd
 rm -rf spack-stack
 
