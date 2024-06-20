@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Clone spack-stack
-spack_stack_version=1.6.0
+spack_stack_version=1.7.0
 git clone -b $spack_stack_version --recursive https://github.com/JCSDA/spack-stack.git
 
 # Create the spack-stack spack.yaml file
@@ -10,7 +10,11 @@ pushd spack-stack
 spack stack create ctr --container=docker-ubuntu-gcc-openmpi --specs=jedi-ci
 
 # Modify spack.yaml to increase parallelism
+cd envs/docker-ubuntu-gcc-openmpi
 perl -p -i -e "s/build_jobs: 2/build_jobs: 8/g" spack.yaml
+
+# Modify spack.yaml to turn on Slurm support
+#perl -p -i -e "s/variants: \+internal-hwloc \+two_level_namespace/variants: \+internal-hwloc \+two_level_namespace \schedulers=slurm/g" spack.yaml
 
 # Modify spack.yaml to install py-pytest, py-flake8, and py-pytest-flake8
 #perl -p -i -e "s/# To avoid/py-flake8:\n      version: [6.1.0]\n    # To avoid/g" spack.yaml
@@ -27,6 +31,7 @@ rm -rf ../../../spack-ext-*
 find . -type d -name 'spack-ext-*' -exec mv {} ../../../ \;
 
 # Remove unneeded spack-stack install
+cp spack.yaml ../../../spack.yaml
 popd
 rm -rf spack-stack
 
@@ -47,11 +52,11 @@ RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml \
   #python -m pip install globus-compute-endpoint
   #python -m pip uninstall -y dill pyzmq
   #python -m pip install dill==0.3.8 pyzmq==25.1.2
-  #python -m pip install parsl[monitoring]==2024.4.8
+  #python -m pip install parsl[monitoring]==2024.6.3
   #python -m pip install pytest-black
   #python -m pip install pytest-isort
   #python -m pip install 'uwtools @ git+https://github.com/ufs-community/uwtools@main#subdirectory=src'
-  #python -m pip install pytest==7.3.2
+  #python -m pip install pytest==7.4.0
   spack mirror list
   if [ "$(spack mirror list | wc -l)" = "3" ]; then
     export AWS_ACCESS_KEY_ID=$(cat /run/secrets/access_key_id)

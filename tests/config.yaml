@@ -77,6 +77,7 @@ chiltepin:
 
   environment:
     - "export OMPI_MCA_btl=self,tcp"
+    - "export rmaps_base_oversubscribe=true"
     - "export CHILTEPIN_MPIF90=mpif90"
     - "export jedi_cmake_ROOT=/opt/views/view"
 

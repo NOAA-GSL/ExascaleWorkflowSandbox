@@ -1,6 +1,6 @@
 FROM ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest as JEDI
 
-FROM noaagsl/slurm-frontend:latest
+FROM ghcr.io/noaa-gsl/dockerslurmcluster/slurm-frontend:latest
 
 #Set environment variables for installing tzdata
 ENV DEBIAN_FRONTEND=noninteractive
@@ -24,14 +24,14 @@ RUN apt-get -yqq update && apt-get -yqq upgrade && apt-get -yqq install \
     gnupg2 \
     gpg \
     iproute2 \
-    libpmi2-0-dev \
     libqt5svg5-dev \
     locales \
     make \
     python3 \
     python3-pip \
     python3-setuptools \
-    qt5-default \
+    qtbase5-dev \
+    qt5-qmake \
     qt5dxcb-plugin \
     unzip \
     vim \
