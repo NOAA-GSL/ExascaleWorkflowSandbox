@@ -1,21 +1,25 @@
---- Dockerfile	2024-06-20 14:23:40
-+++ Dockerfile.update	2024-06-20 14:21:55
+--- Dockerfile	2024-06-22 15:43:22.817145436 +0000
++++ Dockerfile.update	2024-06-22 15:42:30.456433474 +0000
 @@ -1,4 +1,4 @@
 -FROM ubuntu:20.04 as bootstrap
 +FROM ubuntu:22.04 as bootstrap
  
  ENV SPACK_ROOT=/opt/spack \
      CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
-@@ -39,6 +39,8 @@
+@@ -39,6 +39,12 @@
      git init --quiet && git remote add origin https://github.com/jcsda/spack && git fetch --depth=1 origin 60f4c5f033e7539e9f2a8eb3f6c7ca6b800a64b8 && git checkout --detach FETCH_HEAD && \
      mkdir -p $SPACK_ROOT/opt/spack
  
 +COPY openmpi.package.py $SPACK_ROOT/var/spack/repos/builtin/packages/openmpi/package.py
++COPY cc.patch $SPACK_ROOT/cc.patch
++
++RUN cd $SPACK_ROOT && \
++    patch -f -p0 < cc.patch
 +
  RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
            /usr/local/bin/docker-shell \
   && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
-@@ -75,7 +77,7 @@
+@@ -75,7 +81,7 @@
  
  # Install OS packages needed to build the software
  RUN apt-get -yqq update && apt-get -yqq upgrade \
@@ -24,7 +28,7 @@
   && rm -rf /var/lib/apt/lists/*
  
  # Copy the spack-stack extension repo into the spack code
-@@ -83,7 +85,46 @@
+@@ -83,6 +89,45 @@
  # Register spack-stack extension repo
  RUN spack repo add $SPACK_ROOT/var/spack/repos/spack-stack --scope defaults
  
@@ -46,7 +50,7 @@
 +    libhwloc-dev \
 +    openssh-server \
 +    sudo
- 
++
 +# Build Slurm RPMs and install them
 +RUN cd /tmp \
 + && wget https://download.schedmd.com/slurm/slurm-23.11.7.tar.bz2 \
@@ -67,11 +71,10 @@
 + && dpkg --install slurm-smd-libslurm-perl_23.11.7-1_${ARCH}.deb \
 + && dpkg --install slurm-smd-sackd_23.11.7-1_${ARCH}.deb \
 + && dpkg --install slurm-smd-sview_23.11.7-1_${ARCH}.deb
-+
+ 
  # What we want to install and how we want to install it
  # is specified in a manifest file (spack.yaml)
- RUN mkdir -p /opt/spack-environment && \
-@@ -94,20 +135,20 @@
+@@ -94,20 +139,20 @@
  &&   echo '' \
  &&   echo '  config:' \
  &&   echo '    checksum: false' \
@@ -95,7 +98,7 @@
  &&   echo '      modules: []' \
  &&   echo '      environment: {}' \
  &&   echo '      extra_rpaths: []' \
-@@ -125,10 +166,10 @@
+@@ -125,10 +170,10 @@
  &&   echo '        lapack: [openblas]' \
  &&   echo '        yacc: [bison]' \
  &&   echo '        zlib-api: [zlib-ng]' \
@@ -108,7 +111,7 @@
  &&   echo '    awscli-v2:' \
  &&   echo '      require: ~examples' \
  &&   echo '    bacio:' \
-@@ -288,6 +329,12 @@
+@@ -288,6 +333,12 @@
  &&   echo '      variants: +noavx512' \
  &&   echo '    openmpi:' \
  &&   echo '      variants: ~internal-hwloc +two_level_namespace' \
@@ -121,7 +124,7 @@
  &&   echo '    # Pin openssl to avoid duplicate packages being built' \
  &&   echo '    openssl:' \
  &&   echo '      variants: +shared' \
-@@ -492,7 +539,31 @@
+@@ -492,7 +543,31 @@
  &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
  
  # Install the software, remove unnecessary deps
@@ -154,7 +157,7 @@
  
  # Modifications to the environment that are necessary to run
  RUN cd /opt/spack-environment && \
-@@ -505,7 +576,7 @@
+@@ -505,7 +580,7 @@
  
  
  # Bare OS image to run the installed executables
@@ -163,7 +166,7 @@
  
  COPY --from=builder /opt/spack-environment /opt/spack-environment
  COPY --from=builder /opt/software /opt/software
-@@ -531,7 +602,7 @@
+@@ -531,7 +606,7 @@
  
  
  RUN apt-get -yqq update && apt-get -yqq upgrade \
