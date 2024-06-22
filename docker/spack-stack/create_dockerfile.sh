@@ -24,3 +24,8 @@ rm -rf spack-stack
 
 # Patch the Dockerfile to add our customizations
 patch -p0 < Dockerfile.patch
+
+# Set up patches for this architecture
+arch=$(uname -m)
+cp cc.patch.$arch cc.patch
+cp openmpi.package.py.$arch openmpi.package.py
