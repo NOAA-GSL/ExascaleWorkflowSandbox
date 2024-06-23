@@ -1,4 +1,4 @@
-FROM ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest as JEDI
+FROM ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest AS JEDI
 
 FROM ghcr.io/noaa-gsl/dockerslurmcluster/slurm-frontend:latest
 

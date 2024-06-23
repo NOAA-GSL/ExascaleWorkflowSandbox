@@ -115,10 +115,10 @@ def test_run_mpi_hello(config):
 def test_compile_mpi_pi(config):
     shared_dir = "./"
     c = compile_mpi_pi(
-        dirpath=shared_dir,
-        stdout=(os.path.join(shared_dir, "parsl_flux_mpi_pi_compile.out"), "w"),
-        stderr=(os.path.join(shared_dir, "parsl_flux_mpi_pi_compile.err"), "w"),
-        env=config["environment"],
+        dirpath = shared_dir,
+        stdout = (os.path.join(shared_dir, "parsl_flux_mpi_pi_compile.out"), "w"),
+        stderr = (os.path.join(shared_dir, "parsl_flux_mpi_pi_compile.err"), "w"),
+        env = config["environment"],
     ).result()
     assert c == 0
     assert os.path.isfile("mpi_pi.exe")
@@ -139,11 +139,10 @@ def test_run_mpi_pi(config):
     cores_per_node = config["resources"].executors[0].provider.cores_per_node
     assert config["resources"].executors[0].label == "mpi"
     pi1 = run_mpi_pi(
-        dirpath=shared_dir,
-        stdout=os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.out"),
-        stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.err"),
+        dirpath = shared_dir,
+        stdout = os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.out"),
+        stderr = os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.err"),
         env=config["environment"],
-        #parsl_resource_specification={"RANKS_PER_NODE": cores_per_node, "NUM_NODES": 2},
         parsl_resource_specification = {
             'num_nodes': 2,                     # Number of nodes required for the application instance
             'ranks_per_node': cores_per_node,   # Number of ranks / application elements to be launched per node
@@ -152,10 +151,9 @@ def test_run_mpi_pi(config):
     )
     pi2 = run_mpi_pi(
         dirpath=shared_dir,
-        stdout=os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.out"),
-        stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.err"),
+        stdout = os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.out"),
+        stderr = os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.err"),
         env=config["environment"],
-        #parsl_resource_specification={"RANKS_PER_NODE": cores_per_node, "NUM_NODES": 1},
         parsl_resource_specification = {
             'num_nodes': 1,                     # Number of nodes required for the application instance
             'ranks_per_node': cores_per_node,   # Number of ranks / application elements to be launched per node

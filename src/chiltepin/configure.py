@@ -4,7 +4,7 @@ import yaml
 from parsl.channels import LocalChannel
 from parsl.config import Config
 from parsl.executors import FluxExecutor, HighThroughputExecutor, MPIExecutor
-from parsl.launchers import SimpleLauncher, SingleNodeLauncher
+from parsl.launchers import SimpleLauncher
 from parsl.providers import SlurmProvider
 
 
@@ -45,11 +45,11 @@ def configure_flux_executor(name, config):
     )
     return e
 
+
 def configure_mpi_executor(name, config):
 
     e = MPIExecutor(
         label=name,
-        #address=address_by_interface('bond0'),
         mpi_launcher="srun",
         max_workers_per_block=config["max mpi apps"],
         provider=SlurmProvider(
@@ -63,17 +63,16 @@ def configure_mpi_executor(name, config):
             walltime="08:00:00",
             launcher=SimpleLauncher(),
             worker_init="""
-source /work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.refactor-resource-config/install/.chiltepin/bin/activate
             """,
         ),
     )
     return e
 
+
 def configure_htex_executor(name, config):
 
     e = HighThroughputExecutor(
         label=name,
-        # address=address_by_hostname(),
         cores_per_worker=1,
         max_workers_per_node=config["cores per node"],
         provider=SlurmProvider(
@@ -88,11 +87,11 @@ def configure_htex_executor(name, config):
             walltime="08:00:00",
             launcher=SimpleLauncher(),
             worker_init="""
-source /work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.refactor-resource-config/install/.chiltepin/bin/activate
             """,
         ),
     )
     return e
+
 
 def factory(yaml_config, platform):
 
