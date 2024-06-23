@@ -100,9 +100,9 @@ def test_run_mpi_hello(config):
         stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err"),
         env=config["environment"],
         parsl_resource_specification={
-            'num_nodes': 3,        # Number of nodes required for the application instance
-            'ranks_per_node': 2,   # Number of ranks / application elements to be launched per node
-            'num_ranks': 6,        # Number of ranks in total
+            "num_nodes": 3,  # Number of nodes required for the application instance
+            "ranks_per_node": 2,  # Number of ranks / application elements to be launched per node
+            "num_ranks": 6,  # Number of ranks in total
         },
     ).result()
     assert hello == 0
@@ -143,9 +143,9 @@ def test_run_mpi_pi(config):
         stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.err"),
         env=config["environment"],
         parsl_resource_specification={
-            'num_nodes': 2,                     # Number of nodes required for the application instance
-            'ranks_per_node': cores_per_node,   # Number of ranks / application elements to be launched per node
-            'num_ranks': 2 * cores_per_node,    # Number of ranks in total
+            "num_nodes": 2,  # Number of nodes required for the application instance
+            "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
+            "num_ranks": 2 * cores_per_node,  # Number of ranks in total
         },
     )
     pi2 = run_mpi_pi(
@@ -154,9 +154,9 @@ def test_run_mpi_pi(config):
         stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.err"),
         env=config["environment"],
         parsl_resource_specification={
-            'num_nodes': 1,                     # Number of nodes required for the application instance
-            'ranks_per_node': cores_per_node,   # Number of ranks / application elements to be launched per node
-            'num_ranks': cores_per_node,    # Number of ranks in total
+            "num_nodes": 1,  # Number of nodes required for the application instance
+            "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
+            "num_ranks": cores_per_node,  # Number of ranks in total
         },
     )
     assert pi1.result() == 0
