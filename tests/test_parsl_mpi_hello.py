@@ -99,11 +99,10 @@ def test_run_mpi_hello(config):
         stdout=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.out"),
         stderr=os.path.join(shared_dir, "parsl_flux_mpi_hello_run.err"),
         env=config["environment"],
-        #parsl_resource_specification={"RANKS_PER_NODE": 2, "NUM_NODES": 3},
-        parsl_resource_specification = {
-            'num_nodes': 3,        # Number of nodes required for the application instance
-            'ranks_per_node': 2,   # Number of ranks / application elements to be launched per node
-            'num_ranks': 6,        # Number of ranks in total
+        parsl_resource_specification={
+            'num_nodes':3,        # Number of nodes required for the application instance
+            'ranks_per_node':2,   # Number of ranks / application elements to be launched per node
+            'num_ranks':6,        # Number of ranks in total
         },
     ).result()
     assert hello == 0
@@ -114,11 +113,11 @@ def test_run_mpi_hello(config):
 
 def test_compile_mpi_pi(config):
     shared_dir = "./"
-    c = compile_mpi_pi(
-        dirpath = shared_dir,
-        stdout = (os.path.join(shared_dir, "parsl_flux_mpi_pi_compile.out"), "w"),
-        stderr = (os.path.join(shared_dir, "parsl_flux_mpi_pi_compile.err"), "w"),
-        env = config["environment"],
+    c=compile_mpi_pi(
+        dirpath=shared_dir,
+        stdout=(os.path.join(shared_dir, "parsl_flux_mpi_pi_compile.out"), "w"),
+        stderr=(os.path.join(shared_dir, "parsl_flux_mpi_pi_compile.err"), "w"),
+        env=config["environment"],
     ).result()
     assert c == 0
     assert os.path.isfile("mpi_pi.exe")
@@ -126,7 +125,7 @@ def test_compile_mpi_pi(config):
 
 
 def test_run_mpi_pi(config):
-    shared_dir = "./"
+    shared_dir="./"
     # Remove any previous output if necessary
     if os.path.exists("parsl_flux_mpi_pi1_run.out"):
         os.remove("parsl_flux_mpi_pi1_run.out")
@@ -138,23 +137,23 @@ def test_run_mpi_pi(config):
         os.remove("parsl_flux_mpi_pi2_run.err")
     cores_per_node = config["resources"].executors[0].provider.cores_per_node
     assert config["resources"].executors[0].label == "mpi"
-    pi1 = run_mpi_pi(
-        dirpath = shared_dir,
-        stdout = os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.out"),
-        stderr = os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.err"),
+    pi1=run_mpi_pi(
+        dirpath=shared_dir,
+        stdout=os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.out"),
+        stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi1_run.err"),
         env=config["environment"],
-        parsl_resource_specification = {
+        parsl_resource_specification={
             'num_nodes': 2,                     # Number of nodes required for the application instance
             'ranks_per_node': cores_per_node,   # Number of ranks / application elements to be launched per node
             'num_ranks': 2 * cores_per_node,    # Number of ranks in total
         },
     )
-    pi2 = run_mpi_pi(
+    pi2=run_mpi_pi(
         dirpath=shared_dir,
-        stdout = os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.out"),
-        stderr = os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.err"),
+        stdout=os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.out"),
+        stderr=os.path.join(shared_dir, "parsl_flux_mpi_pi2_run.err"),
         env=config["environment"],
-        parsl_resource_specification = {
+        parsl_resource_specification={
             'num_nodes': 1,                     # Number of nodes required for the application instance
             'ranks_per_node': cores_per_node,   # Number of ranks / application elements to be launched per node
             'num_ranks': cores_per_node,    # Number of ranks in total
