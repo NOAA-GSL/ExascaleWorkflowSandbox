@@ -32,7 +32,7 @@ def run_mpi_hello(
     return f"""
     {env}
     cd {dirpath}
-    $PARSL_MPI_PREFIX ./mpi_hello.exe
+    $PARSL_MPI_PREFIX --overcommit ./mpi_hello.exe
     """
 
 
@@ -59,7 +59,7 @@ def run_mpi_pi(
     return f"""
     {env}
     cd {dirpath}
-    $PARSL_MPI_PREFIX ./mpi_pi.exe
+    $PARSL_MPI_PREFIX --overcommit ./mpi_pi.exe
     """
 
 
