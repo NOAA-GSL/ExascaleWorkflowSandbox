@@ -17,10 +17,6 @@ commercial product or activity by DOC or the United States Government.
 
 # Overview
 
-NOTE: If you are reading this with a plain text editor, please note that this document is
-formatted with Markdown syntax elements.  See https://www.markdownguide.org/cheat-sheet/
-for more information.
-
 This repository is a collection of tools and demonstrations used to explore
 and test various technologies for implementing exascale scientific workflows.
 This collection of resources is not intended for production use, and is for
@@ -106,10 +102,13 @@ your machine's specifications to get all tests to pass.
 
 # Running the test suite
 The test suite is run with `pytest` and requires an editable installation of the Chiltepin
-repository.  Before running the test suite:
+repository.  From the repository root, install Chiltepin in editable mode:
 
 ```
 cd <repository root>
+```
+then (don't forget the dot at the end)
+```
 pip install -e .
 ```
 
