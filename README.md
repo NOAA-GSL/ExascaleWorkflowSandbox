@@ -32,25 +32,23 @@ This software can be installed on Linux systems.  MacOS is not currently
 supported.  It can be used, however, on Macs in a container.  See below for
 instructions for building and using the Docker container.
 
-The recommended method for installation is to use a Python venv
+The recommended method for installation is to use a Python venv if
+Python >= 3.9 is available.
 
 ```
 python -m venv create .chiltepin
 source .chiltepin/bin/activate
+pip --use-deprecated=legacy-resolver install -r requirements.txt
 ```
 
-Alternatively, a conda environment (anaconda3, miniconda, miniforge, etc.)
-can be used
+Alternatively, a conda environment (anaconda3, miniconda3, miniforge, etc.)
+can be used. NOTE: Dependencies must still be installed with pip because
+of certain known (and accepted) dependency conflicts that must be ignored.
 
 ```
-conda create -n "chiltepin"
+conda create -n "chiltepin" python=3.10
 conda activate chiltepin
-```
-
-To install Chiltepin into the activated environment
-
-```
-python3 -m pip --use-deprecated=legacy-resolver install -r requirements.txt
+pip --use-deprecated=legacy-resolver install -r requirements.txt
 ```
 
 NOTE: There may be some warnings about incompatible package versions similar
