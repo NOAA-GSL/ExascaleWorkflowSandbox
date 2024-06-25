@@ -44,7 +44,7 @@ of certain known (and accepted) dependency conflicts that must be ignored.
 
 ```
 conda create -n "chiltepin" python=3.10
-conda activate chiltepin
+source activate chiltepin
 pip --use-deprecated=legacy-resolver install -r requirements.txt
 pip install -e .
 ```
