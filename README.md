@@ -116,6 +116,7 @@ pip install -e .
 Once Chiltepin has been installed with `pip`, the tests can be run with:
 
 ```
+cd tests
 PYTHONPATH=.. pytest --assert=plain --config=config.yaml --platform=<platform>
 ```
 
