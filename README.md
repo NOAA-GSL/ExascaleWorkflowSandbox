@@ -35,7 +35,7 @@ Python >= 3.9 is available.
 python -m venv create .chiltepin
 source .chiltepin/bin/activate
 pip --use-deprecated=legacy-resolver install -r requirements.txt
-pip install -e .
+pip install -e .  # Do not forget the dot at the end
 ```
 
 Alternatively, a conda environment (anaconda3, miniconda3, miniforge, etc.)
@@ -46,7 +46,7 @@ of certain known (and accepted) dependency conflicts that must be ignored.
 conda create -n "chiltepin" python=3.10
 source activate chiltepin
 pip --use-deprecated=legacy-resolver install -r requirements.txt
-pip install -e .
+pip install -e .  # Do not forget the dot at the end
 ```
 
 NOTE: There may be some warnings about incompatible package versions similar
@@ -86,7 +86,8 @@ To use the container after it is built and up, log in with a bash shell:
 docker exec -it frontend bash -l
 ```
 
-Once in the container, you can install Chiltepin in editable mode, and run the tests
+Once in the container, you can install Chiltepin in editable mode (using the pip from the
+container environment), and run the tests
 
 ```
 cd chiltepin
@@ -102,17 +103,7 @@ your machine's specifications to get all tests to pass.
 
 # Running the test suite
 The test suite is run with `pytest` and requires an editable installation of the Chiltepin
-repository.  From the repository root, install Chiltepin in editable mode:
-
-```
-cd <repository root>
-```
-then (don't forget the dot at the end)
-```
-pip install -e .
-```
-
-Once Chiltepin has been installed with `pip`, the tests can be run with:
+repository (achieved using the `pip install -e .` installation step from above)
 
 ```
 cd tests
