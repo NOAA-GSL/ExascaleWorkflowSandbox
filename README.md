@@ -39,6 +39,7 @@ Python >= 3.9 is available.
 python -m venv create .chiltepin
 source .chiltepin/bin/activate
 pip --use-deprecated=legacy-resolver install -r requirements.txt
+pip install -e .
 ```
 
 Alternatively, a conda environment (anaconda3, miniconda3, miniforge, etc.)
@@ -49,6 +50,7 @@ of certain known (and accepted) dependency conflicts that must be ignored.
 conda create -n "chiltepin" python=3.10
 conda activate chiltepin
 pip --use-deprecated=legacy-resolver install -r requirements.txt
+pip install -e .
 ```
 
 NOTE: There may be some warnings about incompatible package versions similar
@@ -67,27 +69,6 @@ Those dependency conflicts can be safely ignored.
 Once installed, Chiltepin can be used simply by activating the environment using
 the command appropriate for your environment type (venv, conda, etc).
 
-## Dependencies
-
-Installation and use of Chiltepin requires Python version 3.6 or higher.
-
-Additionally, for developers wishing to take advantage of buildcache mirrors
-when building the spack-stack container, the boto3 Python package is required.
-Building spack-stack container will work without boto3, but will require the
-Chiltepin dependencies to be built from scratch instead of being pulled from
-the buildcache.
-
-NOTE: For Python 3.6, `botocore 1.25.0` is required:
-
-```
-python3 -m pip install --user boto3==1.23.10 botocore==1.25.0
-```
-
-For Python 3.7+ it should be sufficient to install the latest boto3
-
-```
-python3 -m pip install --user boto3
-```
 
 ## Building and running the Chiltepin container
 
