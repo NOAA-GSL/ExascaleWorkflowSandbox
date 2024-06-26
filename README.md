@@ -177,15 +177,15 @@ cd docker/spack-stack
 ```
 
 5. Export the AWS credentials into your environment  
+   Run the export commands output by the following command
 ```
 cd docker/spack-stack
 aws configure export-credentials --format env --profile <myprofile>
 ```  
   
-   Run the export commands output by the above command
 
 6. Build the container, passing AWS credentials in as Docker secrets  
-   ```
+```
 docker buildx build --secret id=mirrors,src=mirrors.yaml --secret id=access_key_id,env=AWS_ACCESS_KEY_ID --secret id=secret_access_key,env=AWS_SECRET_ACCESS_KEY --secret id=session_token,env=AWS_SESSION_TOKEN --progress=plain -t ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest -f Dockerfile .
 ```
 
