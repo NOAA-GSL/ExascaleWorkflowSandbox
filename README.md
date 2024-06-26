@@ -133,10 +133,11 @@ are configured to have a core count equal to the number of CPUs given to the Doc
 ## Modifying the spack-stack container
 Developers that modify the spack-stack container in order to update the development software stack will need to rebuild it.
 Depending on what is needed, this may not be a straightforward process due to the complexity of spack-stack and the need to
-customize the spack-stack container to meet the needs of Chiltepin. An addition complication is that a Spack buildcache mirror
+customize the spack-stack container to meet the needs of Chiltepin. An additional complication is that a Spack buildcache mirror
 is used to speed up build times by caching builds of Spack packages.  Read-only access to the buildcache is always provided
 via the Dockerfile.  However, if the stack has changed and new packages are built from source, those must get pushed to the
-buildcache, which resides on S3.  Write access requires AWS authentication and is only granted to authorized users.
+buildcache, which resides on S3.  Write access to the buildcache requires AWS authentication and is only granted to authorized
+users.
 
 
 To do a basic build of a spack-stack Dockerfile (from the `docker/spack-stack` directory) where read-only access to the
@@ -150,7 +151,7 @@ To do an advanced build of the spack-stack container, several steps are required
 
 1. Make sure the awscli package is installed so that the `aws` command is available
 
-2. Create an AWS profile in `$HOME/.aws/config`:
+2. Create an AWS profile in `$HOME/.aws/config`:  
 ```
 [profile myprofile]
 sso_start_url = https://<my start address>/start#/
@@ -160,33 +161,34 @@ sso_role_name = <sso role name>
 region = us-east-2
 ```
 
-3. Log in to AWS
-NOTE: These credentials are only valid for one hour
+3. Log in to AWS  
+
+NOTE: These credentials are only valid for one hour  
 ```
 aws sso login --profile <myprofile>
 ```
 
-4. Create the Spack mirror file (mirrors.yaml) 
+4. Create the Spack mirror file (mirrors.yaml)  
 
-WARNING: DO NOT COMMIT THE `mirrors.yaml` FILE TO THE REPOSITORY!!
+WARNING: DO NOT COMMIT THE `mirrors.yaml` FILE TO THE REPOSITORY!!  
 ```
 cd docker/spack-stack
 ./get_sso_credentials.sh <myprofile>
 ```
 
-5. Export the AWS credentials into your environment
+5. Export the AWS credentials into your environment  
 ```
 cd docker/spack-stack
 aws configure export-credentials --format env --profile <myprofile>
-```
+```  
 
 Run the export commands output by the above command
 
-6. Build the container, passing AWS credentials in as Docker secrets 
+6. Build the container, passing AWS credentials in as Docker secrets  
 ```
 docker buildx build --secret id=mirrors,src=mirrors.yaml --secret id=access_key_id,env=AWS_ACCESS_KEY_ID --secret id=secret_access_key,env=AWS_SECRET_ACCESS_KEY --secret id=session_token,env=AWS_SESSION_TOKEN --progress=plain -t ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi:latest -f Dockerfile .
 ```
 
-The above allows Spack to push the rebuilt packages to the Spack buildcache on AWS S3.
+The above steps allow Spack to push the rebuilt packages to the Spack buildcache on AWS S3.
 Once in the buildcache, those packages do not need to be rebuilt for subsequent container
 builds.
