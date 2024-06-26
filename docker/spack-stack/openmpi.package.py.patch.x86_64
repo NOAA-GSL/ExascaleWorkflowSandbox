@@ -4,7 +4,7 @@
  
          if spec.satisfies("+pmi"):
              config_args.append("--with-pmi={0}".format(spec["slurm"].prefix))
-+	    config_args.append("--with-pmi-libdir=/usr/lib/x86_64-linux-gnu")
++            config_args.append("--with-pmi-libdir=/usr/lib/x86_64-linux-gnu")
          else:
              config_args.extend(self.with_or_without("pmi"))
  
