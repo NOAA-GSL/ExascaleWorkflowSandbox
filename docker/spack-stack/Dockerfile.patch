@@ -1,5 +1,5 @@
 --- Dockerfile	2024-06-26 10:22:09
-+++ Dockerfile.update	2024-06-26 10:19:57
++++ Dockerfile.update	2024-06-26 10:38:35
 @@ -1,4 +1,4 @@
 -FROM ubuntu:20.04 as bootstrap
 +FROM ubuntu:22.04 AS bootstrap
@@ -13,9 +13,9 @@
 +COPY openmpi.package.py.patch $SPACK_ROOT/openmpi.package.py.patch
 +COPY cc.patch $SPACK_ROOT/cc.patch
 +
-+RUN cd $SPACK_ROOT && \
-+    patch -f -p0 < openmpi.package.py.patch \
-+    patch -f -p0 < cc.patch \
++RUN cd $SPACK_ROOT \
++ && patch -f -p0 < openmpi.package.py.patch \
++ && patch -f -p0 < cc.patch
 +
  RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
            /usr/local/bin/docker-shell \
