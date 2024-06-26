@@ -151,8 +151,8 @@ To do an advanced build of the spack-stack container, several steps are required
 
 1. Make sure the awscli package is installed so that the `aws` command is available
 
-2. Create an AWS profile in `$HOME/.aws/config`:  
-   ```
+2. Create an AWS profile in `$HOME/.aws/config`:
+```
 [profile myprofile]
 sso_start_url = https://<my start address>/start#/
 sso_region = <region for sso authentication>
@@ -164,20 +164,20 @@ region = us-east-2
 3. Log in to AWS  
   
    NOTE: These credentials are only valid for one hour  
-   ```
+```
 aws sso login --profile <myprofile>
 ```
 
 4. Create the Spack mirror file (mirrors.yaml)  
   
    WARNING: DO NOT COMMIT THE `mirrors.yaml` FILE TO THE REPOSITORY!!  
-   ```
+```
 cd docker/spack-stack
 ./get_sso_credentials.sh <myprofile>
 ```
 
 5. Export the AWS credentials into your environment  
-   ```
+```
 cd docker/spack-stack
 aws configure export-credentials --format env --profile <myprofile>
 ```  
