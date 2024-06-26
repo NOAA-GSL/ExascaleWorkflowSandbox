@@ -155,8 +155,8 @@ def test_run_mpi_pi(config):
         env=config["environment"],
         parsl_resource_specification={
             "num_nodes": 1,  # Number of nodes required for the application instance
-            "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
             "num_ranks": cores_per_node,  # Number of ranks in total
+            "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
         },
     )
     assert pi1.result() == 0
