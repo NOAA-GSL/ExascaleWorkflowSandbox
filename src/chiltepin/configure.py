@@ -96,7 +96,6 @@ def configure_htex_executor(name, config):
 def factory(yaml_config, platform):
 
     providers = yaml_config[platform]["resources"]
-
     executors = []
 
     # Make executors for mpi, service, and compute resources

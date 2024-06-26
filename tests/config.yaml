@@ -63,8 +63,6 @@ chiltepin:
       partition: "slurmpar"
       account: ""
     service:
-      type: "htex"
-      name: "service"
       cores per node: 1
       nodes per block: 1
       partition: "slurmpar"
