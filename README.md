@@ -162,14 +162,14 @@ region = us-east-2
 ```
 
 3. Log in to AWS  
-
+  
 NOTE: These credentials are only valid for one hour  
 ```
 aws sso login --profile <myprofile>
 ```
 
 4. Create the Spack mirror file (mirrors.yaml)  
-
+  
 WARNING: DO NOT COMMIT THE `mirrors.yaml` FILE TO THE REPOSITORY!!  
 ```
 cd docker/spack-stack
@@ -181,7 +181,7 @@ cd docker/spack-stack
 cd docker/spack-stack
 aws configure export-credentials --format env --profile <myprofile>
 ```  
-
+  
 Run the export commands output by the above command
 
 6. Build the container, passing AWS credentials in as Docker secrets  
