@@ -1,0 +1,183 @@
+--- Dockerfile	2024-06-26 10:22:09
++++ Dockerfile.update	2024-06-26 10:38:35
+@@ -1,4 +1,4 @@
+-FROM ubuntu:20.04 as bootstrap
++FROM ubuntu:22.04 AS bootstrap
+ 
+ ENV SPACK_ROOT=/opt/spack \
+     CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
+@@ -39,6 +39,13 @@
+     git init --quiet && git remote add origin https://github.com/jcsda/spack && git fetch --depth=1 origin 60f4c5f033e7539e9f2a8eb3f6c7ca6b800a64b8 && git checkout --detach FETCH_HEAD && \
+     mkdir -p $SPACK_ROOT/opt/spack
+ 
++COPY openmpi.package.py.patch $SPACK_ROOT/openmpi.package.py.patch
++COPY cc.patch $SPACK_ROOT/cc.patch
++
++RUN cd $SPACK_ROOT \
++ && patch -f -p0 < openmpi.package.py.patch \
++ && patch -f -p0 < cc.patch
++
+ RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+           /usr/local/bin/docker-shell \
+  && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+@@ -71,11 +78,11 @@
+ CMD ["interactive-shell"]
+ 
+ # Build stage with Spack pre-installed and ready to be used
+-FROM bootstrap as builder
++FROM bootstrap AS builder
+ 
+ # Install OS packages needed to build the software
+ RUN apt-get -yqq update && apt-get -yqq upgrade \
+- && apt-get -yqq install bc cpp g++ gcc gfortran git git-lfs make mysql-server qt5-default libqt5svg5-dev qt5dxcb-plugin wget \
++ && apt-get -yqq install awscli bc cpp g++ gcc gfortran git git-lfs make mysql-server qtbase5-dev qt5-qmake libqt5svg5-dev qt5dxcb-plugin wget \
+  && rm -rf /var/lib/apt/lists/*
+ 
+ # Copy the spack-stack extension repo into the spack code
+@@ -83,6 +90,45 @@
+ # Register spack-stack extension repo
+ RUN spack repo add $SPACK_ROOT/var/spack/repos/spack-stack --scope defaults
+ 
++# Install OS packages needed to build Slurm
++ARG DEBIAN_FRONTEND=noninteractive
++RUN apt-get -yqq update && apt-get -yqq upgrade \
++ && apt-get -yqq install \
++    build-essential \
++    git \
++    mariadb-server \
++    munge \
++    vim \
++    wget \
++    devscripts \
++    equivs \
++    fakeroot \
++    libbpf-dev \
++    libdbus-1-dev \
++    libhwloc-dev \
++    openssh-server \
++    sudo
++
++# Build Slurm RPMs and install them
++RUN cd /tmp \
++ && wget https://download.schedmd.com/slurm/slurm-23.11.7.tar.bz2 \
++ && tar -xaf slurm-23.11.7.tar.bz2 \
++ && cd slurm-23.11.7 \
++ && mk-build-deps -t "apt-get -y" -i debian/control \
++ && debuild -b -uc -us \
++ && cd .. \
++ && ARCH=$(dpkg --print-architecture) \
++ && dpkg --install slurm-smd_23.11.7-1_${ARCH}.deb \
++ && dpkg --install slurm-smd-client_23.11.7-1_${ARCH}.deb \
++ && dpkg --install slurm-smd-dev_23.11.7-1_${ARCH}.deb \
++ && dpkg --install slurm-smd-doc_23.11.7-1_all.deb \
++ && dpkg --install slurm-smd-libnss-slurm_23.11.7-1_${ARCH}.deb \
++ && dpkg --install slurm-smd-libpam-slurm-adopt_23.11.7-1_${ARCH}.deb \
++ && dpkg --install slurm-smd-libpmi0_23.11.7-1_${ARCH}.deb \
++ && dpkg --install slurm-smd-libpmi2-0_23.11.7-1_${ARCH}.deb \
++ && dpkg --install slurm-smd-libslurm-perl_23.11.7-1_${ARCH}.deb \
++ && dpkg --install slurm-smd-sackd_23.11.7-1_${ARCH}.deb \
++ && dpkg --install slurm-smd-sview_23.11.7-1_${ARCH}.deb
+ 
+ # What we want to install and how we want to install it
+ # is specified in a manifest file (spack.yaml)
+@@ -94,20 +140,20 @@
+ &&   echo '' \
+ &&   echo '  config:' \
+ &&   echo '    checksum: false' \
+-&&   echo '    build_jobs: 2' \
++&&   echo '    build_jobs: 8' \
+ &&   echo '    connect_timeout: 60' \
+ &&   echo '' \
+ &&   echo '    install_tree: /opt/software' \
+ &&   echo '  compilers:' \
+ &&   echo '  - compiler:' \
+-&&   echo '      spec: gcc@9.4.0' \
++&&   echo '      spec: gcc@11.4.0' \
+ &&   echo '      paths:' \
+ &&   echo '        cc: /usr/bin/gcc' \
+ &&   echo '        cxx: /usr/bin/g++' \
+ &&   echo '        f77: /usr/bin/gfortran' \
+ &&   echo '        fc: /usr/bin/gfortran' \
+ &&   echo '      flags: {}' \
+-&&   echo '      operating_system: ubuntu20.04' \
++&&   echo '      operating_system: ubuntu22.04' \
+ &&   echo '      modules: []' \
+ &&   echo '      environment: {}' \
+ &&   echo '      extra_rpaths: []' \
+@@ -125,10 +171,10 @@
+ &&   echo '        lapack: [openblas]' \
+ &&   echo '        yacc: [bison]' \
+ &&   echo '        zlib-api: [zlib-ng]' \
+-&&   echo '        mpi: [openmpi@5.1.6]' \
++&&   echo '        mpi: [openmpi@4.1.6]' \
+ &&   echo '      require: '"'"'%gcc'"'"'' \
+ &&   echo '      target: [x86_64]' \
+-&&   echo '      compiler: [gcc@9.4.0]' \
++&&   echo '      compiler: [gcc@11.4.0]' \
+ &&   echo '    awscli-v2:' \
+ &&   echo '      require: ~examples' \
+ &&   echo '    bacio:' \
+@@ -288,6 +334,12 @@
+ &&   echo '      variants: +noavx512' \
+ &&   echo '    openmpi:' \
+ &&   echo '      variants: ~internal-hwloc +two_level_namespace' \
++&&   echo '      require: schedulers=slurm +pmi' \
++&&   echo '    slurm:' \
++&&   echo '      externals:' \
++&&   echo '      - spec: slurm@23.11.7' \
++&&   echo '        prefix: /usr' \
++&&   echo '      buildable: false' \
+ &&   echo '    # Pin openssl to avoid duplicate packages being built' \
+ &&   echo '    openssl:' \
+ &&   echo '      variants: +shared' \
+@@ -492,7 +544,31 @@
+ &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
+ 
+ # Install the software, remove unnecessary deps
+-RUN cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y
++RUN --mount=type=secret,id=mirrors,target=/opt/spack/etc/spack/mirrors.yaml     --mount=type=secret,id=access_key_id     --mount=type=secret,id=secret_access_key     --mount=type=secret,id=session_token <<EOF
++  set -e
++  cd /opt/spack-environment
++  . $SPACK_ROOT/share/spack/setup-env.sh
++  spack env activate .
++  spack mirror add --s3-access-key-id "" --s3-access-key-secret "" s3_spack_stack_buildcache_ro s3://chiltepin-us-east-2/spack-stack/
++  spack install --fail-fast --no-check-signature
++  python -m pip install globus-compute-sdk
++  python -m pip install globus-compute-endpoint
++  python -m pip uninstall -y dill pyzmq
++  python -m pip install dill==0.3.8 pyzmq==25.1.2
++  python -m pip install parsl[monitoring]==2024.6.3
++  python -m pip install pytest-black
++  python -m pip install pytest-isort
++  python -m pip install 'uwtools @ git+https://github.com/ufs-community/uwtools@main#subdirectory=src'
++  python -m pip install pytest
++  spack mirror list
++  if [ "$(spack mirror list | wc -l)" = "3" ]; then
++    export AWS_ACCESS_KEY_ID=$(cat /run/secrets/access_key_id)
++    export AWS_SECRET_ACCESS_KEY=$(cat /run/secrets/secret_access_key)
++    export AWS_SESSION_TOKEN=$(cat /run/secrets/session_token)
++    spack buildcache push --unsigned --update-index s3_spack_stack_buildcache_rw
++  fi
++  spack gc -y
++EOF
+ 
+ # Modifications to the environment that are necessary to run
+ RUN cd /opt/spack-environment && \
+@@ -505,7 +581,7 @@
+ 
+ 
+ # Bare OS image to run the installed executables
+-FROM ubuntu:20.04
++FROM ubuntu:22.04
+ 
+ COPY --from=builder /opt/spack-environment /opt/spack-environment
+ COPY --from=builder /opt/software /opt/software
+@@ -531,7 +607,7 @@
+ 
+ 
+ RUN apt-get -yqq update && apt-get -yqq upgrade \
+- && apt-get -yqq install bc cpp g++ gcc gfortran git git-lfs make mysql-server qt5-default libqt5svg5-dev qt5dxcb-plugin wget build-essential ca-certificates curl file gnupg2 iproute2 locales python3 python3-pip python3-setuptools unzip vim \
++ && apt-get -yqq install bc cpp g++ gcc gfortran git git-lfs make mysql-server qtbase5-dev qt5-qmake libqt5svg5-dev qt5dxcb-plugin wget build-essential ca-certificates curl file gnupg2 iproute2 locales python3 python3-pip python3-setuptools unzip vim \
+  && rm -rf /var/lib/apt/lists/*
+ 
+ # Copy spack find output from builder

@@ -1,0 +1,11 @@
+--- lib/spack/env/cc.orig	2024-06-21 20:02:54.496630733 +0000
++++ lib/spack/env/cc	2024-06-21 19:46:13.019268774 +0000
+@@ -724,7 +724,7 @@
+         esac
+ 
+         # prepend target args
+-        preextend flags_list SPACK_TARGET_ARGS
++        #preextend flags_list SPACK_TARGET_ARGS
+         ;;
+ esac
+ 

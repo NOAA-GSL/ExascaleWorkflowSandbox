@@ -2,6 +2,9 @@
 *#
 *~
 
+# Ignore python chiltepin venv
+.chiltepin
+
 # Ignore Python artifacts
 *.egg-info
 __pycache__
