@@ -7,7 +7,7 @@ globus-compute-endpoint
 parsl[monitoring]>=2024.06.03
 dill==0.3.8
 jsonschema==4.22.*
-uwtools @ git+https://github.com/ufs-community/uwtools@v2.3.1#subdirectory=src
+uwtools @ git+https://github.com/ufs-community/uwtools@v2.3.2#subdirectory=src
 awscli
 
 # Add uwtools dependencies to ensure they
