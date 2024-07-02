@@ -1,0 +1,104 @@
+hercules:
+  resources:
+    mpi:
+      cores per node: 80
+      nodes per block: 3
+      max mpi apps: 2
+      partition: "hercules"
+      account: "gsd-hpcs"
+    service:
+      cores per node: 1
+      nodes per block: 1
+      partition: "service"
+      account: "gsd-hpcs"
+    compute:
+      cores per node: 80
+      nodes per block: 1
+      partition: "hercules"
+      account: "gsd-hpcs"
+  
+  environment:
+    - "module purge"
+    - "module use /work/noaa/epic/role-epic/spack-stack/hercules/spack-stack-1.6.0/envs/unified-env/install/modulefiles/Core"
+    - "module load stack-intel/2021.9.0"
+    - "module load stack-intel-oneapi-mpi/2021.9.0"
+    - "module load stack-python/3.10.13"
+    - "module load jedi-fv3-env"
+    - "export CHILTEPIN_MPIF90=$MPIF90"
+
+hera:
+  resources:
+    mpi:
+      cores per node: 40
+      nodes per block: 3
+      max mpi apps: 2
+      partition: "hera"
+      account: "gsd-hpcs"
+    service:
+      cores per node: 1
+      nodes per block: 1
+      partition: "service"
+      account: "gsd-hpcs"
+    compute:
+      cores per node: 40
+      nodes per block: 1
+      partition: "hera"
+      account: "gsd-hpcs"
+  
+  environment:
+    - "module purge"
+    - "module use /scratch1/NCEPDEV/nems/role.epic/spack-stack/spack-stack-1.6.0/envs/unified-env-rocky8/install/modulefiles/Core"
+    - "module load stack-intel/2021.5.0"
+    - "module load stack-intel-oneapi-mpi/2021.5.1"
+    - "module load stack-python/3.10.13"
+    - "module load jedi-fv3-env"
+    - "export CHILTEPIN_MPIF90=$MPIF90"
+
+chiltepin:
+  resources:
+    mpi:
+      cores per node: 8
+      nodes per block: 3
+      max mpi apps: 2
+      partition: "slurmpar"
+      account: ""
+    service:
+      cores per node: 1
+      nodes per block: 1
+      partition: "slurmpar"
+      account: ""
+    compute:
+      cores per node: 8
+      nodes per block: 1
+      partition: "slurmpar"
+      account: ""
+
+  environment:
+    - "export OMPI_MCA_btl=self,tcp"
+    - "export rmaps_base_oversubscribe=true"
+    - "export CHILTEPIN_MPIF90=mpif90"
+    - "export jedi_cmake_ROOT=/opt/views/view"
+
+ci:
+  resources:
+    mpi:
+      cores per node: 8
+      nodes per block: 3
+      max mpi apps: 2
+      partition: "slurmpar"
+      account: ""
+    service:
+      cores per node: 1
+      nodes per block: 1
+      partition: "slurmpar"
+      account: ""
+    compute:
+      cores per node: 8
+      nodes per block: 1
+      partition: "slurmpar"
+      account: ""
+
+  environment:
+    - "export OMPI_MCA_btl=self,tcp"
+    - "export CHILTEPIN_MPIF90=mpif90"
+    - "export jedi_cmake_ROOT=/opt/views/view"
