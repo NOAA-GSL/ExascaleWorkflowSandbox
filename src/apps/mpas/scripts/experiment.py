@@ -7,7 +7,7 @@ import chiltepin.configure
 from chiltepin.mpas.wrapper import MPAS
 
 # Get resources and platform from command options
-config_file = "parm/resources.yml"
+config_file = "../parm/resources.yml"
 platform = "hercules"
 
 # Load Parsl
@@ -18,8 +18,8 @@ with parsl.load(resources):
 
     # Instantiate MPAS object
     mpas = MPAS(
-        environment=config["environment"],
-        install_path="mpas-model",
+        environment=environment,
+        install_path="../",
         tag="cbba5a4",
     )
 
@@ -29,7 +29,14 @@ with parsl.load(resources):
         stderr=("clone.err", "w"),
     )
 
-    clone.result()
+    # Bulid the MPAS code
+    make = mpas.make(
+        stdout=("make.out", "w"),
+        stderr=("make.err", "w"),
+        clone=clone,
+    )
+
+    make.result()
 
 parsl.clear()
 

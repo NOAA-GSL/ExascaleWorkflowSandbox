@@ -29,79 +29,49 @@ class MPAS:
             echo Started at $(date)
             echo Executing on $(hostname)
             git lfs install --skip-repo
-            rm -rf {self.install_path}/mpas/{self.tag}/src
+            rm -rf {self.install_path}/mpas/{self.tag}
             mkdir -p {self.install_path}/mpas/{self.tag}
             cd {self.install_path}/mpas/{self.tag}
-            git clone --branch {self.tag} https://github.com/NOAA-GSL/MPAS-Model.git src
+            git clone https://github.com/NOAA-GSL/MPAS-Model.git .
+            git checkout {self.tag}
             echo Completed at $(date)
             """
             )
 
         return bash_app(clone, executors=executors)
 
-#    def get_configure_task(
-#        self,
-#        executors=["service"],
-#    ):
-#        def configure(
-#            stdout=None,
-#            stderr=None,
-#            clone=None,
-#        ):
-#            return self.environment + textwrap.dedent(
-#                f"""
-#            echo Started at $(date)
-#            echo Executing on $(hostname)
-#            cd {self.install_path}/jedi-bundle/{self.tag}
-#            rm -rf build
-#            mkdir build
-#            cd build
-#            # Comment out the parts of the bundle we do not need
-#            perl -p -i -e 's/(.* PROJECT vader)/#\\1/g' ../src/CMakeLists.txt
-#            perl -p -i -e 's/(.* PROJECT saber)/#\\1/g' ../src/CMakeLists.txt
-#            perl -p -i -e 's/(.* PROJECT ioda)/#\\1/g' ../src/CMakeLists.txt
-#            perl -p -i -e 's/(.* PROJECT crtm)/#\\1/g' ../src/CMakeLists.txt
-#            perl -p -i -e 's/(.* PROJECT ufo)/#\\1/g' ../src/CMakeLists.txt
-#            perl -p -i -e 's/(.* PROJECT gsw)/#\\1/g' ../src/CMakeLists.txt
-#            perl -p -i -e 's/(.* PROJECT fv3)/#\\1/g' ../src/CMakeLists.txt
-#            perl -p -i -e 's/(.* PROJECT femps)/#\\1/g' ../src/CMakeLists.txt
-#            perl -p -i -e 's/(.* PROJECT soca)/#\\1/g' ../src/CMakeLists.txt
-#            perl -p -i -e 's/(.* PROJECT mom6)/#\\1/g' ../src/CMakeLists.txt
-#            perl -p -i -e 's/(.* PROJECT coupling)/#\\1/g' ../src/CMakeLists.txt
-#            perl -p -i -e 's/(.*mpas)/#\\1/ig' ../src/CMakeLists.txt
-#            ecbuild -DCMAKE_INSTALL_PREFIX=../ ../src
-#            echo Completed at $(date)
-#            """
-#            )
-#
-#        return bash_app(configure, executors=executors)
-#
-#    def get_make_task(
-#        self,
-#        executors=["serial"],
-#    ):
-#        def make(
-#            stdout=None,
-#            stderr=None,
-#            jobs=8,
-#            configure=None,
-#            parsl_resource_specification={"num_nodes": 1},
-#        ):
-#            return self.environment + textwrap.dedent(
-#                f"""
-#            echo Started at $(date)
-#            echo Executing on $(hostname)
-#            spack env list
-#            spack env deactivate
-#            cd {self.install_path}/jedi-bundle/{self.tag}/build
-#            make -j{jobs} VERBOSE=1
-#            make install
-#            echo Completed at $(date)
-#            """
-#            )
-#
-#        return bash_app(make, executors=executors)
-#
+
+    def get_make_task(
+        self,
+        executors=["service"],
+    ):
+        def make(
+            stdout=None,
+            stderr=None,
+            jobs=8,
+            clone=None,
+            parsl_resource_specification={"num_nodes": 1},
+        ):
+            return self.environment + textwrap.dedent(
+                f"""
+            echo Started at $(date)
+            echo Executing on $(hostname)
+            cd {self.install_path}/mpas/{self.tag}
+
+            make intel-mpi CORE=init_atmosphere
+            cp -v init_atmosphere_model ../init_atmosphere_model.exe
+            make clean CORE=init_atmosphere -j {jobs}
+
+            make intel-mpi CORE=atmosphere                                                                                                                                                                                                                      
+            cp -v atmosphere_model ../atmosphere_model.exe                                                                                                                                                                                                    
+            make clean CORE=atmosphere -j {jobs}                                                                                                                                                                                                           
+
+            echo Completed at $(date)
+            """
+            )
+
+        return bash_app(make, executors=executors)
+
 #    def get_install_task(
 #        self,
 #        clone_executors=["service"],
@@ -147,36 +117,24 @@ class MPAS:
             stderr=stderr,
         )
 
-#    def configure(
-#        self,
-#        clone=None,
-#        stdout=None,
-#        stderr=None,
-#        executors=["service"],
-#    ):
-#        return self.get_configure_task(executors=executors)(
-#            stdout=stdout,
-#            stderr=stderr,
-#            clone=clone,
-#        )
-#
-#    def make(
-#        self,
-#        configure=None,
-#        jobs=8,
-#        stdout=None,
-#        stderr=None,
-#        executors=["serial"],
-#        parsl_resource_specification={"num_nodes": 1},
-#    ):
-#        return self.get_make_task(executors=executors)(
-#            configure=configure,
-#            jobs=jobs,
-#            stdout=stdout,
-#            stderr=stderr,
-#            parsl_resource_specification=parsl_resource_specification,
-#        )
-#
+
+    def make(
+        self,
+        clone=None,
+        jobs=8,
+        stdout=None,
+        stderr=None,
+        executors=["service"],
+        parsl_resource_specification={"num_nodes": 1},
+    ):
+        return self.get_make_task(executors=executors)(
+            clone=clone,
+            jobs=jobs,
+            stdout=stdout,
+            stderr=stderr,
+            parsl_resource_specification=parsl_resource_specification,
+        )
+
 #    def install(
 #        self,
 #        jobs=8,
