@@ -48,8 +48,22 @@ with parsl.load(resources):
     #install_wrf.result()
 
 
-    ics = retrieve_data(stdout="get_ics.out", stderr="get_ics.err", ICS_or_LBCS="ICS", TIME_OFFSET_HRS=0, FCST_LEN=24, LBC_INTVL_HRS=6, YYYYMMDDHH="2024070300", OUTPUT_PATH=".")
-    lbcs = retrieve_data(stdout="get_lbcs.out", stderr="get_lbcs.err", ICS_or_LBCS="LBCS", TIME_OFFSET_HRS=0, FCST_LEN=24, LBC_INTVL_HRS=6, YYYYMMDDHH="2024070300", OUTPUT_PATH=".")
+    ics = retrieve_data(stdout="get_ics.out",
+                        stderr="get_ics.err",
+                        ics_or_lbcs="ICS",
+                        time_offset_hrs=0,
+                        fcst_len=24,
+                        lbc_intvl_hrs=6,
+                        yyyymmddhh="2024070300",
+                        output_path=".")
+    lbcs = retrieve_data(stdout="get_lbcs.out",
+                         stderr="get_lbcs.err",
+                         ics_or_lbcs="LBCS",
+                         time_offset_hrs=0,
+                         fcst_len=24,
+                         lbc_intvl_hrs=6,
+                         yyyymmddhh="2024070300",
+                         output_path=".")
     ics.result()
     lbcs.result()
 
