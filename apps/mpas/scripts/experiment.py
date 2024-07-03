@@ -5,6 +5,8 @@ import pytest
 
 import chiltepin.configure
 from chiltepin.mpas.wrapper import MPAS
+from chiltepin.wrf.wrapper import WRF
+from chiltepin.wps.wrapper import WPS
 from chiltepin.utils.chiltepin_get_data import retrieve_data
 
 # Get resources and platform from command options
@@ -31,41 +33,54 @@ with parsl.load(resources):
     #)
     #
     #
-    ## Instantiate WRF object
+    # Instantiate WRF object
     #wrf = WRF(
     #    environment=environment,
     #    install_path="../",
-    #    tag="cbba5a4",
+    #    tag="4.6.0",
     #)
     #
     ## Intall WRF
-    #install_mpas = wrf.install(
+    #install_wrf = wrf.install(
     #    stdout="install_wrf.out",
     #    stderr="install_wrf.err",
     #)
     #
+    # Instantiate WPS object
+    #wps = WPS(
+    #    environment=environment,
+    #    install_path="../",
+    #    tag="4.6.0",
+    #)
+    #
+    ## Intall WPS
+    #install_wps = wps.install(
+    #    stdout="install_wps.out",
+    #    stderr="install_wps.err",
+    #)
+
     #install_mpas.result()
     #install_wrf.result()
+    #install_wps.result()
 
-
-    ics = retrieve_data(stdout="get_ics.out",
-                        stderr="get_ics.err",
-                        ics_or_lbcs="ICS",
-                        time_offset_hrs=0,
-                        fcst_len=24,
-                        lbc_intvl_hrs=6,
-                        yyyymmddhh="2024070300",
-                        output_path=".")
-    lbcs = retrieve_data(stdout="get_lbcs.out",
-                         stderr="get_lbcs.err",
-                         ics_or_lbcs="LBCS",
-                         time_offset_hrs=0,
-                         fcst_len=24,
-                         lbc_intvl_hrs=6,
-                         yyyymmddhh="2024070300",
-                         output_path=".")
-    ics.result()
-    lbcs.result()
+    #ics = retrieve_data(stdout="get_ics.out",
+    #                    stderr="get_ics.err",
+    #                    ics_or_lbcs="ICS",
+    #                    time_offset_hrs=0,
+    #                    fcst_len=24,
+    #                    lbc_intvl_hrs=6,
+    #                    yyyymmddhh="2024070300",
+    #                    output_path=".")
+    #lbcs = retrieve_data(stdout="get_lbcs.out",
+    #                     stderr="get_lbcs.err",
+    #                     ics_or_lbcs="LBCS",
+    #                     time_offset_hrs=0,
+    #                     fcst_len=24,
+    #                     lbc_intvl_hrs=6,
+    #                     yyyymmddhh="2024070300",
+    #                     output_path=".")
+    #ics.result()
+    #lbcs.result()
 
 parsl.clear()
 
