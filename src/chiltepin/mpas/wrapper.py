@@ -72,39 +72,32 @@ class MPAS:
 
         return bash_app(make, executors=executors)
 
-#    def get_install_task(
-#        self,
-#        clone_executors=["service"],
-#        configure_executors=["service"],
-#        make_executors=["serial"],
-#    ):
-#        def install(
-#            jobs=8,
-#            stdout=None,
-#            stderr=None,
-#        ):
-#            clone_task = self.get_clone_task(executors=clone_executors)
-#            configure_task = self.get_configure_task(executors=configure_executors)
-#            make_task = self.get_make_task(executors=make_executors)
-#
-#            clone = clone_task(
-#                stdout=(stdout, "w"),
-#                stderr=(stderr, "w"),
-#            )
-#            configure = configure_task(
-#                stdout=(stdout, "a"),
-#                stderr=(stderr, "a"),
-#                clone=clone,
-#            )
-#            make = make_task(
-#                jobs=jobs,
-#                stdout=(stdout, "a"),
-#                stderr=(stderr, "a"),
-#                configure=configure,
-#            )
-#            return make
-#
-#        return join_app(install)
+    def get_install_task(
+        self,
+        clone_executors=["service"],
+        make_executors=["service"],
+    ):
+        def install(
+            jobs=8,
+            stdout=None,
+            stderr=None,
+        ):
+            clone_task = self.get_clone_task(executors=clone_executors)
+            make_task = self.get_make_task(executors=make_executors)
+
+            clone = clone_task(
+                stdout=(stdout, "w"),
+                stderr=(stderr, "w"),
+            )
+            make = make_task(
+                jobs=jobs,
+                stdout=(stdout, "a"),
+                stderr=(stderr, "a"),
+                clone=clone,
+            )
+            return make
+
+        return join_app(install)
 
     def clone(
         self,
@@ -135,22 +128,20 @@ class MPAS:
             parsl_resource_specification=parsl_resource_specification,
         )
 
-#    def install(
-#        self,
-#        jobs=8,
-#        stdout=None,
-#        stderr=None,
-#        clone_executors=["service"],
-#        configure_executors=["service"],
-#        make_executors=["serial"],
-#    ):
-#        return self.get_install_task(
-#            clone_executors=clone_executors,
-#            configure_executors=configure_executors,
-#            make_executors=make_executors,
-#        )(
-#            jobs=jobs,
-#            stdout=stdout,
-#            stderr=stderr,
-#        )
+    def install(
+        self,
+        jobs=8,
+        stdout=None,
+        stderr=None,
+        clone_executors=["service"],
+        make_executors=["service"],
+    ):
+        return self.get_install_task(
+            clone_executors=clone_executors,
+            make_executors=make_executors,
+        )(
+            jobs=jobs,
+            stdout=stdout,
+            stderr=stderr,
+        )
 

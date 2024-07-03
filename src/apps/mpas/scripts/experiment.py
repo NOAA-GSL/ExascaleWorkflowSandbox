@@ -24,19 +24,14 @@ with parsl.load(resources):
     )
 
     # Clone the MPAS repository
-    clone = mpas.clone(
-        stdout=("clone.out", "w"),
-        stderr=("clone.err", "w"),
+    install_mpas = mpas.install(
+        #stdout=("install_mpas.out", "w"),
+        #stderr=("install_mpas.err", "w"),
+        stdout="install_mpas.out",
+        stderr="install_mpas.err",
     )
 
-    # Bulid the MPAS code
-    make = mpas.make(
-        stdout=("make.out", "w"),
-        stderr=("make.err", "w"),
-        clone=clone,
-    )
-
-    make.result()
+    install_mpas.result()
 
 parsl.clear()
 
