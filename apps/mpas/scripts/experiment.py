@@ -58,25 +58,26 @@ with parsl.load(resources):
     #install_wps = wps.install(
     #    stdout="install_wps.out",
     #    stderr="install_wps.err",
+    #    WRF_dir=None,
     #)
 
-    # Instantiate Metis object
-    metis = Metis(
-        environment=environment,
-        install_path="/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.mpas-app-skeleton/apps/mpas",
-        tag="5.1.0",
-    )
-
-    # Intall Metis
-    install_metis = metis.install(
-        stdout="install_metis.out",
-        stderr="install_metis.err",
-    )
+    ## Instantiate Metis object
+    #metis = Metis(
+    #    environment=environment,
+    #    install_path="/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.mpas-app-skeleton/apps/mpas",
+    #    tag="5.1.0",
+    #)
+    #
+    ## Intall Metis
+    #install_metis = metis.install(
+    #    stdout="install_metis.out",
+    #    stderr="install_metis.err",
+    #)
 
     #install_mpas.result()
     #install_wrf.result()
     #install_wps.result()
-    install_metis.result()
+    #install_metis.result()
 
     #ics = retrieve_data(stdout="get_ics.out",
     #                    stderr="get_ics.err",

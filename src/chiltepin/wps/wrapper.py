@@ -49,21 +49,26 @@ class WPS:
         def make(
             stdout=None,
             stderr=None,
+            WRF_dir=None,
             jobs=8,
             clone=None,
             parsl_resource_specification={"num_nodes": 1},
         ):
+            if WRF_dir is None:
+                no_wrf="--nowrf"
+            else:
+                no_wrf=""
             return self.environment + textwrap.dedent(
                 f"""
             echo Started at $(date)
             echo Executing on $(hostname)
             cd {self.install_path}/WPS/{self.tag}
-            export WRF_DIR=../../WRF/{self.tag}
+            export WRF_DIR={WRF_dir}
             export JASPERLIB=$jasper_ROOT/lib64
             export JASPERINC=$jasper_ROOT/include
             export NETCDF=$netcdf_fortran_ROOT
             export J="-j {jobs}"
-            echo "23" | ./configure
+            echo "23" | ./configure {no_wrf}
             sed 's:-lnetcdff -lnetcdf:-lnetcdff:' -i configure.wps
             sed 's:mpif90:mpiifort:' -i configure.wps
             sed 's:mpicc:mpiicc:' -i configure.wps
@@ -81,6 +86,7 @@ class WPS:
     ):
         def install(
             jobs=8,
+            WRF_dir=None,
             stdout=None,
             stderr=None,
         ):
@@ -93,6 +99,7 @@ class WPS:
             )
             make = make_task(
                 jobs=jobs,
+                WRF_dir=WRF_dir,
                 stdout=(stdout, "a"),
                 stderr=(stderr, "a"),
                 clone=clone,
@@ -117,6 +124,7 @@ class WPS:
         self,
         clone=None,
         jobs=8,
+        WRF_dir=None,
         stdout=None,
         stderr=None,
         executors=["service"],
@@ -125,6 +133,7 @@ class WPS:
         return self.get_make_task(executors=executors)(
             clone=clone,
             jobs=jobs,
+            WRF_dir=WRF_dir,
             stdout=stdout,
             stderr=stderr,
             parsl_resource_specification=parsl_resource_specification,
@@ -133,6 +142,7 @@ class WPS:
     def install(
         self,
         jobs=8,
+        WRF_dir=None,
         stdout=None,
         stderr=None,
         clone_executors=["service"],
@@ -143,6 +153,7 @@ class WPS:
             make_executors=make_executors,
         )(
             jobs=jobs,
+            WRF_dir=WRF_dir,
             stdout=stdout,
             stderr=stderr,
         )
