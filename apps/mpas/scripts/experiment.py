@@ -7,6 +7,7 @@ import chiltepin.configure
 from chiltepin.mpas.wrapper import MPAS
 from chiltepin.wrf.wrapper import WRF
 from chiltepin.wps.wrapper import WPS
+from chiltepin.metis.wrapper import Metis
 from chiltepin.utils.chiltepin_get_data import retrieve_data
 
 # Get resources and platform from command options
@@ -59,9 +60,23 @@ with parsl.load(resources):
     #    stderr="install_wps.err",
     #)
 
+    # Instantiate Metis object
+    metis = Metis(
+        environment=environment,
+        install_path="/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.mpas-app-skeleton/apps/mpas",
+        tag="5.1.0",
+    )
+
+    # Intall Metis
+    install_metis = metis.install(
+        stdout="install_metis.out",
+        stderr="install_metis.err",
+    )
+
     #install_mpas.result()
     #install_wrf.result()
     #install_wps.result()
+    install_metis.result()
 
     #ics = retrieve_data(stdout="get_ics.out",
     #                    stderr="get_ics.err",
