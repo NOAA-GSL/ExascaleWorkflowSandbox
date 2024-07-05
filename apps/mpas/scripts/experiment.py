@@ -10,6 +10,8 @@ from chiltepin.wps.wrapper import WPS
 from chiltepin.metis.wrapper import Metis
 from chiltepin.utils.chiltepin_get_data import retrieve_data
 
+from shutil import copy
+
 # Get resources and platform from command options
 config_file = "../parm/resources.yml"
 platform = "hercules"
@@ -62,12 +64,12 @@ with parsl.load(resources):
     #)
 
     ## Instantiate Metis object
-    #metis = Metis(
-    #    environment=environment,
-    #    install_path="/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.mpas-app-skeleton/apps/mpas",
-    #    tag="5.1.0",
-    #)
-    #
+    metis = Metis(
+        environment=environment,
+        install_path="/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.mpas-app-skeleton/apps/mpas",
+        tag="5.1.0",
+    )
+
     ## Intall Metis
     #install_metis = metis.install(
     #    stdout="install_metis.out",
@@ -78,6 +80,15 @@ with parsl.load(resources):
     #install_wrf.result()
     #install_wps.result()
     #install_metis.result()
+
+    # Set up mesh files
+    mesh_file_path = "/work/noaa/gsd-hpcs/charrop/mpas/mpas-dev/test-mesh/conus.graph.info"
+    copy(src=mesh_file_path, dst=".")
+    gpm = metis.gpmetis("conus.graph.info", 4, stdout="gpmetis_4.out", stderr="gpmetis_4.err")
+    gpm.result()
+    copy(src=mesh_file_path, dst=".")
+    gpm = metis.gpmetis("conus.graph.info", 32, stdout="gpmetis_32.out", stderr="gpmetis_32.err")
+    gpm.result()
 
     #ics = retrieve_data(stdout="get_ics.out",
     #                    stderr="get_ics.err",

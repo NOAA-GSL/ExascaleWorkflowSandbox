@@ -93,6 +93,28 @@ class Metis:
 
         return join_app(install)
 
+    def get_gpmetis_task(
+        self,
+        executors=["compute"],
+    ):
+        def gpmetis(
+            mesh_file,
+            nprocs,
+            stdout=None,
+            stderr=None,
+        ):
+
+            return self.environment + textwrap.dedent(
+                f"""
+            echo Started at $(date)
+            echo Executing on $(hostname)
+            {self.install_path}/metis/{self.tag}/bin/gpmetis -minconn -contig -niter=200 {mesh_file} {nprocs}
+            echo Completed at $(date)
+            """
+            )
+
+        return bash_app(gpmetis, executors=executors)
+
     def clone(
         self,
         stdout=None,
@@ -135,6 +157,21 @@ class Metis:
             make_executors=make_executors,
         )(
             jobs=jobs,
+            stdout=stdout,
+            stderr=stderr,
+        )
+
+    def gpmetis(
+        self,
+        mesh_file,
+        nprocs,
+        stdout=None,
+        stderr=None,
+        executors=["compute"],
+    ):
+        return self.get_gpmetis_task(executors=executors)(
+            mesh_file,
+            nprocs,
             stdout=stdout,
             stderr=stderr,
         )
