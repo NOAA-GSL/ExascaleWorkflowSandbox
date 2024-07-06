@@ -1,6 +1,8 @@
 import textwrap
 
 from parsl.app.app import bash_app, join_app
+from uwtools.api import config as uwconfig
+from datetime import datetime
 
 
 class MPAS:
@@ -99,6 +101,44 @@ class MPAS:
 
         return join_app(install)
 
+    def get_mpas_init_task(
+        self,
+        executors=["mpi"],
+    ):
+        def mpas_init(
+            config_path,
+            cycle_str,
+            stdout=None,
+            stderr=None,
+            parsl_resource_specification={},
+        ):
+
+            cycle = datetime.fromisoformat(cycle_str)
+
+            # Extract driver config from experiment config
+            expt_config = uwconfig.get_yaml_config(config_path)
+            expt_config.dereference(context={"cycle": cycle, **expt_config})
+
+            # Run ungrib
+            #ungrib_driver.execute(task="run", config=config_path, cycle=cycle,
+            #                      key_path=["prepare_grib"])
+
+            return self.environment + textwrap.dedent(
+                f"""
+            echo Started at $(date)
+            echo Executing on $(hostname)
+            export PATH=$PATH:.
+            uw mpas_init provisioned_run_directory --cycle {cycle_str} --config-file {config_path} --key-path create_ics --verbose
+            cd {expt_config['create_ics']['mpas_init']['run_dir']}
+            echo "$PARSL_MPI_PREFIX {self.install_path}/mpas/init_atmosphere_model.exe" > debug.out
+            $PARSL_MPI_PREFIX {self.install_path}/mpas/init_atmosphere_model.exe
+            echo Completed at $(date)
+            """
+            )
+
+        return bash_app(mpas_init, executors=executors)
+
+
     def clone(
         self,
         stdout=None,
@@ -145,3 +185,23 @@ class MPAS:
             stderr=stderr,
         )
 
+    def mpas_init(
+        self,
+        config_path,
+        cycle_str,
+        stdout=None,
+        stderr=None,
+        executors=["mpi"],
+        parsl_resource_specification={
+            "num_nodes": 1,  # Number of nodes required for the application instance
+            "num_ranks": 4,  # Number of ranks in total
+            "ranks_per_node": 4,  # Number of MPI ranks per node
+        },
+    ):
+        return self.get_mpas_init_task(executors=executors)(
+            config_path,
+            cycle_str,
+            stdout=stdout,
+            stderr=stderr,
+            parsl_resource_specification=parsl_resource_specification,
+        )

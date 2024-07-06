@@ -26,6 +26,7 @@ hercules:
     - "module load jedi-mpas-env"
     - "module unload py-attrs"
     - "export CHILTEPIN_MPIF90=$MPIF90"
+    - "ulimit -s unlimited || true"
 
 hera:
   resources:

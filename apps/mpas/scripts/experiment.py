@@ -22,12 +22,12 @@ resources, environments = chiltepin.configure.factory(yaml_config, platform)
 environment = environments[platform]
 with parsl.load(resources):
 
-    ## Instantiate MPAS object
-    #mpas = MPAS(
-    #    environment=environment,
-    #    install_path="../",
-    #    tag="cbba5a4",
-    #)
+    # Instantiate MPAS object
+    mpas = MPAS(
+        environment=environment,
+        install_path="../",
+        tag="cbba5a4",
+    )
     #
     ## Install MPAS
     #install_mpas = mpas.install(
@@ -109,11 +109,18 @@ with parsl.load(resources):
     #ics.result()
     #lbcs.result()
 
-    ungrib = wps.ungrib("./experiment.yml",
-                        "2024-07-03T00:00:00",
-                        stdout="ungrib.out",
-                        stderr="ungrib.err")
+    #ungrib = wps.ungrib("./experiment.yml",
+    #                    "2024-07-03T00:00:00",
+    #                    stdout="ungrib.out",
+    #                    stderr="ungrib.err")
+    #
+    #ungrib.result()
 
-    ungrib.result()
+    mpas_init = mpas.mpas_init("./experiment.yml",
+                        "2024-07-03T00:00:00",
+                        stdout="mpas_init.out",
+                        stderr="mpas_init.err")
+
+    mpas_init.result()
 
 parsl.clear()
