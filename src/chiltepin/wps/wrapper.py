@@ -1,7 +1,10 @@
 import textwrap
 
-from parsl.app.app import bash_app, join_app
-
+from parsl.app.app import bash_app, join_app, python_app
+from uwtools.api import config as uwconfig
+from uwtools.api import ungrib as ungrib_driver
+from datetime import datetime
+import yaml
 
 class WPS:
 
@@ -108,6 +111,40 @@ class WPS:
 
         return join_app(install)
 
+    def get_ungrib_task(
+        self,
+        executors=["compute"],
+    ):
+        def ungrib(
+            config_path,
+            cycle_str,
+            stdout=None,
+            stderr=None,
+        ):
+
+            cycle = datetime.fromisoformat(cycle_str)
+
+            # Extract driver config from experiment config
+            #expt_config = uwconfig.get_yaml_config(config_path)
+            #expt_config.dereference(context={"cycle": cycle, **expt_config})
+
+            # Run ungrib
+            #ungrib_driver.execute(task="run", config=config_path, cycle=cycle,
+            #                      key_path=["prepare_grib"])
+
+            return self.environment + textwrap.dedent(
+                f"""
+            echo Started at $(date)
+            echo Executing on $(hostname)
+            export PATH=$PATH:.
+            uw ungrib run --cycle {cycle_str} --config-file {config_path} --key-path prepare_grib --verbose
+            echo Completed at $(date)
+            """
+            )
+
+        #return python_app(ungrib, executors=executors)
+        return bash_app(ungrib, executors=executors)
+
     def clone(
         self,
         stdout=None,
@@ -158,3 +195,17 @@ class WPS:
             stderr=stderr,
         )
 
+    def ungrib(
+        self,
+        config_path,
+        cycle_str,
+        stdout=None,
+        stderr=None,
+        executors=["compute"],
+    ):
+        return self.get_ungrib_task(executors=executors)(
+            config_path,
+            cycle_str,
+            stdout=stdout,
+            stderr=stderr,
+        )

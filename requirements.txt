@@ -2,13 +2,12 @@ pytest
 pytest-flake8
 pytest-black
 pytest-isort
+awscli
 globus-compute-sdk
 globus-compute-endpoint
 parsl[monitoring]>=2024.06.03
 dill==0.3.8
-jsonschema==4.22.*
 uwtools @ git+https://github.com/ufs-community/uwtools@v2.3.2#subdirectory=src
-awscli
 
 # Add uwtools dependencies to ensure they
 # get installed.  This is necessary because
@@ -16,8 +15,8 @@ awscli
 # environment (including base) is activated, pip
 # will not install any uwtools dependencies.
 f90nml==1.4.*
-iotaa==0.8.*
+iotaa==0.7.*
 jinja2==3.1.*
-jsonschema==4.22.*
-lxml==5.2.*
+jsonschema==4.21.*
+lxml==5.1.*
 pyyaml==6.0.*

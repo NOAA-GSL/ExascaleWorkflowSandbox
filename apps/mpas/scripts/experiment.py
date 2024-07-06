@@ -50,12 +50,12 @@ with parsl.load(resources):
     #)
     #
     # Instantiate WPS object
-    #wps = WPS(
-    #    environment=environment,
-    #    install_path="../",
-    #    tag="4.6.0",
-    #)
-    #
+    wps = WPS(
+        environment=environment,
+        install_path="../",
+        tag="4.6.0",
+    )
+
     ## Intall WPS
     #install_wps = wps.install(
     #    stdout="install_wps.out",
@@ -64,11 +64,11 @@ with parsl.load(resources):
     #)
 
     ## Instantiate Metis object
-    metis = Metis(
-        environment=environment,
-        install_path="/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.mpas-app-skeleton/apps/mpas",
-        tag="5.1.0",
-    )
+    #metis = Metis(
+    #    environment=environment,
+    #    install_path="/work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.mpas-app-skeleton/apps/mpas",
+    #    tag="5.1.0",
+    #)
 
     ## Intall Metis
     #install_metis = metis.install(
@@ -82,14 +82,14 @@ with parsl.load(resources):
     #install_metis.result()
 
     # Set up mesh files
-    mesh_file_path = "/work/noaa/gsd-hpcs/charrop/mpas/mpas-dev/test-mesh/conus.graph.info"
-    copy(src=mesh_file_path, dst=".")
-    gpm = metis.gpmetis("conus.graph.info", 4, stdout="gpmetis_4.out", stderr="gpmetis_4.err")
-    gpm.result()
-    copy(src=mesh_file_path, dst=".")
-    gpm = metis.gpmetis("conus.graph.info", 32, stdout="gpmetis_32.out", stderr="gpmetis_32.err")
-    gpm.result()
-
+    #mesh_file_path = "/work/noaa/gsd-hpcs/charrop/mpas/mpas-dev/test-mesh/conus.graph.info"
+    #copy(src=mesh_file_path, dst=".")
+    #gpm = metis.gpmetis("conus.graph.info", 4, stdout="gpmetis_4.out", stderr="gpmetis_4.err")
+    #gpm.result()
+    #copy(src=mesh_file_path, dst=".")
+    #gpm = metis.gpmetis("conus.graph.info", 32, stdout="gpmetis_32.out", stderr="gpmetis_32.err")
+    #gpm.result()
+    #
     #ics = retrieve_data(stdout="get_ics.out",
     #                    stderr="get_ics.err",
     #                    ics_or_lbcs="ICS",
@@ -109,6 +109,11 @@ with parsl.load(resources):
     #ics.result()
     #lbcs.result()
 
+    ungrib = wps.ungrib("./experiment.yml",
+                        "2024-07-03T00:00:00",
+                        stdout="ungrib.out",
+                        stderr="ungrib.err")
+
+    ungrib.result()
+
 parsl.clear()
-
-
