@@ -59,14 +59,16 @@ class MPAS:
             echo Started at $(date)
             echo Executing on $(hostname)
             cd {self.install_path}/mpas/{self.tag}
+            mkdir exe
+            export PIO=$parallelio_ROOT
 
-            make intel-mpi CORE=init_atmosphere
-            cp -v init_atmosphere_model ../init_atmosphere_model.exe
-            make clean CORE=init_atmosphere -j {jobs}
+            make intel-mpi CORE=init_atmosphere -j {jobs}
+            cp -v init_atmosphere_model exe/
+            make clean CORE=init_atmosphere
 
-            make intel-mpi CORE=atmosphere                                                                                                                                                                                                                      
-            cp -v atmosphere_model ../atmosphere_model.exe                                                                                                                                                                                                    
-            make clean CORE=atmosphere -j {jobs}                                                                                                                                                                                                           
+            make intel-mpi CORE=atmosphere -j {jobs}
+            cp -v atmosphere_model exe/
+            make clean CORE=atmosphere
 
             echo Completed at $(date)
             """
@@ -108,6 +110,7 @@ class MPAS:
         def mpas_init(
             config_path,
             cycle_str,
+            key_path,
             stdout=None,
             stderr=None,
             parsl_resource_specification={},
@@ -119,24 +122,55 @@ class MPAS:
             expt_config = uwconfig.get_yaml_config(config_path)
             expt_config.dereference(context={"cycle": cycle, **expt_config})
 
-            # Run ungrib
-            #ungrib_driver.execute(task="run", config=config_path, cycle=cycle,
-            #                      key_path=["prepare_grib"])
+            return self.environment + textwrap.dedent(
+                f"""
+            echo Started at $(date)
+            echo Executing on $(hostname)
+            export PATH=$PATH:.
+            uw mpas_init provisioned_run_directory --cycle {cycle_str} --config-file {config_path} --key-path {key_path} --verbose
+            cd {expt_config[key_path]['mpas_init']['run_dir']}
+            echo "Run Command: '$PARSL_MPI_PREFIX {self.install_path}/mpas/{self.tag}/exe/init_atmosphere_model'"
+            $PARSL_MPI_PREFIX {self.install_path}/mpas/{self.tag}/exe/init_atmosphere_model
+            echo Completed at $(date)
+            """
+            )
+
+        return bash_app(mpas_init, executors=executors)
+
+
+    def get_mpas_forecast_task(
+        self,
+        executors=["mpi"],
+    ):
+        def mpas_forecast(
+            config_path,
+            cycle_str,
+            key_path,
+            stdout=None,
+            stderr=None,
+            parsl_resource_specification={},
+        ):
+
+            cycle = datetime.fromisoformat(cycle_str)
+
+            # Extract driver config from experiment config
+            expt_config = uwconfig.get_yaml_config(config_path)
+            expt_config.dereference(context={"cycle": cycle, **expt_config})
 
             return self.environment + textwrap.dedent(
                 f"""
             echo Started at $(date)
             echo Executing on $(hostname)
             export PATH=$PATH:.
-            uw mpas_init provisioned_run_directory --cycle {cycle_str} --config-file {config_path} --key-path create_ics --verbose
-            cd {expt_config['create_ics']['mpas_init']['run_dir']}
-            echo "$PARSL_MPI_PREFIX {self.install_path}/mpas/init_atmosphere_model.exe" > debug.out
-            $PARSL_MPI_PREFIX {self.install_path}/mpas/init_atmosphere_model.exe
+            uw mpas provisioned_run_directory --cycle {cycle_str} --config-file {config_path} --key-path {key_path} --verbose
+            cd {expt_config[key_path]['mpas']['run_dir']}
+            echo "Run Command: '$PARSL_MPI_PREFIX {self.install_path}/mpas/{self.tag}/exe/atmosphere_model'"
+            $PARSL_MPI_PREFIX {self.install_path}/mpas/{self.tag}/exe/atmosphere_model
             echo Completed at $(date)
             """
             )
 
-        return bash_app(mpas_init, executors=executors)
+        return bash_app(mpas_forecast, executors=executors)
 
 
     def clone(
@@ -189,6 +223,7 @@ class MPAS:
         self,
         config_path,
         cycle_str,
+        key_path,
         stdout=None,
         stderr=None,
         executors=["mpi"],
@@ -201,6 +236,31 @@ class MPAS:
         return self.get_mpas_init_task(executors=executors)(
             config_path,
             cycle_str,
+            key_path,
+            stdout=stdout,
+            stderr=stderr,
+            parsl_resource_specification=parsl_resource_specification,
+        )
+
+
+    def mpas_forecast(
+        self,
+        config_path,
+        cycle_str,
+        key_path,
+        stdout=None,
+        stderr=None,
+        executors=["mpi"],
+        parsl_resource_specification={
+            "num_nodes": 1,  # Number of nodes required for the application instance
+            "num_ranks": 32,  # Number of ranks in total
+            "ranks_per_node": 32,  # Number of MPI ranks per node
+        },
+    ):
+        return self.get_mpas_forecast_task(executors=executors)(
+            config_path,
+            cycle_str,
+            key_path,
             stdout=stdout,
             stderr=stderr,
             parsl_resource_specification=parsl_resource_specification,

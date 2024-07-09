@@ -37,7 +37,7 @@ def configure_flux_executor(name, config):
             init_blocks=1,
             partition=config["partition"],
             account=config["account"],
-            walltime="08:00:00",
+            walltime="00:30:00",
             launcher=SimpleLauncher(),
             worker_init="""
             """,
@@ -60,7 +60,7 @@ def configure_mpi_executor(name, config):
             init_blocks=1,
             partition=config["partition"],
             account=config["account"],
-            walltime="08:00:00",
+            walltime="00:30:00",
             launcher=SimpleLauncher(),
             worker_init="""
             """,
@@ -84,7 +84,7 @@ def configure_htex_executor(name, config):
             min_blocks=1,
             partition=config["partition"],
             account=config["account"],
-            walltime="08:00:00",
+            walltime="00:30:00",
             launcher=SimpleLauncher(),
             worker_init="""
             """,

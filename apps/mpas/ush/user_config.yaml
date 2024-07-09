@@ -1,0 +1,3 @@
+user:
+  experiment_dir: /work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.mpas-app-skeleton/apps/experiments/test
+  platform: hercules
