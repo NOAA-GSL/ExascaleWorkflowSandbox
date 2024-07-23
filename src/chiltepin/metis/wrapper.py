@@ -10,10 +10,12 @@ class Metis:
         environment="",
         install_path="./",
         tag="develop",
+        tmp_path="/tmp/metis",
     ):
         self.environment = environment
         self.install_path = install_path
         self.tag = tag
+        self.tmp_path = tmp_path
 
     def get_clone_task(
         self,
@@ -26,13 +28,14 @@ class Metis:
 
             return self.environment + textwrap.dedent(
                 f"""
+            #!/bin/bash -e
             echo Started at $(date)
             echo Executing on $(hostname)
             git lfs install --skip-repo
-            rm -rf /tmp/metis/{self.tag}
-            mkdir -p /tmp/metis/{self.tag}
-            cd /tmp/metis/{self.tag}
-            wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-{self.tag}.tar.gz
+            rm -rf {self.tmp_path}/{self.tag}
+            mkdir -p {self.tmp_path}/{self.tag} 
+            cd {self.tmp_path}/{self.tag}
+            wget -T 30 -t 3 http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-{self.tag}.tar.gz
             tar --strip-components=1 -xzf metis-{self.tag}.tar.gz
             rm -f metis-{self.tag}.tar.gz
             echo Completed at $(date)
@@ -55,9 +58,10 @@ class Metis:
         ):
             return self.environment + textwrap.dedent(
                 f"""
+            #!/bin/bash -e
             echo Started at $(date)
             echo Executing on $(hostname)
-            cd /tmp/metis/{self.tag}
+            cd {self.tmp_path}/{self.tag}
             make config prefix={self.install_path}/metis/{self.tag}
             make install
             echo Completed at $(date)

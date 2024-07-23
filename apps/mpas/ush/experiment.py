@@ -56,6 +56,7 @@ def main(user_config_file: Path) -> None:
             environment=environment,
             install_path=experiment_path,
             tag="5.1.0",
+            tmp_path=f"{experiment_path}/tmp/metis",
         )
         
         # Instantiate WPS object
