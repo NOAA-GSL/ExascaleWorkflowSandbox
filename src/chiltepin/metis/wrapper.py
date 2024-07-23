@@ -10,12 +10,10 @@ class Metis:
         environment="",
         install_path="./",
         tag="develop",
-        tmp_path="/tmp/metis",
     ):
         self.environment = environment
         self.install_path = install_path
         self.tag = tag
-        self.tmp_path = tmp_path
 
     def get_clone_task(
         self,
@@ -28,15 +26,18 @@ class Metis:
 
             return self.environment + textwrap.dedent(
                 f"""
-            #!/bin/bash -e
+            set +e
             echo Started at $(date)
             echo Executing on $(hostname)
             git lfs install --skip-repo
-            rm -rf {self.tmp_path}/{self.tag}
-            mkdir -p {self.tmp_path}/{self.tag} 
-            cd {self.tmp_path}/{self.tag}
-            wget -T 30 -t 3 http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-{self.tag}.tar.gz
-            tar --strip-components=1 -xzf metis-{self.tag}.tar.gz
+            rm -rf {self.install_path}/metis/build/{self.tag}
+            mkdir -p {self.install_path}/metis/build/{self.tag}
+            cd {self.install_path}/metis/build/{self.tag}
+            # Clone GKlib tools needed by metis
+            git clone https://github.com/KarypisLab/GKlib.git
+            # Fetch and untar metis tarball
+            wget -T 30 -t 3 https://github.com/KarypisLab/METIS/archive/refs/tags/v{self.tag}.tar.gz
+            tar -xzf v{self.tag}.tar.gz
             rm -f metis-{self.tag}.tar.gz
             echo Completed at $(date)
             """
@@ -58,12 +59,16 @@ class Metis:
         ):
             return self.environment + textwrap.dedent(
                 f"""
-            #!/bin/bash -e
+            set +e
             echo Started at $(date)
             echo Executing on $(hostname)
-            cd {self.tmp_path}/{self.tag}
+            cd {self.install_path}/metis/build/{self.tag}/GKlib
             make config prefix={self.install_path}/metis/{self.tag}
             make install
+            cd {self.install_path}/metis/build/{self.tag}/METIS-{self.tag}
+            make config prefix={self.install_path}/metis/{self.tag}
+            make install
+            rm -rf {self.install_path}/metis/build
             echo Completed at $(date)
             """
             )

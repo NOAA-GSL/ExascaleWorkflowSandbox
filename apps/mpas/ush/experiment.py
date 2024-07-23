@@ -55,10 +55,9 @@ def main(user_config_file: Path) -> None:
         metis = Metis(
             environment=environment,
             install_path=experiment_path,
-            tag="5.1.0",
-            tmp_path=f"{experiment_path}/tmp/metis",
+            tag="5.2.1",
         )
-        
+
         # Instantiate WPS object
         wps = WPS(
             environment=environment,
@@ -72,7 +71,7 @@ def main(user_config_file: Path) -> None:
             install_path=experiment_path,
             tag="cbba5a4",
         )
-        
+
         # Intall Metis
         install_metis = metis.install(
             stdout=experiment_path / "install_metis.out",
@@ -91,7 +90,7 @@ def main(user_config_file: Path) -> None:
             stdout=experiment_path / "install_mpas.out",
             stderr=experiment_path / "install_mpas.err",
         ).result()
-        
+
         # Create the grid files
         mesh_file_name = f"{experiment_config['user']['mesh_label']}.graph.info"
         mesh_file_path = Path(experiment_config["data"]["mesh_files"]) / mesh_file_name
@@ -117,7 +116,7 @@ def main(user_config_file: Path) -> None:
             # Create string representations of the cycle
             yyyymmddhh=cycle.strftime("%Y%m%d%H")
             cycle_iso=cycle.strftime("%Y-%m-%dT%H:%M:%S")
-            
+
             # Resolve config for this cycle
             experiment_config.dereference(context={"cycle": cycle, **experiment_config})
 
@@ -132,7 +131,7 @@ def main(user_config_file: Path) -> None:
                                          lbc_intvl_hrs=6,
                                          yyyymmddhh=yyyymmddhh,
                                          output_path=get_ics_dir)
-            
+
             # Get the lbcs data
             get_lbcs_data_config = experiment_config["get_lbcs_data"]
             get_lbcs_dir = Path(get_lbcs_data_config["run_dir"])
@@ -144,7 +143,7 @@ def main(user_config_file: Path) -> None:
                                           lbc_intvl_hrs=6,
                                           yyyymmddhh=yyyymmddhh,
                                           output_path=get_lbcs_dir)
-            
+
             # Wait for the data to be retrieved
             get_ics_data.result()
             get_lbcs_data.result()
@@ -193,7 +192,7 @@ def main(user_config_file: Path) -> None:
     # Clean up resources
     parsl.clear()
 
-    
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
