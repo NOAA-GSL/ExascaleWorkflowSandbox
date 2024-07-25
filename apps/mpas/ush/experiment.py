@@ -27,16 +27,16 @@ def main(user_config_file: Path) -> None:
 
     for config in (platform_config, user_config):
         experiment_config.update_values(config)
-    
+
     experiment_config["user"]["mpas_app"] = mpas_app.as_posix()
     experiment_config.dereference()
 
     # Build the experiment directory
     experiment_path = Path(experiment_config["user"]["experiment_dir"])
     os.makedirs(experiment_path, exist_ok=True)
-    
+
     experiment_file = experiment_path / "experiment.yaml"
-    
+
     # Create experiment yaml
     uwconfig.realize(
         input_config=experiment_config,
@@ -50,7 +50,7 @@ def main(user_config_file: Path) -> None:
     resources, environments = chiltepin.configure.factory(resource_config, machine)
     environment = environments[machine]
     with parsl.load(resources):
-    
+
         # Instantiate Metis object
         metis = Metis(
             environment=environment,
@@ -62,7 +62,7 @@ def main(user_config_file: Path) -> None:
         wps = WPS(
             environment=environment,
             install_path=experiment_path,
-            tag="4.6.0",
+            tag="4.5",
         )
 
         # Instantiate MPAS object
@@ -173,7 +173,7 @@ def main(user_config_file: Path) -> None:
                                             stdout=experiment_path / f"mpas_init_lbcs_{yyyymmddhh}.out",
                                             stderr=experiment_path / f"mpas_init_lbcs_{yyyymmddhh}.err")
 
-            # Wait for lateral boundary conditions 
+            # Wait for lateral boundary conditions
             mpas_init_lbcs.result()
 
             # Run the forecast

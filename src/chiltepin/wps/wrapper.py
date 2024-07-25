@@ -61,6 +61,7 @@ class WPS:
                 no_wrf="--nowrf"
             else:
                 no_wrf=""
+            patch_url="https://raw.githubusercontent.com/spack/spack/develop/var/spack/repos/builtin/packages/wps/patches"
             return self.environment + textwrap.dedent(
                 f"""
             echo Started at $(date)
@@ -69,12 +70,27 @@ class WPS:
             export WRF_DIR={WRF_dir}
             export JASPERLIB=$jasper_ROOT/lib64
             export JASPERINC=$jasper_ROOT/include
-            export NETCDF=$netcdf_fortran_ROOT
+            export NETCDF=$netcdf_c_ROOT
+            export NETCDFF=$netcdf_fortran_ROOT
             export J="-j {jobs}"
-            echo "23" | ./configure {no_wrf}
-            sed 's:-lnetcdff -lnetcdf:-lnetcdff:' -i configure.wps
-            sed 's:mpif90:mpiifort:' -i configure.wps
-            sed 's:mpicc:mpiicc:' -i configure.wps
+            curl -L {patch_url}/4.2/arch.Config.pl.patch -o arch.Config.pl.patch
+            curl -L {patch_url}/4.2/preamble.patch -o preamble.patch
+            curl -L {patch_url}/4.4/configure.patch -o configure.patch
+            patch -p 1 < arch.Config.pl.patch
+            patch -p 1 < preamble.patch
+            patch -p 1 < configure.patch
+            compiler=$(basename $CC)
+            if [[ $compiler = "gcc" ]]; then
+              build_option=3
+            elif [[ $compiler = "icc" ]]; then
+              sed 's:mpicc:mpiicc:' -i configure.wps
+              sed 's:mpif90:mpiifort:' -i configure.wps
+              build_option=19
+            else
+              echo "Unsupported compiler: $CC"
+              exit 1
+            fi
+            echo $build_option | ./configure {no_wrf}
             ./compile
             echo Completed at $(date)
             """
