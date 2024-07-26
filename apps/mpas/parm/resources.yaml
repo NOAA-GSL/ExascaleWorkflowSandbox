@@ -83,6 +83,7 @@ chiltepin:
     - "export jasper_ROOT=/opt/views/view"
     - "export netcdf_c_ROOT=/opt/views/view"
     - "export netcdf_fortran_ROOT=/opt/views/view"
+    - "export parallelio_ROOT=/opt/views/view"
 
 ci:
   resources:

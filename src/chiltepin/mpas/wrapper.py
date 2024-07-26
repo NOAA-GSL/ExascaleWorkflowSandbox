@@ -61,14 +61,22 @@ class MPAS:
             cd {self.install_path}/mpas/{self.tag}
             mkdir exe
             export PIO=$parallelio_ROOT
-
-            make intel-mpi CORE=init_atmosphere -j {jobs}
+            compiler=$(basename $CC)
+            # Set the MPAS build target to match compiler
+            if [[ $compiler = "gcc" ]]; then
+              build_target="gfortran"
+            elif [[ $compiler = "icc" ]]; then
+              build_target="intel-mpi"
+            else
+              echo "Unsupported compiler: $CC"
+              exit 1
+            fi
+            make $build_target CORE=init_atmosphere -j {jobs}
             cp -v init_atmosphere_model exe/
             make clean CORE=init_atmosphere
 
-            make intel-mpi CORE=atmosphere -j {jobs}
+            make $build_target CORE=atmosphere -j {jobs}
             cp -v atmosphere_model exe/
-            make clean CORE=atmosphere
 
             echo Completed at $(date)
             """
