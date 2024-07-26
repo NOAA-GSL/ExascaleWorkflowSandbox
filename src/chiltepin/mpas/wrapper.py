@@ -54,6 +54,7 @@ class MPAS:
             clone=None,
             parsl_resource_specification={"num_nodes": 1},
         ):
+            patch_url = "https://raw.githubusercontent.com/NOAA-GSL/ExascaleWorkflowSandbox/feature/mpas-app-skeleton/apps/mpas/patches"
             return self.environment + textwrap.dedent(
                 f"""
             echo Started at $(date)
@@ -61,6 +62,8 @@ class MPAS:
             cd {self.install_path}/mpas/{self.tag}
             mkdir exe
             export PIO=$parallelio_ROOT
+            curl -L {patch_url}/src.framework.Makefile.patch -o src.framework.Makefile.patch
+            patch -p 0 < src.framework.Makefile.patch
             compiler=$(basename $CC)
             # Set the MPAS build target to match compiler
             if [[ $compiler = "gcc" ]]; then
