@@ -80,6 +80,9 @@ chiltepin:
     - "export rmaps_base_oversubscribe=true"
     - "export CHILTEPIN_MPIF90=mpif90"
     - "export jedi_cmake_ROOT=/opt/views/view"
+    - "export jasper_ROOT=/opt/views/view"
+    - "export netcdf_c_ROOT=/opt/views/view"
+    - "export netcdf_fortran_ROOT=/opt/views/view"
 
 ci:
   resources:

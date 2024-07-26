@@ -68,7 +68,8 @@ class WPS:
             echo Executing on $(hostname)
             cd {self.install_path}/WPS/{self.tag}
             export WRF_DIR={WRF_dir}
-            export JASPERLIB=$jasper_ROOT/lib64
+            # Jasper may be in /lib or /lib64
+            export JASPERLIB=$(dirname $(find -L $jasper_ROOT -name libjasper.so))
             export JASPERINC=$jasper_ROOT/include
             export NETCDF=$netcdf_c_ROOT
             export NETCDFF=$netcdf_fortran_ROOT
@@ -80,6 +81,7 @@ class WPS:
             patch -p 1 < preamble.patch
             patch -p 1 < configure.patch
             compiler=$(basename $CC)
+            # Set the WPS build option to match compiler
             if [[ $compiler = "gcc" ]]; then
               build_option=3
             elif [[ $compiler = "icc" ]]; then
