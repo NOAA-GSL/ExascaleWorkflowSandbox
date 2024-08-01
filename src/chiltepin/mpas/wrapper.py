@@ -124,6 +124,7 @@ class MPAS:
             key_path,
             stdout=None,
             stderr=None,
+            install=None,
             parsl_resource_specification={},
         ):
 
@@ -159,6 +160,7 @@ class MPAS:
             key_path,
             stdout=None,
             stderr=None,
+            install=None,
             parsl_resource_specification={},
         ):
 
@@ -237,6 +239,7 @@ class MPAS:
         key_path,
         stdout=None,
         stderr=None,
+        install=None,
         executors=["mpi"],
         parsl_resource_specification={
             "num_nodes": 1,  # Number of nodes required for the application instance
@@ -250,6 +253,7 @@ class MPAS:
             key_path,
             stdout=stdout,
             stderr=stderr,
+            install=install,
             parsl_resource_specification=parsl_resource_specification,
         )
 
@@ -261,6 +265,7 @@ class MPAS:
         key_path,
         stdout=None,
         stderr=None,
+        install=None,
         executors=["mpi"],
         parsl_resource_specification={
             "num_nodes": 1,  # Number of nodes required for the application instance
@@ -274,5 +279,6 @@ class MPAS:
             key_path,
             stdout=stdout,
             stderr=stderr,
+            install=install,
             parsl_resource_specification=parsl_resource_specification,
         )

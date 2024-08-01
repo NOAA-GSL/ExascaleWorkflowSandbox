@@ -138,6 +138,7 @@ class WPS:
             cycle_str,
             stdout=None,
             stderr=None,
+            install=None,
         ):
 
             cycle = datetime.fromisoformat(cycle_str)
@@ -219,6 +220,7 @@ class WPS:
         cycle_str,
         stdout=None,
         stderr=None,
+        install=None,
         executors=["compute"],
     ):
         return self.get_ungrib_task(executors=executors)(
@@ -226,4 +228,5 @@ class WPS:
             cycle_str,
             stdout=stdout,
             stderr=stderr,
+            install=install,
         )

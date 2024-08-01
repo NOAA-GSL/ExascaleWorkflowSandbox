@@ -82,7 +82,26 @@ def main(user_config_file: Path) -> None:
         install_limited_area = limited_area.install(
             stdout=experiment_path / "install_limited_area.out",
             stderr=experiment_path / "install_limited_area.err",
-        ).result()
+        )
+
+        # Intall Metis
+        install_metis = metis.install(
+            stdout=experiment_path / "install_metis.out",
+            stderr=experiment_path / "install_metis.err",
+        )
+
+        # Intall WPS
+        install_wps = wps.install(
+            stdout=experiment_path / "install_wps.out",
+            stderr=experiment_path / "install_wps.err",
+            WRF_dir=None,
+        )
+
+        # Install MPAS
+        install_mpas = mpas.install(
+            stdout=experiment_path / "install_mpas.out",
+            stderr=experiment_path / "install_mpas.err",
+        )
 
         # Generate mesh
         create_region = limited_area.create_region(
@@ -90,25 +109,7 @@ def main(user_config_file: Path) -> None:
             region="conus",
             stdout=experiment_path / "create_region.out",
             stderr=experiment_path / "create_region.err",
-        ).result()
-
-        # Intall Metis
-        install_metis = metis.install(
-            stdout=experiment_path / "install_metis.out",
-            stderr=experiment_path / "install_metis.err",
-        ).result()
-
-        # Intall WPS
-        install_wps = wps.install(
-            stdout=experiment_path / "install_wps.out",
-            stderr=experiment_path / "install_wps.err",
-            WRF_dir=None,
-        ).result()
-
-        # Install MPAS
-        install_mpas = mpas.install(
-            stdout=experiment_path / "install_mpas.out",
-            stderr=experiment_path / "install_mpas.err",
+            install=limited_area,
         ).result()
 
         # Create the grid files
@@ -125,8 +126,7 @@ def main(user_config_file: Path) -> None:
         for nprocs in all_nprocs:
             if not (experiment_path / f"{mesh_file_path.name}.part.{nprocs}").is_file():
                 print(f"Creating grid file for {nprocs} procs")
-                gpm = metis.gpmetis(mesh_file_path, nprocs, stdout=experiment_path / f"gpmetis_{nprocs}.out", stderr= experiment_path / f"gpmetis_{nprocs}.err")
-                gpm.result()
+                gpm = metis.gpmetis(mesh_file_path, nprocs, stdout=experiment_path / f"gpmetis_{nprocs}.out", stderr= experiment_path / f"gpmetis_{nprocs}.err", install=install_metis)
 
         # Run the experiment cycles
         cycle = experiment_config["user"]["first_cycle"]
@@ -171,7 +171,8 @@ def main(user_config_file: Path) -> None:
             ungrib = wps.ungrib(experiment_file,
                                 cycle_iso,
                                 stdout=experiment_path / f"ungrib_{yyyymmddhh}.out",
-                                stderr=experiment_path / f"ungrib_{yyyymmddhh}.err")
+                                stderr=experiment_path / f"ungrib_{yyyymmddhh}.err",
+                                install=install_wps)
 
             # Wait for ungrib to complete
             ungrib.result()
@@ -181,7 +182,8 @@ def main(user_config_file: Path) -> None:
                                            cycle_iso,
                                            "create_ics",
                                            stdout=experiment_path / f"mpas_init_ics_{yyyymmddhh}.out",
-                                           stderr=experiment_path / f"mpas_init_ics_{yyyymmddhh}.err")
+                                           stderr=experiment_path / f"mpas_init_ics_{yyyymmddhh}.err",
+                                           install=install_mpas)
 
             # Wait for initial conditions
             mpas_init_ics.result()
@@ -191,7 +193,8 @@ def main(user_config_file: Path) -> None:
                                             cycle_iso,
                                             "create_lbcs",
                                             stdout=experiment_path / f"mpas_init_lbcs_{yyyymmddhh}.out",
-                                            stderr=experiment_path / f"mpas_init_lbcs_{yyyymmddhh}.err")
+                                            stderr=experiment_path / f"mpas_init_lbcs_{yyyymmddhh}.err",
+                                            install=install_mpas)
 
             # Wait for lateral boundary conditions
             mpas_init_lbcs.result()
@@ -201,7 +204,8 @@ def main(user_config_file: Path) -> None:
                                                cycle_iso,
                                                "forecast",
                                                stdout=experiment_path / f"mpas_forecast_{yyyymmddhh}.out",
-                                               stderr=experiment_path / f"mpas_forecast_{yyyymmddhh}.err")
+                                               stderr=experiment_path / f"mpas_forecast_{yyyymmddhh}.err",
+                                               install=install_mpas)
 
             # Wait for the forecast
             mpas_forecast.result()

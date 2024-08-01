@@ -72,6 +72,7 @@ class LimitedArea:
             stdout=None,
             stderr=None,
             parsl_resource_specification={},
+            install=None,
         ):
             resolution_cells={
                 480: 2562,
@@ -142,6 +143,7 @@ class LimitedArea:
         region,
         stdout=None,
         stderr=None,
+        install=None,
         executors=["service"],
     ):
         return self.get_create_region_task(executors=executors)(
@@ -149,4 +151,5 @@ class LimitedArea:
             region,
             stdout=stdout,
             stderr=stderr,
+            install=install,
         )

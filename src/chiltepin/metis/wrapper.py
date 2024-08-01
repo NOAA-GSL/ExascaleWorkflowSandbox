@@ -111,6 +111,7 @@ class Metis:
             nprocs,
             stdout=None,
             stderr=None,
+            install=None,
         ):
 
             return self.environment + textwrap.dedent(
@@ -176,6 +177,7 @@ class Metis:
         nprocs,
         stdout=None,
         stderr=None,
+        install=None,
         executors=["compute"],
     ):
         return self.get_gpmetis_task(executors=executors)(
@@ -183,5 +185,6 @@ class Metis:
             nprocs,
             stdout=stdout,
             stderr=stderr,
+            install=install,
         )
 

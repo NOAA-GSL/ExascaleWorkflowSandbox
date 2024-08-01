@@ -82,6 +82,7 @@ def configure_htex_executor(name, config):
             nodes_per_block=config["nodes per block"],
             init_blocks=1,
             min_blocks=1,
+            max_blocks=3,
             partition=config["partition"],
             account=config["account"],
             walltime="00:30:00",
