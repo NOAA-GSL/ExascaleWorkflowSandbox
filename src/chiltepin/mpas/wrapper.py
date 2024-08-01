@@ -141,7 +141,7 @@ class MPAS:
             uw mpas_init provisioned_run_directory --cycle {cycle_str} --config-file {config_path} --key-path {key_path} --verbose
             cd {expt_config[key_path]['mpas_init']['run_dir']}
             echo "Run Command: '$PARSL_MPI_PREFIX {self.install_path}/mpas/{self.tag}/exe/init_atmosphere_model'"
-            $PARSL_MPI_PREFIX {self.install_path}/mpas/{self.tag}/exe/init_atmosphere_model
+            $PARSL_MPI_PREFIX --overcommit {self.install_path}/mpas/{self.tag}/exe/init_atmosphere_model
             echo Completed at $(date)
             """
             )
@@ -176,7 +176,7 @@ class MPAS:
             uw mpas provisioned_run_directory --cycle {cycle_str} --config-file {config_path} --key-path {key_path} --verbose
             cd {expt_config[key_path]['mpas']['run_dir']}
             echo "Run Command: '$PARSL_MPI_PREFIX {self.install_path}/mpas/{self.tag}/exe/atmosphere_model'"
-            $PARSL_MPI_PREFIX {self.install_path}/mpas/{self.tag}/exe/atmosphere_model
+            $PARSL_MPI_PREFIX --overcommit {self.install_path}/mpas/{self.tag}/exe/atmosphere_model
             echo Completed at $(date)
             """
             )

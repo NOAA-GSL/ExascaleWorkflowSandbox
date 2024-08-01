@@ -8,6 +8,7 @@ from chiltepin.mpas.wrapper import MPAS
 from chiltepin.wrf.wrapper import WRF
 from chiltepin.wps.wrapper import WPS
 from chiltepin.metis.wrapper import Metis
+from chiltepin.mpas.limited_area.wrapper import LimitedArea
 from chiltepin.utils.chiltepin_get_data import retrieve_data
 import uwtools.api.config as uwconfig
 from datetime import date, timedelta
@@ -23,10 +24,8 @@ def main(user_config_file: Path) -> None:
     experiment_config = uwconfig.get_yaml_config(Path("./default_config.yaml"))
     user_config = uwconfig.get_yaml_config(user_config_file)
     machine = user_config["user"]["platform"]
-    platform_config = uwconfig.get_yaml_config(mpas_app / "parm" / "machines" / f"{machine}.yaml")
 
-    for config in (platform_config, user_config):
-        experiment_config.update_values(config)
+    experiment_config.update_values(user_config)
 
     experiment_config["user"]["mpas_app"] = mpas_app.as_posix()
     experiment_config.dereference()
@@ -51,6 +50,13 @@ def main(user_config_file: Path) -> None:
     environment = environments[machine]
     with parsl.load(resources):
 
+        # Instantiate LimitedArea object
+        limited_area = LimitedArea(
+            environment=environment,
+            install_path=experiment_path,
+            tag="2.1",
+        )
+
         # Instantiate Metis object
         metis = Metis(
             environment=environment,
@@ -71,6 +77,20 @@ def main(user_config_file: Path) -> None:
             install_path=experiment_path,
             tag="cbba5a4",
         )
+
+        # Intall Limited Area
+        install_limited_area = limited_area.install(
+            stdout=experiment_path / "install_limited_area.out",
+            stderr=experiment_path / "install_limited_area.err",
+        ).result()
+
+        # Generate mesh
+        create_region = limited_area.create_region(
+            resolution=120,
+            region="conus",
+            stdout=experiment_path / "create_region.out",
+            stderr=experiment_path / "create_region.err",
+        ).result()
 
         # Intall Metis
         install_metis = metis.install(
@@ -105,8 +125,7 @@ def main(user_config_file: Path) -> None:
         for nprocs in all_nprocs:
             if not (experiment_path / f"{mesh_file_path.name}.part.{nprocs}").is_file():
                 print(f"Creating grid file for {nprocs} procs")
-                copy(src=mesh_file_path, dst=experiment_path)
-                gpm = metis.gpmetis(experiment_path / mesh_file_name, nprocs, stdout=experiment_path / f"gpmetis_{nprocs}.out", stderr= experiment_path / f"gpmetis_{nprocs}.err")
+                gpm = metis.gpmetis(mesh_file_path, nprocs, stdout=experiment_path / f"gpmetis_{nprocs}.out", stderr= experiment_path / f"gpmetis_{nprocs}.err")
                 gpm.result()
 
         # Run the experiment cycles
@@ -163,6 +182,7 @@ def main(user_config_file: Path) -> None:
                                            "create_ics",
                                            stdout=experiment_path / f"mpas_init_ics_{yyyymmddhh}.out",
                                            stderr=experiment_path / f"mpas_init_ics_{yyyymmddhh}.err")
+
             # Wait for initial conditions
             mpas_init_ics.result()
 
