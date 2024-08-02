@@ -33,11 +33,10 @@ import os
 import shutil
 import subprocess
 import sys
-import glob
-from textwrap import dedent
 import time
 import urllib.request
 from copy import deepcopy
+from textwrap import dedent
 
 import yaml
 

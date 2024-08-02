@@ -41,7 +41,6 @@ class WRF:
 
         return bash_app(clone, executors=executors)
 
-
     def get_make_task(
         self,
         executors=["compute"],
@@ -105,7 +104,6 @@ class WRF:
             stderr=stderr,
         )
 
-
     def make(
         self,
         clone=None,
@@ -139,4 +137,3 @@ class WRF:
             stdout=stdout,
             stderr=stderr,
         )
-

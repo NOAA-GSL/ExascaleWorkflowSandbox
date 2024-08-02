@@ -45,7 +45,6 @@ class Metis:
 
         return bash_app(clone, executors=executors)
 
-
     def get_make_task(
         self,
         executors=["service"],
@@ -136,7 +135,6 @@ class Metis:
             stderr=stderr,
         )
 
-
     def make(
         self,
         clone=None,
@@ -187,4 +185,3 @@ class Metis:
             stderr=stderr,
             install=install,
         )
-

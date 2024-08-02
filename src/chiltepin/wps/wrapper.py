@@ -1,10 +1,11 @@
 import textwrap
+from datetime import datetime
 
+import yaml
 from parsl.app.app import bash_app, join_app, python_app
 from uwtools.api import config as uwconfig
 from uwtools.api import ungrib as ungrib_driver
-from datetime import datetime
-import yaml
+
 
 class WPS:
 
@@ -44,7 +45,6 @@ class WPS:
 
         return bash_app(clone, executors=executors)
 
-
     def get_make_task(
         self,
         executors=["compute"],
@@ -58,10 +58,10 @@ class WPS:
             parsl_resource_specification={"num_nodes": 1},
         ):
             if WRF_dir is None:
-                no_wrf="--nowrf"
+                no_wrf = "--nowrf"
             else:
-                no_wrf=""
-            patch_url="https://raw.githubusercontent.com/spack/spack/develop/var/spack/repos/builtin/packages/wps/patches"
+                no_wrf = ""
+            patch_url = "https://raw.githubusercontent.com/spack/spack/develop/var/spack/repos/builtin/packages/wps/patches"
             return self.environment + textwrap.dedent(
                 f"""
             echo Started at $(date)
@@ -144,11 +144,11 @@ class WPS:
             cycle = datetime.fromisoformat(cycle_str)
 
             # Extract driver config from experiment config
-            #expt_config = uwconfig.get_yaml_config(config_path)
-            #expt_config.dereference(context={"cycle": cycle, **expt_config})
+            # expt_config = uwconfig.get_yaml_config(config_path)
+            # expt_config.dereference(context={"cycle": cycle, **expt_config})
 
             # Run ungrib
-            #ungrib_driver.execute(task="run", config=config_path, cycle=cycle,
+            # ungrib_driver.execute(task="run", config=config_path, cycle=cycle,
             #                      key_path=["prepare_grib"])
 
             return self.environment + textwrap.dedent(
@@ -161,7 +161,7 @@ class WPS:
             """
             )
 
-        #return python_app(ungrib, executors=executors)
+        # return python_app(ungrib, executors=executors)
         return bash_app(ungrib, executors=executors)
 
     def clone(
@@ -174,7 +174,6 @@ class WPS:
             stdout=stdout,
             stderr=stderr,
         )
-
 
     def make(
         self,

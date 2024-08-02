@@ -1,8 +1,8 @@
 import textwrap
+from datetime import datetime
 
 from parsl.app.app import bash_app, join_app
 from uwtools.api import config as uwconfig
-from datetime import datetime
 
 
 class MPAS:
@@ -41,7 +41,6 @@ class MPAS:
             )
 
         return bash_app(clone, executors=executors)
-
 
     def get_make_task(
         self,
@@ -149,7 +148,6 @@ class MPAS:
 
         return bash_app(mpas_init, executors=executors)
 
-
     def get_mpas_forecast_task(
         self,
         executors=["mpi"],
@@ -185,7 +183,6 @@ class MPAS:
 
         return bash_app(mpas_forecast, executors=executors)
 
-
     def clone(
         self,
         stdout=None,
@@ -196,7 +193,6 @@ class MPAS:
             stdout=stdout,
             stderr=stderr,
         )
-
 
     def make(
         self,
@@ -256,7 +252,6 @@ class MPAS:
             install=install,
             parsl_resource_specification=parsl_resource_specification,
         )
-
 
     def mpas_forecast(
         self,

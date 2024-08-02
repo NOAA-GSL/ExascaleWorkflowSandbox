@@ -1,19 +1,20 @@
+import pathlib
 import textwrap
 
 import parsl
-from parsl.app.app import bash_app 
-import pathlib
+from parsl.app.app import bash_app
+
 
 @bash_app(executors=["service"])
 def retrieve_data(
-        stdout=None,
-        stderr=None,
-        ics_or_lbcs="ICS",
-        time_offset_hrs=0,
-        fcst_len=0,
-        lbc_intvl_hrs=6,
-        yyyymmddhh=None,
-        output_path=".",
+    stdout=None,
+    stderr=None,
+    ics_or_lbcs="ICS",
+    time_offset_hrs=0,
+    fcst_len=0,
+    lbc_intvl_hrs=6,
+    yyyymmddhh=None,
+    output_path=".",
 ):
 
     # Calculate args for file retrieval script
@@ -22,7 +23,7 @@ def retrieve_data(
     if ics_or_lbcs == "ICS":
         fcst_hours = time_offset_hrs
         if time_offset_hrs == 0:
-            file_set="anl"
+            file_set = "anl"
     else:
         first_time = time_offset_hrs + lbc_intvl_hrs
         last_time = time_offset_hrs + fcst_len

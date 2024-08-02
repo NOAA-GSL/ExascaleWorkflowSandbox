@@ -1,8 +1,8 @@
 import textwrap
+from datetime import datetime
 
 from parsl.app.app import bash_app, join_app
 from uwtools.api import config as uwconfig
-from datetime import datetime
 
 
 class LimitedArea:
@@ -43,7 +43,6 @@ class LimitedArea:
 
         return bash_app(clone, executors=executors)
 
-
     def get_install_task(
         self,
         clone_executors=["service"],
@@ -74,7 +73,7 @@ class LimitedArea:
             parsl_resource_specification={},
             install=None,
         ):
-            resolution_cells={
+            resolution_cells = {
                 480: 2562,
                 384: 4002,
                 240: 10242,
@@ -92,7 +91,7 @@ class LimitedArea:
                 3.75: 41943042,
                 3: 65536002,
             }
-            static_url="https://www2.mmm.ucar.edu/projects/mpas/atmosphere_meshes"
+            static_url = "https://www2.mmm.ucar.edu/projects/mpas/atmosphere_meshes"
 
             return self.environment + textwrap.dedent(
                 f"""
@@ -111,7 +110,6 @@ class LimitedArea:
             )
 
         return bash_app(create_region, executors=executors)
-
 
     def clone(
         self,
