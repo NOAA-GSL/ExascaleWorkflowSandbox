@@ -1,21 +1,21 @@
+import argparse
 import os
+from datetime import date, timedelta
+from pathlib import Path
+from shutil import copy
 
 import parsl
 import pytest
+import uwtools.api.config as uwconfig
 
 import chiltepin.configure
-from chiltepin.mpas.wrapper import MPAS
-from chiltepin.wrf.wrapper import WRF
-from chiltepin.wps.wrapper import WPS
 from chiltepin.metis.wrapper import Metis
 from chiltepin.mpas.limited_area.wrapper import LimitedArea
+from chiltepin.mpas.wrapper import MPAS
 from chiltepin.utils.chiltepin_get_data import retrieve_data
-import uwtools.api.config as uwconfig
-from datetime import date, timedelta
+from chiltepin.wps.wrapper import WPS
+from chiltepin.wrf.wrapper import WRF
 
-import argparse
-from pathlib import Path
-from shutil import copy
 
 def main(user_config_file: Path) -> None:
 
@@ -118,23 +118,29 @@ def main(user_config_file: Path) -> None:
         all_nprocs = (
             experiment_config[sect][driver]["execution"]["batchargs"]["cores"]
             for sect, driver in (
-                    ("create_ics", "mpas_init"),
-                    ("create_lbcs", "mpas_init"),
-                    ("forecast", "mpas"),
+                ("create_ics", "mpas_init"),
+                ("create_lbcs", "mpas_init"),
+                ("forecast", "mpas"),
             )
         )
         for nprocs in all_nprocs:
             if not (experiment_path / f"{mesh_file_path.name}.part.{nprocs}").is_file():
                 print(f"Creating grid file for {nprocs} procs")
-                gpm = metis.gpmetis(mesh_file_path, nprocs, stdout=experiment_path / f"gpmetis_{nprocs}.out", stderr= experiment_path / f"gpmetis_{nprocs}.err", install=install_metis)
+                gpm = metis.gpmetis(
+                    mesh_file_path,
+                    nprocs,
+                    stdout=experiment_path / f"gpmetis_{nprocs}.out",
+                    stderr=experiment_path / f"gpmetis_{nprocs}.err",
+                    install=install_metis,
+                )
 
         # Run the experiment cycles
         cycle = experiment_config["user"]["first_cycle"]
         while cycle <= experiment_config["user"]["last_cycle"]:
 
             # Create string representations of the cycle
-            yyyymmddhh=cycle.strftime("%Y%m%d%H")
-            cycle_iso=cycle.strftime("%Y-%m-%dT%H:%M:%S")
+            yyyymmddhh = cycle.strftime("%Y%m%d%H")
+            cycle_iso = cycle.strftime("%Y-%m-%dT%H:%M:%S")
 
             # Resolve config for this cycle
             experiment_config.dereference(context={"cycle": cycle, **experiment_config})
@@ -142,70 +148,82 @@ def main(user_config_file: Path) -> None:
             # Get the ics data
             get_ics_data_config = experiment_config["get_ics_data"]
             get_ics_dir = Path(get_ics_data_config["run_dir"])
-            get_ics_data = retrieve_data(stdout=experiment_path / f"get_ics_{yyyymmddhh}.out",
-                                         stderr=experiment_path / f"get_ics_{yyyymmddhh}.err",
-                                         ics_or_lbcs="ICS",
-                                         time_offset_hrs=0,
-                                         fcst_len=24,
-                                         lbc_intvl_hrs=6,
-                                         yyyymmddhh=yyyymmddhh,
-                                         output_path=get_ics_dir)
+            get_ics_data = retrieve_data(
+                stdout=experiment_path / f"get_ics_{yyyymmddhh}.out",
+                stderr=experiment_path / f"get_ics_{yyyymmddhh}.err",
+                ics_or_lbcs="ICS",
+                time_offset_hrs=0,
+                fcst_len=24,
+                lbc_intvl_hrs=6,
+                yyyymmddhh=yyyymmddhh,
+                output_path=get_ics_dir,
+            )
 
             # Get the lbcs data
             get_lbcs_data_config = experiment_config["get_lbcs_data"]
             get_lbcs_dir = Path(get_lbcs_data_config["run_dir"])
-            get_lbcs_data = retrieve_data(stdout=experiment_path / f"get_lbcs_{yyyymmddhh}.out",
-                                          stderr=experiment_path / f"get_lbcs_{yyyymmddhh}.err",
-                                          ics_or_lbcs="LBCS",
-                                          time_offset_hrs=0,
-                                          fcst_len=24,
-                                          lbc_intvl_hrs=6,
-                                          yyyymmddhh=yyyymmddhh,
-                                          output_path=get_lbcs_dir)
+            get_lbcs_data = retrieve_data(
+                stdout=experiment_path / f"get_lbcs_{yyyymmddhh}.out",
+                stderr=experiment_path / f"get_lbcs_{yyyymmddhh}.err",
+                ics_or_lbcs="LBCS",
+                time_offset_hrs=0,
+                fcst_len=24,
+                lbc_intvl_hrs=6,
+                yyyymmddhh=yyyymmddhh,
+                output_path=get_lbcs_dir,
+            )
 
             # Wait for the data to be retrieved
             get_ics_data.result()
             get_lbcs_data.result()
 
             # Run ungrib
-            ungrib = wps.ungrib(experiment_file,
-                                cycle_iso,
-                                stdout=experiment_path / f"ungrib_{yyyymmddhh}.out",
-                                stderr=experiment_path / f"ungrib_{yyyymmddhh}.err",
-                                install=install_wps)
+            ungrib = wps.ungrib(
+                experiment_file,
+                cycle_iso,
+                stdout=experiment_path / f"ungrib_{yyyymmddhh}.out",
+                stderr=experiment_path / f"ungrib_{yyyymmddhh}.err",
+                install=install_wps,
+            )
 
             # Wait for ungrib to complete
             ungrib.result()
 
             # Create initial conditions
-            mpas_init_ics = mpas.mpas_init(experiment_file,
-                                           cycle_iso,
-                                           "create_ics",
-                                           stdout=experiment_path / f"mpas_init_ics_{yyyymmddhh}.out",
-                                           stderr=experiment_path / f"mpas_init_ics_{yyyymmddhh}.err",
-                                           install=install_mpas)
+            mpas_init_ics = mpas.mpas_init(
+                experiment_file,
+                cycle_iso,
+                "create_ics",
+                stdout=experiment_path / f"mpas_init_ics_{yyyymmddhh}.out",
+                stderr=experiment_path / f"mpas_init_ics_{yyyymmddhh}.err",
+                install=install_mpas,
+            )
 
             # Wait for initial conditions
             mpas_init_ics.result()
 
             # Create lateral boundary conditions
-            mpas_init_lbcs = mpas.mpas_init(experiment_file,
-                                            cycle_iso,
-                                            "create_lbcs",
-                                            stdout=experiment_path / f"mpas_init_lbcs_{yyyymmddhh}.out",
-                                            stderr=experiment_path / f"mpas_init_lbcs_{yyyymmddhh}.err",
-                                            install=install_mpas)
+            mpas_init_lbcs = mpas.mpas_init(
+                experiment_file,
+                cycle_iso,
+                "create_lbcs",
+                stdout=experiment_path / f"mpas_init_lbcs_{yyyymmddhh}.out",
+                stderr=experiment_path / f"mpas_init_lbcs_{yyyymmddhh}.err",
+                install=install_mpas,
+            )
 
             # Wait for lateral boundary conditions
             mpas_init_lbcs.result()
 
             # Run the forecast
-            mpas_forecast = mpas.mpas_forecast(experiment_file,
-                                               cycle_iso,
-                                               "forecast",
-                                               stdout=experiment_path / f"mpas_forecast_{yyyymmddhh}.out",
-                                               stderr=experiment_path / f"mpas_forecast_{yyyymmddhh}.err",
-                                               install=install_mpas)
+            mpas_forecast = mpas.mpas_forecast(
+                experiment_file,
+                cycle_iso,
+                "forecast",
+                stdout=experiment_path / f"mpas_forecast_{yyyymmddhh}.out",
+                stderr=experiment_path / f"mpas_forecast_{yyyymmddhh}.err",
+                install=install_mpas,
+            )
 
             # Wait for the forecast
             mpas_forecast.result()
