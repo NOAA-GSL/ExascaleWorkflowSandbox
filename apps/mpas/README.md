@@ -23,7 +23,7 @@ Edit `user_config.yaml` to set the platform and experiment directory for running
 
 # 2. Instructions for building the model
 
-# 3. Instructions for running the MPAS AppEdit `ush/user_config.yaml` to set the platform and experiment directory for running theyour runs.
+# 3. Instructions for running the MPAS App
 
 ```
 cd bin
