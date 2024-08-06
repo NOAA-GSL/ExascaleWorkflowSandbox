@@ -21,7 +21,7 @@ def main(user_config_file: Path) -> None:
 
     # Set up the experiment
     mpas_app = Path(os.path.dirname(__file__)).parent.absolute()
-    experiment_config = uwconfig.get_yaml_config(Path("./default_config.yaml"))
+    experiment_config = uwconfig.get_yaml_config(mpas_app / "config" / "default_config.yaml")
     user_config = uwconfig.get_yaml_config(user_config_file)
     machine = user_config["user"]["platform"]
 
@@ -44,7 +44,7 @@ def main(user_config_file: Path) -> None:
     )
 
     # Load Parsl resource configs
-    resource_config_file = mpas_app / "parm" / "resources.yaml"
+    resource_config_file = mpas_app / "config" / "resources.yaml"
     resource_config = chiltepin.configure.parse_file(resource_config_file)
     resources, environments = chiltepin.configure.factory(resource_config, machine)
     environment = environments[machine]
