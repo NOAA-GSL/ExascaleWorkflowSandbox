@@ -10,13 +10,13 @@ App for building, configuring, and running the MPAS forecast model.
 
 # Instructions for configuring the model
 
-`default_config.yaml` is the default configuration used to run the MPAS App. `default_config.yaml` is located in the `config` directory of the MPAS App.
+- `default_config.yaml` is the default configuration used to run the MPAS App. `default_config.yaml` is located in the `config` directory of the MPAS App.
 
-`user_config.yaml` is used to update the default configuration. The `user_config.yaml` will be used to render the `default_config.yaml` provided by the user. The `experiment.py` script will use the configuration scripts to run the experiment. Both `user_config.yaml` and `experiment.py` are located in the `config` directory.
+- `user_config.yaml` is used to update the default configuration. The `user_config.yaml` will be used to render the `default_config.yaml` provided by the user. The `experiment.py` script will use the configuration scripts to run the experiment. Both `user_config.yaml` and `experiment.py` are located in the `config` directory.
 
-- Edit `user_config.yaml` to set the platform and experiment directory for running the forecast.
+    - Edit `user_config.yaml` to set the platform and experiment directory for running the forecast.
 
-`resources.yaml` provides platform details and contains `environment` commands, allowing users to update the default `environment`, providing flexibility to use additional modules.
+- `resources.yaml` provides platform details and contains `environment` commands, allowing users to update the default `environment`, providing flexibility to use additional modules.
 
 # Instructions for building the model
 
