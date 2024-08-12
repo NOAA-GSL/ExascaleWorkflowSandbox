@@ -48,7 +48,7 @@ Run the `mpas_forecast` task.
 
 ```
 cd bin
-python experiment.py ../config/user_config.yaml
+python experiment.py ../config/user_config.yaml &
 ```
 
 Monitor runs with `squeue` and viewing logs in experiment directory.
