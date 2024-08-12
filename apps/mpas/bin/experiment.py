@@ -24,6 +24,7 @@ def main(user_config_file: Path) -> None:
     experiment_config = uwconfig.get_yaml_config(mpas_app / "config" / "default_config.yaml")
     user_config = uwconfig.get_yaml_config(user_config_file)
     machine = user_config["user"]["platform"]
+    user_resolution = user_config["user"]["resolution"]
 
     experiment_config.update_values(user_config)
 
@@ -105,7 +106,7 @@ def main(user_config_file: Path) -> None:
 
         # Generate mesh
         create_region = limited_area.create_region(
-            resolution=120,
+            resolution=user_resolution,
             region="conus",
             stdout=experiment_path / "create_region.out",
             stderr=experiment_path / "create_region.err",

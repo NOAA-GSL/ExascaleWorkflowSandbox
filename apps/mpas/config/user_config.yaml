@@ -1,3 +1,4 @@
 user:
-  experiment_dir: /work/noaa/gsd-hpcs/charrop/hercules/SENA/ExascaleWorkflowSandbox.mpas-app-skeleton/apps/experiments/test
+  experiment_dir: /work/noaa/gsd-hpcs/nbharwani/SENA/exp_dir/ExascaleWorkflowSandbox.mpas-app-skeleton 
   platform: hercules
+  resolution: 240 
