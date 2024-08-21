@@ -193,7 +193,6 @@ jobs:
 
   remove-label:
     if: always()
-    if: ${{ github.event.label.name == 'Test-MPAS-App' }}
     runs-on: ubuntu-latest
     needs: [test-mpas-app-amd64 test-mpas-app-arm64]
     timeout-minutes: 360
