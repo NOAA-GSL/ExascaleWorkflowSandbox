@@ -192,9 +192,9 @@ jobs:
           docker compose -f docker-compose.yml down
 
   remove-label:
+    if: always()
     if: ${{ github.event.label.name == 'Test-MPAS-App' }}
     runs-on: ubuntu-latest
-    if: always()
     needs: [test-mpas-app-amd64 test-mpas-app-arm64]
     timeout-minutes: 360
     permissions:
