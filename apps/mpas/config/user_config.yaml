@@ -1,4 +1,4 @@
 user:
-  experiment_dir: /work/noaa/gsd-hpcs/nbharwani/SENA/exp_dir/ExascaleWorkflowSandbox.mpas-app-skeleton 
-  platform: hercules
+  experiment_dir: /home/admin/chiltepin/apps/mpas/experiments/test
+  platform: chiltepin
   resolution: 240 
