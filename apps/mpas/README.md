@@ -2,30 +2,35 @@
 
 App for building, configuring, and running the MPAS forecast model.
 
+The App runs the workflow depicted below:
+
+![Diagram of MPAS App workflow](./assets/mpas_app_workflow.png)
+
 # Steps
 
-1. Configuring the Model
-2. Building the Model
-3. Running the Model
+1. Configure the Workflow
+2. Run the Workflow
 
-# Instructions for configuring the model
+# Instructions for Configuring the workflow
 
-- `default_config.yaml` is the default configuration used to run the MPAS App. `default_config.yaml` is located in the `config` directory of the MPAS App.
+- `config/default_config.yaml` is the default configuration used to run the MPAS App.
 
-- `user_config.yaml` is used to update the default configuration. The `user_config.yaml` will be used to render the `default_config.yaml` provided by the user. The `experiment.py` script will use the configuration scripts to run the experiment. Both `user_config.yaml` and `experiment.py` are located in the `config` directory.
+- `config/user_config.yaml` is used to override the default configuration with select customizations.
 
-    - Edit `user_config.yaml` to set the platform and experiment directory for running the forecast.
+    - Edit `user_config.yaml` to set the platform, experiment directory, and model resolution, for running the forecast.
 
 - `resources.yaml` provides platform details and contains `environment` commands, allowing users to update the default `environment`, providing flexibility to use additional modules.
 
-# Instructions for building the model
-
-`experiment.py` will contain the content to build and run the forecast. Building the forecast will cover several steps including:
-
-1. Build the experiment directory using the supplied `default_config.yaml` and `user_config.yaml`.
-2. Fetch the Metis, WPS, MPAS packages automatically and install packages into the experiment directory provided from the `user_config.yaml`. These packages are needed to run the experiment to generate the forecast.
-
 # Instructions for running the MPAS App
+
+Once `user_config.yaml` is updated with user settings, run the App:
+
+```
+cd bin
+python experiment.py ../config/user_config.yaml &
+```
+
+Putting the run command in the background allows you to use the shell for monitoring workflow progress.
 
 ## Running the ungrib component
 
