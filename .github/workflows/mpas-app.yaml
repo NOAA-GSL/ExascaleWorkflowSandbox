@@ -22,9 +22,9 @@ jobs:
         name: Format Check
         run:  |
           pip install flake8 black isort
-          flake8 src tests
-          black src tests --check --diff
-          isort src tests --check --diff --profile black
+          flake8 apps/mpas/bin
+          black apps/mpas/bin --check --diff
+          isort apps/mpas/bin --check --diff --profile black
 
 
   test-mpas-app:
@@ -78,7 +78,7 @@ jobs:
       -
         name: Run test suite
         run: |
-          docker exec frontend bash -l -c "cd work/apps/mpas/bin ; PYTHONPATH=../../../ ./experiment.py ../config/user_config.yaml"
+          docker exec frontend bash -l -c "cd work/apps/mpas/bin ; PYTHONPATH=../../../ python experiment.py ../config/user_config.yaml"
       -
         name: Debug session
         if: ${{ failure() }}

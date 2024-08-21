@@ -1,11 +1,9 @@
 import argparse
 import os
-from datetime import date, timedelta
+from datetime import timedelta
 from pathlib import Path
-from shutil import copy
 
 import parsl
-import pytest
 import uwtools.api.config as uwconfig
 
 import chiltepin.configure
@@ -14,14 +12,15 @@ from chiltepin.mpas.limited_area.wrapper import LimitedArea
 from chiltepin.mpas.wrapper import MPAS
 from chiltepin.utils.chiltepin_get_data import retrieve_data
 from chiltepin.wps.wrapper import WPS
-from chiltepin.wrf.wrapper import WRF
 
 
 def main(user_config_file: Path) -> None:
 
     # Set up the experiment
     mpas_app = Path(os.path.dirname(__file__)).parent.absolute()
-    experiment_config = uwconfig.get_yaml_config(mpas_app / "config" / "default_config.yaml")
+    experiment_config = uwconfig.get_yaml_config(
+        mpas_app / "config" / "default_config.yaml"
+    )
     user_config = uwconfig.get_yaml_config(user_config_file)
     machine = user_config["user"]["platform"]
     user_resolution = user_config["user"]["resolution"]
@@ -110,8 +109,9 @@ def main(user_config_file: Path) -> None:
             region="conus",
             stdout=experiment_path / "create_region.out",
             stderr=experiment_path / "create_region.err",
-            install=limited_area,
-        ).result()
+            install=install_limited_area,
+        )
+        create_region.result()
 
         # Create the grid files
         mesh_file_name = f"{experiment_config['user']['mesh_label']}.graph.info"
@@ -124,16 +124,20 @@ def main(user_config_file: Path) -> None:
                 ("forecast", "mpas"),
             )
         )
+        gpms = []
         for nprocs in all_nprocs:
             if not (experiment_path / f"{mesh_file_path.name}.part.{nprocs}").is_file():
-                print(f"Creating grid file for {nprocs} procs")
-                gpm = metis.gpmetis(
-                    mesh_file_path,
-                    nprocs,
-                    stdout=experiment_path / f"gpmetis_{nprocs}.out",
-                    stderr=experiment_path / f"gpmetis_{nprocs}.err",
-                    install=install_metis,
+                gpms.append(
+                    metis.gpmetis(
+                        mesh_file_path,
+                        nprocs,
+                        stdout=experiment_path / f"gpmetis_{nprocs}.out",
+                        stderr=experiment_path / f"gpmetis_{nprocs}.err",
+                        install=install_metis,
+                    )
                 )
+        for gpm in gpms:
+            gpm.result()
 
         # Run the experiment cycles
         cycle = experiment_config["user"]["first_cycle"]
