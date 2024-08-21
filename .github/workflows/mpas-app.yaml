@@ -79,7 +79,7 @@ jobs:
         name: Run test suite
         run: |
           docker exec frontend bash -l -c "cd work/apps/mpas/bin ; PYTHONPATH=../../../ python experiment.py ../config/user_config.yaml"
-	  docker exec frontend bash -l -c "cd work/apps/mpas/experiments/test ; ls -lrt ; tail 2023091500/forecast/log.atmosphere.0000.out"
+          docker exec frontend bash -l -c "cd work/apps/mpas/experiments/test ; ls -lrt ; tail 2023091500/forecast/log.atmosphere.0000.out"
       -
         name: Debug session
         if: ${{ failure() }}
