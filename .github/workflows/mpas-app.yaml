@@ -197,8 +197,7 @@ jobs:
     needs: [test-mpas-app-amd64, test-mpas-app-arm64]
     timeout-minutes: 360
     permissions:
-      packages: write
-      contents: read
+      pull-requests: write
     steps:
       -
         # Beta ARM runners do not have Docker installed
