@@ -98,7 +98,7 @@ jobs:
   test-mpas-app-arm64:
     if: ${{ github.event.label.name == 'Test-MPAS-App' }}
     runs-on: LinuxARM64-16core-64G-600Gb
-    timeout-minutes: 360
+    timeout-minutes: 40
     permissions:
       packages: write
       contents: read
@@ -173,6 +173,7 @@ jobs:
         run: docker exec frontend bash -l -c "cd work ; pip install -e ."
       -
         name: Run mpas workflow
+        timeout-minutes: 30
         run: |
           docker exec frontend bash -l -c "cd work/apps/mpas/bin ; PYTHONPATH=../../../ python experiment.py ../config/user_config.yaml"
           docker exec frontend bash -l -c "cd work/apps/mpas/experiments/test ; ls -lrt ; tail 2023091500/forecast/log.atmosphere.0000.out"
