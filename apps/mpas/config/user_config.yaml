@@ -1,4 +1,4 @@
 user:
-  experiment_dir: /home/admin/chiltepin/apps/mpas/experiments/test
+  experiment_dir: /home/admin/work/apps/mpas/experiments/test
   platform: chiltepin
   resolution: 240 
