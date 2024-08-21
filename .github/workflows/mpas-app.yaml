@@ -1,4 +1,4 @@
-name: ExascaleSandboxTests
+name: MPAS App
 
 on:
   push:
@@ -27,7 +27,7 @@ jobs:
           isort src tests --check --diff --profile black
 
 
-  build-and-test-chiltepin:
+  test-mpas-app:
     runs-on: ubuntu2204-16c-64g-600ssd
     timeout-minutes: 360
     permissions:
