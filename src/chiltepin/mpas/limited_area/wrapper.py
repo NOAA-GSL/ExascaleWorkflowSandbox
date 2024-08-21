@@ -1,8 +1,6 @@
 import textwrap
-from datetime import datetime
 
 from parsl.app.app import bash_app, join_app
-from uwtools.api import config as uwconfig
 
 
 class LimitedArea:
@@ -104,7 +102,9 @@ class LimitedArea:
             wget {static_url}/x1.{resolution_cells[resolution]}_static.tar.gz
             tar -xzf x1.{resolution_cells[resolution]}_static.tar.gz
             rm -rf x1.{resolution_cells[resolution]}_static.tar.gz
-            {self.install_path}/mpas-limited-area/{self.tag}/create_region {self.install_path}/mpas-limited-area/{self.tag}/docs/points-examples/{region}.custom.pts x1.{resolution_cells[resolution]}.static.nc
+            {self.install_path}/mpas-limited-area/{self.tag}/create_region \
+                {self.install_path}/mpas-limited-area/{self.tag}/docs/points-examples/{region}.custom.pts \
+                x1.{resolution_cells[resolution]}.static.nc
             echo Completed at $(date)
             """
             )

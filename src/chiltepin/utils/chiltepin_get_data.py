@@ -1,7 +1,6 @@
 import pathlib
 import textwrap
 
-import parsl
 from parsl.app.app import bash_app
 
 

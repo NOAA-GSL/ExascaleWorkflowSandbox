@@ -53,7 +53,8 @@ class MPAS:
             clone=None,
             parsl_resource_specification={"num_nodes": 1},
         ):
-            patch_url = "https://raw.githubusercontent.com/NOAA-GSL/ExascaleWorkflowSandbox/feature/mpas-app-skeleton/apps/mpas/patches"
+            repo_url = "https://raw.githubusercontent.com/NOAA-GSL/ExascaleWorkflowSandbox/"
+            patch_url = repo_url + "feature/mpas-app-skeleton/apps/mpas/patches"
             return self.environment + textwrap.dedent(
                 f"""
             echo Started at $(date)
@@ -138,7 +139,8 @@ class MPAS:
             echo Started at $(date)
             echo Executing on $(hostname)
             export PATH=$PATH:.
-            uw mpas_init provisioned_run_directory --cycle {cycle_str} --config-file {config_path} --key-path {key_path} --verbose
+            uw mpas_init provisioned_run_directory --cycle {cycle_str} \
+               --config-file {config_path} --key-path {key_path} --verbose
             cd {expt_config[key_path]['mpas_init']['run_dir']}
             echo "Run Command: '$PARSL_MPI_PREFIX {self.install_path}/mpas/{self.tag}/exe/init_atmosphere_model'"
             $PARSL_MPI_PREFIX --overcommit {self.install_path}/mpas/{self.tag}/exe/init_atmosphere_model
@@ -173,7 +175,8 @@ class MPAS:
             echo Started at $(date)
             echo Executing on $(hostname)
             export PATH=$PATH:.
-            uw mpas provisioned_run_directory --cycle {cycle_str} --config-file {config_path} --key-path {key_path} --verbose
+            uw mpas provisioned_run_directory --cycle {cycle_str} \
+                --config-file {config_path} --key-path {key_path} --verbose
             cd {expt_config[key_path]['mpas']['run_dir']}
             echo "Run Command: '$PARSL_MPI_PREFIX {self.install_path}/mpas/{self.tag}/exe/atmosphere_model'"
             $PARSL_MPI_PREFIX --overcommit {self.install_path}/mpas/{self.tag}/exe/atmosphere_model

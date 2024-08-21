@@ -143,7 +143,7 @@ def download_file(url):
     except subprocess.CalledProcessError as err:
         logging.info(err)
         return False
-    except:
+    except Exception:
         logging.error("Command failed!")
         raise
 
@@ -581,7 +581,7 @@ def hpss_requested_files(cla, file_names, store_specs, members=-1, ens_group=-1)
                         check=False,
                         shell=True,
                     )
-                except:
+                except Exception:
                     if r.returncode == 11:
                         # Continue if files missing from archive; we will check later if this is
                         # an acceptable condition

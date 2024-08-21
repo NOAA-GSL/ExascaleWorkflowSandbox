@@ -47,22 +47,6 @@ jobs:
           min-versions-to-keep: 0
           delete-only-untagged-versions: 'true'
       -
-        name: Remove untagged versions of exascaleworkflowsandbox/flux-cache-amd64
-        uses: actions/delete-package-versions@v5
-        with: 
-          package-name: 'exascaleworkflowsandbox/flux-cache-amd64'
-          package-type: 'container'
-          min-versions-to-keep: 0
-          delete-only-untagged-versions: 'true'
-      -
-        name: Remove untagged versions of exascaleworkflowsandbox/flux-cache-arm64
-        uses: actions/delete-package-versions@v5
-        with: 
-          package-name: 'exascaleworkflowsandbox/flux-cache-arm64'
-          package-type: 'container'
-          min-versions-to-keep: 0
-          delete-only-untagged-versions: 'true'
-      -
         name: Remove untagged versions of exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64
         uses: actions/delete-package-versions@v5
         with: 

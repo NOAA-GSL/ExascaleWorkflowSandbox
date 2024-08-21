@@ -1,10 +1,6 @@
 import textwrap
-from datetime import datetime
 
-import yaml
-from parsl.app.app import bash_app, join_app, python_app
-from uwtools.api import config as uwconfig
-from uwtools.api import ungrib as ungrib_driver
+from parsl.app.app import bash_app, join_app
 
 
 class WPS:
@@ -61,7 +57,8 @@ class WPS:
                 no_wrf = "--nowrf"
             else:
                 no_wrf = ""
-            patch_url = "https://raw.githubusercontent.com/spack/spack/develop/var/spack/repos/builtin/packages/wps/patches"
+            repo_url = "https://raw.githubusercontent.com/spack/"
+            patch_url = repo_url + "spack/develop/var/spack/repos/builtin/packages/wps/patches"
             return self.environment + textwrap.dedent(
                 f"""
             echo Started at $(date)
@@ -140,16 +137,6 @@ class WPS:
             stderr=None,
             install=None,
         ):
-
-            cycle = datetime.fromisoformat(cycle_str)
-
-            # Extract driver config from experiment config
-            # expt_config = uwconfig.get_yaml_config(config_path)
-            # expt_config.dereference(context={"cycle": cycle, **expt_config})
-
-            # Run ungrib
-            # ungrib_driver.execute(task="run", config=config_path, cycle=cycle,
-            #                      key_path=["prepare_grib"])
 
             return self.environment + textwrap.dedent(
                 f"""
