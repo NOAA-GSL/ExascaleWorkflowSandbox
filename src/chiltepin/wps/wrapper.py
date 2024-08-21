@@ -58,7 +58,9 @@ class WPS:
             else:
                 no_wrf = ""
             repo_url = "https://raw.githubusercontent.com/spack/"
-            patch_url = repo_url + "spack/develop/var/spack/repos/builtin/packages/wps/patches"
+            patch_url = (
+                repo_url + "spack/develop/var/spack/repos/builtin/packages/wps/patches"
+            )
             return self.environment + textwrap.dedent(
                 f"""
             echo Started at $(date)

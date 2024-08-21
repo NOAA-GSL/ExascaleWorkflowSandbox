@@ -53,7 +53,9 @@ class MPAS:
             clone=None,
             parsl_resource_specification={"num_nodes": 1},
         ):
-            repo_url = "https://raw.githubusercontent.com/NOAA-GSL/ExascaleWorkflowSandbox/"
+            repo_url = (
+                "https://raw.githubusercontent.com/NOAA-GSL/ExascaleWorkflowSandbox/"
+            )
             patch_url = repo_url + "feature/mpas-app-skeleton/apps/mpas/patches"
             return self.environment + textwrap.dedent(
                 f"""
