@@ -1,10 +1,9 @@
 name: MPAS App
 
 on:
-  push:
-    branches: [ develop, main ]
   pull_request:
     branches: [ develop, main ]
+    types: [ labeled ]
   workflow_dispatch:
 
 env:
@@ -27,7 +26,8 @@ jobs:
           isort apps/mpas/bin --check --diff --profile black
 
 
-  test-mpas-app:
+  test-mpas-app-amd64:
+    if: ${{ github.event.label.name == 'Test-MPAS-App' }}
     runs-on: ubuntu2204-16c-64g-600ssd
     timeout-minutes: 360
     permissions:
@@ -76,7 +76,7 @@ jobs:
         name: Install chiltepin package
         run: docker exec frontend bash -l -c "cd work ; pip install -e ."
       -
-        name: Run test suite
+        name: Run mpas workflow
         run: |
           docker exec frontend bash -l -c "cd work/apps/mpas/bin ; PYTHONPATH=../../../ python experiment.py ../config/user_config.yaml"
           docker exec frontend bash -l -c "cd work/apps/mpas/experiments/test ; ls -lrt ; tail 2023091500/forecast/log.atmosphere.0000.out"
@@ -94,3 +94,119 @@ jobs:
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
           docker compose -f docker-compose.yml down
+
+  test-mpas-app-arm64:
+    if: ${{ github.event.label.name == 'Test-MPAS-App' }}
+    runs-on: LinuxARM64-16core-64G-600Gb
+    timeout-minutes: 360
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      -
+        # Beta ARM runners do not have Docker installed
+        name: Install Docker
+        run: |
+           # Uninstall incompatible packages
+           for pkg in docker.io containerd runc; do sudo apt-get remove $pkg; done
+           # Add Docker's official GPG key:
+           sudo apt-get update
+           sudo apt-get install ca-certificates curl
+           sudo install -m 0755 -d /etc/apt/keyrings
+           sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+           sudo chmod a+r /etc/apt/keyrings/docker.asc
+           # Add the repository to Apt sources:
+           echo \
+             "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+             $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+             sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+           sudo apt-get update -y
+           # Install docker packages
+           sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+           # Allow runner use to run docker without sudo
+           sudo usermod -aG docker $USER
+           sudo apt-get install acl
+           sudo setfacl --modify user:$USER:rw /var/run/docker.sock
+      -
+        name: Test Docker Installation
+        run: docker run hello-world
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      -
+        name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
+      -
+        name: Prune pre-loaded GHA docker images
+        run: |
+          docker images
+          docker image prune -a -f
+          docker images
+      -
+        name: Start Slurm cluster containers
+        run: |
+          cd docker
+          export DOCKER_CLIENT_TIMEOUT=600
+          export COMPOSE_HTTP_TIMEOUT=600
+          docker compose version
+          docker compose config
+          docker images
+          docker ps -a
+          docker compose -f docker-compose.yml up -d --no-build
+      -
+        name: Copy test files to work directory
+        run: |
+          docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
+      -
+        name: Install chiltepin package
+        run: docker exec frontend bash -l -c "cd work ; pip install -e ."
+      -
+        name: Run mpas workflow
+        run: |
+          docker exec frontend bash -l -c "cd work/apps/mpas/bin ; PYTHONPATH=../../../ python experiment.py ../config/user_config.yaml"
+          docker exec frontend bash -l -c "cd work/apps/mpas/experiments/test ; ls -lrt ; tail 2023091500/forecast/log.atmosphere.0000.out"
+      -
+        name: Debug session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 60
+        with:
+          limit-access-to-actor: true
+      -
+        name: Shut down Slurm cluster containers
+        run: |
+          cd docker
+          export DOCKER_CLIENT_TIMEOUT=600
+          export COMPOSE_HTTP_TIMEOUT=600
+          docker compose -f docker-compose.yml down
+
+  remove-label:
+    if: ${{ github.event.label.name == 'Test-MPAS-App' }}
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [test-mpas-app-amd64 test-mpas-app-arm64]
+    timeout-minutes: 360
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      -
+        # Beta ARM runners do not have Docker installed
+        name: Remove Test-MPAS-App label
+        run: |
+          curl --silent --fail-with-body \
+          -X DELETE \
+          -H 'Accept: application/vnd.github.v3+json' \
+          -H 'Authorization: token ${{ github.token }}' \
+          'https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/labels/Test-MPAS-App'

@@ -7,7 +7,7 @@ preprocessing and forecast steps, the workflow also downloads and builds the pac
 steps.  This includes MPAS_Limited_Area, Metis, WPS (for ungrib), and MPAS. The app also downloads
 and generates the required MPAS mesh files.  In this sense the App is self-contained and does not
 rely on installations of gpmetis, ungrib, or MPAS.  However, the software stack
-(such as [spack-stack](https://spack-stack.readthedocs.io/en/1.4.0/PreConfiguredSites.html#) required
+(such as [spack-stack](https://spack-stack.readthedocs.io/en/1.4.0/PreConfiguredSites.html#)) required
 for building those packages must be pre-installed for those builds to succeed.
 
 ![Diagram of MPAS App workflow](./assets/mpas_app_workflow.png)
