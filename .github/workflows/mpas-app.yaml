@@ -11,7 +11,7 @@ env:
   AWS_REGION: us-east-2
 
 jobs:
-  lint-check:
+  mpas-app-lint-check:
     runs-on: ubuntu-latest
     steps:
       -
