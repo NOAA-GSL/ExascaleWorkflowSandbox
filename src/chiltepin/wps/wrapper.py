@@ -59,7 +59,7 @@ class WPS:
                 no_wrf = ""
             repo_url = "https://raw.githubusercontent.com/spack/"
             patch_url = (
-                repo_url + "spack/develop/var/spack/repos/builtin/packages/wps/patches"
+                repo_url + "spack/develop/var/spack/repos/builtin/packages/wps"
             )
             return self.environment + textwrap.dedent(
                 f"""
@@ -73,12 +73,17 @@ class WPS:
             export NETCDF=$netcdf_c_ROOT
             export NETCDFF=$netcdf_fortran_ROOT
             export J="-j {jobs}"
-            curl -L {patch_url}/4.2/arch.Config.pl.patch -o arch.Config.pl.patch
-            curl -L {patch_url}/4.2/preamble.patch -o preamble.patch
-            curl -L {patch_url}/4.4/configure.patch -o configure.patch
+            curl -L {patch_url}/patches/4.2/arch.Config.pl.patch -o arch.Config.pl.patch
+            curl -L {patch_url}/patches/4.2/preamble.patch -o preamble.patch
+            curl -L {patch_url}/patches/4.4/configure.patch -o configure.patch
             patch -p 1 < arch.Config.pl.patch
             patch -p 1 < preamble.patch
             patch -p 1 < configure.patch
+            os=$(uname -m)
+            if [[ $os = "aarch64" ]]; then
+              curl -L {patch_url}/for_aarch64.patch -o configure.aarch64.patch
+              patch -p 1 < configure.aarch64.patch
+            fi
             compiler=$(basename $CC)
             # Set the WPS build option to match compiler
             if [[ $compiler = "gcc" ]]; then
