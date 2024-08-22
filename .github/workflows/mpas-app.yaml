@@ -200,7 +200,6 @@ jobs:
       pull-requests: write
     steps:
       -
-        # Beta ARM runners do not have Docker installed
         name: Remove Test-MPAS-App label
         run: |
           curl -L \
