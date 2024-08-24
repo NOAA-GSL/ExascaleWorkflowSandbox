@@ -23,13 +23,13 @@ for building those packages must be pre-installed for those builds to succeed.
 
 - `config/user_config.yaml` is used to override the default configuration with select customizations.
 
-    - Edit `user_config.yaml` to set the platform, experiment directory, and model resolution, for running the forecast.
+    - Edit `user_config.yaml` to set the platform, experiment directory, and model resolution for running the forecast.
 
 - `resources.yaml` provides platform details and contains `environment` commands that load the software stack needed by the app.
 
 # Instructions for running the MPAS App
 
-Once `user_config.yaml` is updated with user customizations (e.g. experiment directory, platform, model resolution), run the App:
+Once `user_config.yaml` is updated with user customizations (e.g. experiment directory, platform, model resolution) run the App:
 
 ```
 cd bin
@@ -66,7 +66,9 @@ Output logs for this task are written to: `install_metis.[out | err]`
 
 This task installs a minimal build of the [WRF Preprocessing System (WPS)](https://github.com/wrf-model/WPS). This package
 provides the `ungrib` utility which is used in the first preprocessing step to prepare initial and boundary conditions for
-use by the MPAS initialization.  NOTE: This task does not build all WPS executables because only `ungrib` is needed for the
+use by the MPAS initialization.
+
+***NOTE:*** This task does not build all WPS executables because only `ungrib` is needed for the
 MPAS App.
 
 Output logs for this task are written to: `install_wps.[out | err]`
