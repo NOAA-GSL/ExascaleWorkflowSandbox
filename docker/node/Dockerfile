@@ -31,6 +31,7 @@ RUN apt-get -yqq update && apt-get -yqq upgrade && apt-get -yqq install \
     qtbase5-dev \
     qt5-qmake \
     qt5dxcb-plugin \
+    tcsh \
     unzip \
     vim \
     wget \

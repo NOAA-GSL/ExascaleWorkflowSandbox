@@ -294,6 +294,7 @@ jobs:
     permissions:
       packages: write
       contents: read
+      pull-requests: write
     steps:
       -
         name: Checkout repository
@@ -372,7 +373,7 @@ jobs:
       -
         name: Run test suite
         run: |
-          docker exec frontend bash -l -c "cd work/tests ; PYTHONPATH=.. pytest -s -v --assert=plain --config=config.yaml --platform=ci"
+          docker exec frontend bash -l -c "cd work/tests ; PYTHONPATH=.. pytest -s -v --assert=plain --config=config.yaml --platform=docker"
       -
         name: Debug session
         if: ${{ failure() }}
@@ -420,3 +421,13 @@ jobs:
           tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
           cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
           cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
+      -
+        name: Add Test-MPAS-App label
+        run: |
+          curl \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.LABEL_PR }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/labels \
+            -d '{"labels":["Test-MPAS-App"]}'

@@ -77,9 +77,8 @@ PYTHONPATH=.. pytest --assert=plain --config=config.yaml --platform=<platform>
 
 Where `<platform>` is the specific platform where you are running the tests:
 
-1. `ci`         #  Platform used in CI testing
-2. `chiltepin`  #  Platform used for the container
-3. `hercules`
+1. `docker`  #  Platform used for the container
+2. `hercules`
 3. `hera`
 
 # Building and running the Chiltepin container

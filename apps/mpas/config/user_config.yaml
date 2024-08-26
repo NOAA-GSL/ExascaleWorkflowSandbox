@@ -1,0 +1,4 @@
+user:
+  experiment_dir: /home/admin/work/apps/mpas/experiments/test
+  platform: docker
+  resolution: 480
