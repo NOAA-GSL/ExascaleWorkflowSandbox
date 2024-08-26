@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # pylint: disable-all
 """
+This script was borrowed verbatim from the UFS SRW App:
+  https://github.com/ufs-community/ufs-srweather-app
+
+Although this utility was originally designed with SRW in mind, it has
+general applicability across modeling applications and is included in
+Chiltepin as a general purpose tool.  Note that original documentation
+referring to SRW throughout is kept intact.
+
 This script helps users pull data from known data streams, including
 URLS and HPSS (only on supported NOAA platforms), or from user-supplied
 data locations on disk.

@@ -1,4 +1,4 @@
 user:
   experiment_dir: /home/admin/work/apps/mpas/experiments/test
-  platform: chiltepin
+  platform: docker
   resolution: 480

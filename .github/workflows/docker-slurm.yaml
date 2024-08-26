@@ -373,7 +373,7 @@ jobs:
       -
         name: Run test suite
         run: |
-          docker exec frontend bash -l -c "cd work/tests ; PYTHONPATH=.. pytest -s -v --assert=plain --config=config.yaml --platform=ci"
+          docker exec frontend bash -l -c "cd work/tests ; PYTHONPATH=.. pytest -s -v --assert=plain --config=config.yaml --platform=docker"
       -
         name: Debug session
         if: ${{ failure() }}

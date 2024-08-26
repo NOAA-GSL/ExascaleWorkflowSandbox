@@ -1,3 +1,11 @@
+# This configuration file is borrowed verbatim from the UFS SRW App:
+#   https://github.com/ufs-community/ufs-srweather-app
+#
+# Although originally designed with SRW in mind, this configuration has
+# general applicability across modeling systems and is included in
+# Chiltepin as a general purpose utility.  Original documentation
+# referencing SRW is kept intact.
+#
 # This file tracks known data store locations for data used as input to
 # the SRW App configuations.
 #

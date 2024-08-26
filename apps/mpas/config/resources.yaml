@@ -56,7 +56,7 @@ hera:
     - "module load jedi-mpas-env"
     - "export CHILTEPIN_MPIF90=$MPIF90"
 
-chiltepin:
+docker:
   resources:
     mpi:
       cores per node: 8
