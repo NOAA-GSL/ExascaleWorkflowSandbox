@@ -372,8 +372,11 @@ jobs:
         run: docker exec frontend bash -l -c "cd work ; pip install -e ."
       -
         name: Run test suite
+        env:
+          GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
+          GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec frontend bash -l -c "cd work/tests ; PYTHONPATH=.. pytest -s -v --assert=plain --config=config.yaml --platform=docker"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work/tests ; PYTHONPATH=.. pytest -s -v --assert=plain --config=config.yaml --platform=docker"
       -
         name: Debug session
         if: ${{ failure() }}
