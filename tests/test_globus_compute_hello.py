@@ -1,6 +1,7 @@
-import subprocess
 import os.path
 import shutil
+import subprocess
+
 from globus_compute_sdk import Executor
 
 
