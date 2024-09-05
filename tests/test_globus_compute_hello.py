@@ -11,7 +11,8 @@ def test_endpoint_config():
         ["globus-compute-endpoint", "configure", "foo"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        text=True, timeout=20
+        text=True,
+        timeout=20,
     )
     assert p.returncode == 0
     assert os.path.exists("/home/admin/.globus_compute/foo/config.yaml")
@@ -23,7 +24,7 @@ def test_endpoint_start():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=20
+        timeout=20,
     )
     assert p.returncode == 0
 
@@ -38,7 +39,7 @@ def test_endpoint_hello():
         stderr=subprocess.STDOUT,
         text=True,
         timeout=20,
-        shell=True
+        shell=True,
     )
     assert p.returncode == 0
     hello_endpoint_id = p.stdout.strip()
@@ -54,7 +55,7 @@ def test_endpoint_stop():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=20
+        timeout=20,
     )
     assert p.returncode == 0
 
@@ -66,6 +67,6 @@ def test_endpoint_delete():
         stderr=subprocess.STDOUT,
         text=True,
         timeout=20,
-        shell=True
+        shell=True,
     )
     assert p.returncode == 0
