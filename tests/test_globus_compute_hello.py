@@ -40,7 +40,7 @@ def test_endpoint_hello():
         timeout=20,
         shell=True
     )
-    assert p.returncode==0
+    assert p.returncode == 0
     hello_endpoint_id = p.stdout.strip()
     assert len(hello_endpoint_id) == 36
     with Executor(endpoint_id=hello_endpoint_id) as gce:
