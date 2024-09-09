@@ -2,6 +2,7 @@
 display_name: mpi
 engine:
   type: GlobusMPIEngine
+  max_workers_per_block: 2
   run_in_sandbox: True
   mpi_launcher: srun
 

@@ -1,14 +1,13 @@
 import os.path
 import pathlib
-import pytest
 import re
-import shutil
 import subprocess
 from datetime import datetime as dt
 
+import chiltepin.configure
+import pytest
 from globus_compute_sdk import Executor, MPIFunction, ShellFunction
 
-import chiltepin.configure
 
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
@@ -16,9 +15,9 @@ def config(config_file, platform):
     yaml_config = chiltepin.configure.parse_file(config_file)
     resources, environments = chiltepin.configure.factory(yaml_config, platform)
     environment = environments[platform]
-    #with parsl.load(resources):
+    # with parsl.load(resources):
     return {"resources": resources, "environment": environment}
-    #parsl.clear()
+    # parsl.clear()
 
 
 # Test endpoint startup
@@ -55,7 +54,7 @@ def test_endpoint_mpi_hello(config):
         """
         {env}
         cd {dirpath}
-        $CHILTEPIN_MPIF90 -o mpi_hello.exe mpi_hello.f90    
+        $CHILTEPIN_MPIF90 -o mpi_hello.exe mpi_hello.f90
         """,
         stdout=os.path.join(pwd, "globus_compute_mpi_hello_compile.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_hello_compile.err"),
@@ -71,7 +70,7 @@ def test_endpoint_mpi_hello(config):
         stdout=os.path.join(pwd, "globus_compute_mpi_hello_run.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_hello_run.err"),
     )
-    
+
     # Get a listing of the endpoints
     p = subprocess.run(
         ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "list"],
@@ -82,7 +81,7 @@ def test_endpoint_mpi_hello(config):
     )
     assert p.returncode == 0
     print(p.stdout)
-    
+
     # Get the uuid of the mpi endpoint
     mpi_endpoint_regex = re.compile(r"\| ([0-9a-f\-]{36}) \| Running\s+\| mpi\s+\|")
     match = mpi_endpoint_regex.search(p.stdout)
@@ -90,7 +89,9 @@ def test_endpoint_mpi_hello(config):
     assert len(mpi_endpoint_id) == 36
 
     # Get the uuid of the compute endpoint
-    compute_endpoint_regex = re.compile(r"\| ([0-9a-f\-]{36}) \| Running\s+\| compute\s+\|")
+    compute_endpoint_regex = re.compile(
+        r"\| ([0-9a-f\-]{36}) \| Running\s+\| compute\s+\|"
+    )
     match = compute_endpoint_regex.search(p.stdout)
     compute_endpoint_id = match.group(1)
     assert len(compute_endpoint_id) == 36
@@ -107,33 +108,35 @@ def test_endpoint_mpi_hello(config):
 
     # Compile the MPI program in the compute endpoint
     with Executor(endpoint_id=compute_endpoint_id) as gce:
-        future = gce.submit(compile_func,
-                            env=config["environment"],
-                            dirpath=pwd,
-        )        
+        future = gce.submit(
+            compile_func,
+            env=config["environment"],
+            dirpath=pwd,
+        )
         r = future.result()
         assert r.returncode == 0
-        
+
     # Run the MPI program in the MPI endpoint
     with Executor(endpoint_id=mpi_endpoint_id) as gce:
         gce.resource_specification = {
-            'num_nodes': 3,        # Number of nodes required for the application instance
-            'num_ranks': 6,        # Number of ranks in total
-            'ranks_per_node': 2,   # Number of ranks / application elements to be launched per node
+            "num_nodes": 3,  # Number of nodes required for the application instance
+            "num_ranks": 6,  # Number of ranks in total
+            "ranks_per_node": 2,  # Number of ranks / application elements to be launched per node
         }
-        future = gce.submit(hello_func,
-                            env=config["environment"],
-                            dirpath=pwd,
+        future = gce.submit(
+            hello_func,
+            env=config["environment"],
+            dirpath=pwd,
         )
         r = future.result()
-        assert r.returncode == 0 
+        assert r.returncode == 0
 
     # Check output
     with open(pwd / "globus_compute_mpi_hello_run.out", "r") as f:
         for line in f:
             assert re.match(r"Hello world from host \S+, rank \d+ out of 6", line)
 
-        
+
 # Test endpoint use
 def test_endpoint_mpi_pi(config):
     pwd = pathlib.Path(__file__).parent.resolve()
@@ -143,7 +146,7 @@ def test_endpoint_mpi_pi(config):
         """
         {env}
         cd {dirpath}
-        $CHILTEPIN_MPIF90 -o mpi_pi.exe mpi_pi.f90    
+        $CHILTEPIN_MPIF90 -o mpi_pi.exe mpi_pi.f90
         """,
         stdout=os.path.join(pwd, "globus_compute_mpi_pi_compile.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_pi_compile.err"),
@@ -159,7 +162,7 @@ def test_endpoint_mpi_pi(config):
         stdout=os.path.join(pwd, "globus_compute_mpi_pi1_run.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_pi1_run.err"),
     )
-    
+
     # Define a MPIFunction to run the MPI program
     pi2_func = MPIFunction(
         """true;  # Force the default prefix to launch a no-op
@@ -170,7 +173,7 @@ def test_endpoint_mpi_pi(config):
         stdout=os.path.join(pwd, "globus_compute_mpi_pi2_run.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_pi2_run.err"),
     )
-    
+
     # Get a listing of the endpoints
     p = subprocess.run(
         ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "list"],
@@ -188,7 +191,9 @@ def test_endpoint_mpi_pi(config):
     assert len(mpi_endpoint_id) == 36
 
     # Get the uuid of the compute endpoint
-    compute_endpoint_regex = re.compile(r"\| ([0-9a-f\-]{36}) \| Running\s+\| compute\s+\|")
+    compute_endpoint_regex = re.compile(
+        r"\| ([0-9a-f\-]{36}) \| Running\s+\| compute\s+\|"
+    )
     match = compute_endpoint_regex.search(p.stdout)
     compute_endpoint_id = match.group(1)
     assert len(compute_endpoint_id) == 36
@@ -209,40 +214,43 @@ def test_endpoint_mpi_pi(config):
 
     # Compile the MPI program in the compute endpoint
     with Executor(endpoint_id=compute_endpoint_id) as gce:
-        future = gce.submit(compile_func,
-                            env=config["environment"],
-                            dirpath=pwd,
-        )        
+        future = gce.submit(
+            compile_func,
+            env=config["environment"],
+            dirpath=pwd,
+        )
         r = future.result()
         assert r.returncode == 0
-        
+
     # Run the MPI program in the MPI endpoint
     with Executor(endpoint_id=mpi_endpoint_id) as gce:
         cores_per_node = 8
         gce.resource_specification = {
-            'num_nodes': 2,        # Number of nodes required for the application instance
-            'num_ranks': 2 * cores_per_node,        # Number of ranks in total
-            'ranks_per_node': cores_per_node,   # Number of ranks / application elements to be launched per node
+            "num_nodes": 2,  # Number of nodes required for the application instance
+            "num_ranks": 2 * cores_per_node,  # Number of ranks in total
+            "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
         }
-        future1 = gce.submit(pi1_func,
-                            env=config["environment"],
-                            dirpath=pwd,
+        future1 = gce.submit(
+            pi1_func,
+            env=config["environment"],
+            dirpath=pwd,
         )
 
         gce.resource_specification = {
-            'num_nodes': 1,        # Number of nodes required for the application instance
-            'num_ranks': cores_per_node,        # Number of ranks in total
-            'ranks_per_node': cores_per_node,   # Number of ranks / application elements to be launched per node
+            "num_nodes": 1,  # Number of nodes required for the application instance
+            "num_ranks": cores_per_node,  # Number of ranks in total
+            "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
         }
-        future2 = gce.submit(pi2_func,
-                            env=config["environment"],
-                            dirpath=pwd,
+        future2 = gce.submit(
+            pi2_func,
+            env=config["environment"],
+            dirpath=pwd,
         )
 
         r1 = future1.result()
-        assert r1.returncode == 0 
+        assert r1.returncode == 0
         r2 = future2.result()
-        assert r2.returncode == 0 
+        assert r2.returncode == 0
 
     # Extract the hostnames used by pi1
     with open("globus_compute_mpi_pi1_run.out", "r") as f:
@@ -274,7 +282,7 @@ def test_endpoint_mpi_pi(config):
                     end_time.append(dt.strptime(line, "%d/%m/%Y %H:%M:%S"))
     assert start_time[0] < end_time[1] and start_time[1] < end_time[0]
 
-        
+
 # Test stopping of  endpoints
 def test_endpoint_stop():
     pwd = pathlib.Path(__file__).parent.resolve()
