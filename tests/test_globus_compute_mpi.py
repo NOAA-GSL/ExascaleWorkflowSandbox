@@ -4,9 +4,10 @@ import re
 import subprocess
 from datetime import datetime as dt
 
-import chiltepin.configure
 import pytest
 from globus_compute_sdk import Executor, MPIFunction, ShellFunction
+
+import chiltepin.configure
 
 
 # Set up fixture to initialize and cleanup Parsl
@@ -30,7 +31,7 @@ def test_endpoint_start():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=20,
+        timeout=60,
     )
     assert p.returncode == 0
 
@@ -40,7 +41,7 @@ def test_endpoint_start():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=20,
+        timeout=60,
     )
     assert p.returncode == 0
 
@@ -77,10 +78,9 @@ def test_endpoint_mpi_hello(config):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=20,
+        timeout=60,
     )
     assert p.returncode == 0
-    print(p.stdout)
 
     # Get the uuid of the mpi endpoint
     mpi_endpoint_regex = re.compile(r"\| ([0-9a-f\-]{36}) \| Running\s+\| mpi\s+\|")
@@ -293,7 +293,7 @@ def test_endpoint_stop():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=20,
+        timeout=60,
     )
     assert p.returncode == 0
 
@@ -303,6 +303,6 @@ def test_endpoint_stop():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=20,
+        timeout=60,
     )
     assert p.returncode == 0
