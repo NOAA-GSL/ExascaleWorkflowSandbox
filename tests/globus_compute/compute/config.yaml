@@ -1,0 +1,14 @@
+# compute endpoint
+display_name: compute
+engine:
+  type: GlobusComputeEngine
+  run_in_sandbox: True
+  provider:
+    type: SlurmProvider
+
+    launcher:
+      type: SrunLauncher    
+
+    nodes_per_block: 1
+    partition: slurmpar
+    walltime: 08:00:00

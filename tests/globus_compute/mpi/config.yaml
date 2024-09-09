@@ -1,0 +1,17 @@
+# MPI Endpoint
+display_name: mpi
+engine:
+  type: GlobusMPIEngine
+  run_in_sandbox: True
+  mpi_launcher: srun
+
+  provider:
+    type: SlurmProvider
+
+    launcher:
+      type: SimpleLauncher
+
+    nodes_per_block: 3
+    exclusive: True
+    partition: slurmpar
+    walltime: 08:00:00
