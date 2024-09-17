@@ -4,6 +4,8 @@ import re
 import subprocess
 from datetime import datetime as dt
 
+from jinja2 import Environment, FileSystemLoader
+
 import pytest
 from globus_compute_sdk import Executor, MPIFunction, ShellFunction
 
@@ -13,9 +15,20 @@ import chiltepin.configure
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
 def config(config_file, platform):
+    pwd = pathlib.Path(__file__).parent.resolve()
+
     yaml_config = chiltepin.configure.parse_file(config_file)
-    resources, environments = chiltepin.configure.factory(yaml_config, platform)
-    environment = environments[platform]
+    resources = yaml_config[platform]["resources"]
+    environment = "\n".join(yaml_config[platform]["environment"])
+
+    # Create endpoint configs for this platform using Jinja2 templates
+    jinja_env = Environment(loader=FileSystemLoader(f"{pwd}/templates/"))
+    for endpoint in ["service", "compute", "mpi"]:
+        template = jinja_env.get_template(f"{endpoint}.yaml")
+        content = template.render(partition=resources[endpoint]["partition"], account=resources[endpoint]["account"])
+        with open(f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8") as gc_config:
+            gc_config.write(content)
+
     # with parsl.load(resources):
     return {"resources": resources, "environment": environment}
     # parsl.clear()
