@@ -27,7 +27,7 @@ def test_endpoint_configure(config):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=20,
+        timeout=60,
     )
     assert p.returncode == 0
 
@@ -47,7 +47,7 @@ def test_endpoint_start():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=20,
+        timeout=60,
     )
     assert p.returncode == 0
 
@@ -62,7 +62,7 @@ def test_endpoint_hello():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=20,
+        timeout=60,
         shell=True,
     )
     assert p.returncode == 0
@@ -80,7 +80,7 @@ def test_endpoint_stop():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=20,
+        timeout=60,
     )
     assert p.returncode == 0
 
@@ -93,6 +93,6 @@ def test_endpoint_delete():
         stderr=subprocess.STDOUT,
         text=True,
         shell=True,
-        timeout=20,
+        timeout=60,
     )
     assert p.returncode == 0

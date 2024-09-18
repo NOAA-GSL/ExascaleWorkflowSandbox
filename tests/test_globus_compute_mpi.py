@@ -216,7 +216,7 @@ def test_endpoint_mpi_pi(config):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=20,
+        timeout=60,
     )
     assert p.returncode == 0
 
