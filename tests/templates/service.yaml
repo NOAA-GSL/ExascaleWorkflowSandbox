@@ -11,6 +11,7 @@ engine:
 
     nodes_per_block: 1
     cores_per_node: 1
+    exclusive: False
     partition: {{ partition }}
     account: {{ account }}
     walltime: 00:10:00

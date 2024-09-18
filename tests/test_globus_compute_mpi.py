@@ -15,23 +15,46 @@ import chiltepin.configure
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
 def config(config_file, platform):
-    pwd = pathlib.Path(__file__).parent.resolve()
-
     yaml_config = chiltepin.configure.parse_file(config_file)
     resources = yaml_config[platform]["resources"]
     environment = "\n".join(yaml_config[platform]["environment"])
 
-    # Create endpoint configs for this platform using Jinja2 templates
-    jinja_env = Environment(loader=FileSystemLoader(f"{pwd}/templates/"))
-    for endpoint in ["service", "compute", "mpi"]:
-        template = jinja_env.get_template(f"{endpoint}.yaml")
-        content = template.render(partition=resources[endpoint]["partition"], account=resources[endpoint]["account"])
-        with open(f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8") as gc_config:
-            gc_config.write(content)
-
     # with parsl.load(resources):
     return {"resources": resources, "environment": environment}
     # parsl.clear()
+
+
+# Test endpoint configure
+def test_endpoint_configure(config):
+    pwd = pathlib.Path(__file__).parent.resolve()
+
+    # Configure compute endpoint
+    p = subprocess.run(
+        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "configure", "compute"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=60,
+    )
+    assert p.returncode == 0
+
+    # Configure MPI endpoint
+    p = subprocess.run(
+        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "configure", "mpi"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=60,
+    )
+    assert p.returncode == 0
+
+    # Customize endpoint configs for this platform using Jinja2 templates
+    jinja_env = Environment(loader=FileSystemLoader(f"{pwd}/templates/"))
+    for endpoint in ["compute", "mpi"]:
+        template = jinja_env.get_template(f"{endpoint}.yaml")
+        content = template.render(partition=config["resources"][endpoint]["partition"], account=config["resources"][endpoint]["account"])
+        with open(f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8") as gc_config:
+            gc_config.write(content)
 
 
 # Test endpoint startup
@@ -319,3 +342,31 @@ def test_endpoint_stop():
         timeout=60,
     )
     assert p.returncode == 0
+
+
+# Test endpoint delete
+def test_endpoint_delete(config):
+    pwd = pathlib.Path(__file__).parent.resolve()
+
+    # Delete compute endpoint
+    p = subprocess.run(
+        f"echo y | globus-compute-endpoint -c {pwd}/globus_compute delete compute",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        shell=True,
+        timeout=60,
+    )
+    assert p.returncode == 0
+
+    # Delete MPI endpoint
+    p = subprocess.run(
+        f"echo y | globus-compute-endpoint -c {pwd}/globus_compute delete mpi",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        shell=True,
+        timeout=60,
+    )
+    assert p.returncode == 0
+
