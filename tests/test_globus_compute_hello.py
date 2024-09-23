@@ -24,7 +24,13 @@ def config(config_file, platform):
 def test_endpoint_configure(config):
     pwd = pathlib.Path(__file__).parent.resolve()
     p = subprocess.run(
-        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "configure", "service"],
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "configure",
+            "service"
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -45,7 +51,13 @@ def test_endpoint_configure(config):
 def test_endpoint_start():
     pwd = pathlib.Path(__file__).parent.resolve()
     p = subprocess.run(
-        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "start", "service"],
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "start",
+            "service"
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -78,7 +90,13 @@ def test_endpoint_hello():
 def test_endpoint_stop():
     pwd = pathlib.Path(__file__).parent.resolve()
     p = subprocess.run(
-        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "stop", "service"],
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "stop",
+            "service"
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,

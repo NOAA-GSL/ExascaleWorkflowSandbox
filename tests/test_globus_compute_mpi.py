@@ -30,7 +30,12 @@ def test_endpoint_configure(config):
 
     # Configure compute endpoint
     p = subprocess.run(
-        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "configure", "compute"],
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "configure", "compute"
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -40,7 +45,13 @@ def test_endpoint_configure(config):
 
     # Configure MPI endpoint
     p = subprocess.run(
-        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "configure", "mpi"],
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "configure",
+            "mpi"
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -52,9 +63,13 @@ def test_endpoint_configure(config):
     jinja_env = Environment(loader=FileSystemLoader(f"{pwd}/templates/"))
     for endpoint in ["compute", "mpi"]:
         template = jinja_env.get_template(f"{endpoint}.yaml")
-        content = template.render(partition=config["resources"][endpoint]["partition"],
-                                  account=config["resources"][endpoint]["account"])
-        with open(f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8") as gc_config:
+        content = template.render(
+            partition=config["resources"][endpoint]["partition"],
+            account=config["resources"][endpoint]["account"]
+        )
+        with open(
+            f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8"
+        ) as gc_config:
             gc_config.write(content)
 
 
@@ -64,7 +79,13 @@ def test_endpoint_start():
 
     # Start compute endpoint
     p = subprocess.run(
-        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "start", "compute"],
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "start",
+            "compute"
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -74,7 +95,13 @@ def test_endpoint_start():
 
     # Start MPI endpoint
     p = subprocess.run(
-        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "start", "mpi"],
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "start",
+            "mpi"
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -213,7 +240,12 @@ def test_endpoint_mpi_pi(config):
 
     # Get a listing of the endpoints
     p = subprocess.run(
-        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "list"],
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "list"
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -326,7 +358,13 @@ def test_endpoint_stop():
 
     # Stop the compute endpoint
     p = subprocess.run(
-        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "stop", "compute"],
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "stop",
+            "compute"
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -336,7 +374,13 @@ def test_endpoint_stop():
 
     # Stop the MPI endpoint
     p = subprocess.run(
-        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "stop", "mpi"],
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "stop",
+            "mpi"
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
