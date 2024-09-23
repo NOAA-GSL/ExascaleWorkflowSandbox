@@ -2,10 +2,11 @@ import os
 import re
 from datetime import datetime as dt
 
-import chiltepin.configure
 import parsl
 import pytest
 from parsl.app.app import bash_app
+
+import chiltepin.configure
 
 
 # Compile the hello MPI program with environment passed in

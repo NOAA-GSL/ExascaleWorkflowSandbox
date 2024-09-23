@@ -4,10 +4,11 @@ import re
 import subprocess
 from datetime import datetime as dt
 
-import chiltepin.configure
 import pytest
 from globus_compute_sdk import Executor, MPIFunction, ShellFunction
 from jinja2 import Environment, FileSystemLoader
+
+import chiltepin.configure
 
 
 # Set up fixture to initialize and cleanup Parsl
