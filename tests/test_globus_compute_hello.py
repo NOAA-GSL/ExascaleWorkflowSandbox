@@ -1,12 +1,10 @@
 import pathlib
-import pytest
 import subprocess
 
-from jinja2 import Environment, FileSystemLoader
-
-from globus_compute_sdk import Executor
-
 import chiltepin.configure
+import pytest
+from globus_compute_sdk import Executor
+from jinja2 import Environment, FileSystemLoader
 
 
 # Set up fixture to initialize and cleanup Parsl
@@ -29,7 +27,7 @@ def test_endpoint_configure(config):
             "-c",
             f"{pwd}/globus_compute",
             "configure",
-            "service"
+            "service",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -42,22 +40,20 @@ def test_endpoint_configure(config):
     jinja_env = Environment(loader=FileSystemLoader(f"{pwd}/templates/"))
     for endpoint in ["service"]:
         template = jinja_env.get_template(f"{endpoint}.yaml")
-        content = template.render(partition=config["resources"][endpoint]["partition"],
-                                  account=config["resources"][endpoint]["account"])
-        with open(f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8") as gc_config:
+        content = template.render(
+            partition=config["resources"][endpoint]["partition"],
+            account=config["resources"][endpoint]["account"],
+        )
+        with open(
+            f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8"
+        ) as gc_config:
             gc_config.write(content)
 
 
 def test_endpoint_start():
     pwd = pathlib.Path(__file__).parent.resolve()
     p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "start",
-            "service"
-        ],
+        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "start", "service"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -90,13 +86,7 @@ def test_endpoint_hello():
 def test_endpoint_stop():
     pwd = pathlib.Path(__file__).parent.resolve()
     p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "stop",
-            "service"
-        ],
+        ["globus-compute-endpoint", "-c", f"{pwd}/globus_compute", "stop", "service"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,

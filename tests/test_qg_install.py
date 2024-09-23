@@ -1,9 +1,8 @@
 import os
 
+import chiltepin.configure
 import parsl
 import pytest
-
-import chiltepin.configure
 from chiltepin.jedi.qg.wrapper import QG
 
 
