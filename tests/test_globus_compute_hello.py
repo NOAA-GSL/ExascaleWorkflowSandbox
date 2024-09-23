@@ -8,6 +8,7 @@ from globus_compute_sdk import Executor
 
 import chiltepin.configure
 
+
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
 def config(config_file, platform):
@@ -35,7 +36,8 @@ def test_endpoint_configure(config):
     jinja_env = Environment(loader=FileSystemLoader(f"{pwd}/templates/"))
     for endpoint in ["service"]:
         template = jinja_env.get_template(f"{endpoint}.yaml")
-        content = template.render(partition=config["resources"][endpoint]["partition"], account=config["resources"][endpoint]["account"])
+        content = template.render(partition=config["resources"][endpoint]["partition"],
+                                  account=config["resources"][endpoint]["account"])
         with open(f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8") as gc_config:
             gc_config.write(content)
 

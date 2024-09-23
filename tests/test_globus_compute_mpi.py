@@ -52,7 +52,8 @@ def test_endpoint_configure(config):
     jinja_env = Environment(loader=FileSystemLoader(f"{pwd}/templates/"))
     for endpoint in ["compute", "mpi"]:
         template = jinja_env.get_template(f"{endpoint}.yaml")
-        content = template.render(partition=config["resources"][endpoint]["partition"], account=config["resources"][endpoint]["account"])
+        content = template.render(partition=config["resources"][endpoint]["partition"],
+                                  account=config["resources"][endpoint]["account"])
         with open(f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8") as gc_config:
             gc_config.write(content)
 
@@ -369,4 +370,3 @@ def test_endpoint_delete(config):
         timeout=60,
     )
     assert p.returncode == 0
-
