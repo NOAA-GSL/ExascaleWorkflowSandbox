@@ -61,7 +61,7 @@ def test_endpoint_start():
     assert p.returncode == 0
 
 
-def test_endpoint_hello():
+def test_hello_endpoint():
     def hello():
         return "Hello"
 
@@ -75,6 +75,7 @@ def test_endpoint_hello():
         shell=True,
     )
     assert p.returncode == 0
+
     hello_endpoint_id = p.stdout.strip()
     assert len(hello_endpoint_id) == 36
     with Executor(endpoint_id=hello_endpoint_id) as gce:
