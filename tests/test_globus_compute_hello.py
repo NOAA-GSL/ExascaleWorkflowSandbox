@@ -15,9 +15,7 @@ def config(config_file, platform):
     resources = yaml_config[platform]["resources"]
     environment = "\n".join(yaml_config[platform]["environment"])
 
-    # with parsl.load(resources):
     return {"resources": resources, "environment": environment}
-    # parsl.clear()
 
 
 def test_endpoint_configure(config):
