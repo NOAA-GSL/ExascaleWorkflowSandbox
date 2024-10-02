@@ -1,5 +1,5 @@
 Welcome to ExascaleWorkflowSandbox's documentation!
-===================================
+===================================================
 
 **ExascaleWorkflowSandbox** is a Python library for exploring federated
 workflow capabilities using Parsl and Globus Compute.
