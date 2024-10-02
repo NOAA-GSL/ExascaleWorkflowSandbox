@@ -4,4 +4,4 @@ API
 .. autosummary::
    :toctree: generated
 
-   chiltepin
+   src/chiltepin/configure.py
