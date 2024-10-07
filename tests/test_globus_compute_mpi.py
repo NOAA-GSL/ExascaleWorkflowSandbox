@@ -21,6 +21,42 @@ def config(config_file, platform):
     return {"resources": resources, "environment": environment}
 
 
+# Local function to get endpoint ids
+def _get_endpoint_ids():
+    pwd = pathlib.Path(__file__).parent.resolve()
+
+    # Get a listing of the endpoints
+    p = subprocess.run(
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "list",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=60,
+    )
+    assert p.returncode == 0
+
+    # Get the uuid of the mpi endpoint
+    mpi_endpoint_regex = re.compile(r"\| ([0-9a-f\-]{36}) \| Running\s+\| mpi\s+\|")
+    match = mpi_endpoint_regex.search(p.stdout)
+    mpi_endpoint_id = match.group(1)
+    assert len(mpi_endpoint_id) == 36
+
+    # Get the uuid of the compute endpoint
+    compute_endpoint_regex = re.compile(
+        r"\| ([0-9a-f\-]{36}) \| Running\s+\| compute\s+\|"
+    )
+    match = compute_endpoint_regex.search(p.stdout)
+    compute_endpoint_id = match.group(1)
+    assert len(compute_endpoint_id) == 36
+
+    return mpi_endpoint_id, compute_endpoint_id
+
+
 # Test endpoint configure
 def test_endpoint_configure(config):
     pwd = pathlib.Path(__file__).parent.resolve()
@@ -135,33 +171,7 @@ def test_endpoint_mpi_hello(config):
     )
 
     # Get a listing of the endpoints
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "list",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-    )
-    assert p.returncode == 0
-
-    # Get the uuid of the mpi endpoint
-    mpi_endpoint_regex = re.compile(r"\| ([0-9a-f\-]{36}) \| Running\s+\| mpi\s+\|")
-    match = mpi_endpoint_regex.search(p.stdout)
-    mpi_endpoint_id = match.group(1)
-    assert len(mpi_endpoint_id) == 36
-
-    # Get the uuid of the compute endpoint
-    compute_endpoint_regex = re.compile(
-        r"\| ([0-9a-f\-]{36}) \| Running\s+\| compute\s+\|"
-    )
-    match = compute_endpoint_regex.search(p.stdout)
-    compute_endpoint_id = match.group(1)
-    assert len(compute_endpoint_id) == 36
+    mpi_endpoint_id, compute_endpoint_id = _get_endpoint_ids()
 
     # Remove any previous output if necessary
     if os.path.exists(pwd / "globus_compute_mpi_hello_compile.out"):
@@ -242,33 +252,7 @@ def test_endpoint_mpi_pi(config):
     )
 
     # Get a listing of the endpoints
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "list",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-    )
-    assert p.returncode == 0
-
-    # Get the uuid of the mpi endpoint
-    mpi_endpoint_regex = re.compile(r"\| ([0-9a-f\-]{36}) \| Running\s+\| mpi\s+\|")
-    match = mpi_endpoint_regex.search(p.stdout)
-    mpi_endpoint_id = match.group(1)
-    assert len(mpi_endpoint_id) == 36
-
-    # Get the uuid of the compute endpoint
-    compute_endpoint_regex = re.compile(
-        r"\| ([0-9a-f\-]{36}) \| Running\s+\| compute\s+\|"
-    )
-    match = compute_endpoint_regex.search(p.stdout)
-    compute_endpoint_id = match.group(1)
-    assert len(compute_endpoint_id) == 36
+    mpi_endpoint_id, compute_endpoint_id = _get_endpoint_ids()
 
     # Remove any previous output if necessary
     if os.path.exists(pwd / "globus_compute_mpi_pi_compile.out"):
