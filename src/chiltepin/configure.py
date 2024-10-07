@@ -1,3 +1,18 @@
+"""
+Chiltepin configure
+
+.. code-block:: python
+
+    # Import configure
+    import chiltepin.configure
+
+    # Parse a chiltepin config file
+    yaml_config = chiltepin.configure.parse_file(config_file)
+
+    # Extract Parsl resources and environment settings from config
+    resources, environments = chiltepin.configure.factory(yaml_config, platform)
+"""
+
 import os
 
 import yaml
@@ -10,6 +25,13 @@ from parsl.providers import SlurmProvider
 
 # Define function to parse yaml config
 def parse_file(filename):
+    """
+    Return a dictionary for the configuration contained in a file.
+
+    :param filename: Path of configuration file to parse
+    :return: The configuration dictionary
+    :rtype: dict
+    """
     # Open and parse the yaml config
     with open(filename, "r") as stream:
         try:
