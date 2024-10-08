@@ -70,8 +70,13 @@ the command appropriate for your environment type (venv, conda, etc).
 The test suite is run with `pytest` and requires an editable installation of the Chiltepin
 repository (achieved using the `pip install -e .` installation step from above)
 
+An additional step is required for successful completion of the Globus Compute tests. These
+tests require users to authenticate to globus before running the pytest command. This is done
+with the `globus-compute-endpoint login` command.
+
 ```
 cd tests
+globus-compute-endpoint login
 PYTHONPATH=.. pytest --assert=plain --config=config.yaml --platform=<platform>
 ```
 

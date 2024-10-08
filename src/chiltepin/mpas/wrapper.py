@@ -56,7 +56,7 @@ class MPAS:
             repo_url = (
                 "https://raw.githubusercontent.com/NOAA-GSL/ExascaleWorkflowSandbox/"
             )
-            patch_url = repo_url + "feature/mpas-app-skeleton/apps/mpas/patches"
+            patch_url = repo_url + "main/apps/mpas/patches"
             return self.environment + textwrap.dedent(
                 f"""
             echo Started at $(date)
