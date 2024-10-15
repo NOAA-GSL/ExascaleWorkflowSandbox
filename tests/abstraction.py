@@ -110,7 +110,8 @@ class HelloPythonTest:
     @python_task
     def hello(self, name):
         import socket
-        return f"Hello {name} on {socket.gethostname()} at {time.now}"
+        import datetime
+        return f"Hello {name} on {socket.gethostname()} at {datetime.datetime.now()}"
 
 
 class HelloBashTest:
@@ -123,7 +124,7 @@ class HelloBashTest:
     @bash_task
     def hello(self, name, stdout=None, stderr=None):
         return f"""
-        echo "Hello {name} on $(hostname)"
+        echo "Hello {name} on $(hostname) at $(date)"
         """
 
 
@@ -137,7 +138,7 @@ class HelloMPITest:
     @mpi_task
     def hello(self, name, stdout=None, stderr=None, compile=None, parsl_resource_specification=None):
         return f"""
-        echo "Hello {name} on $(hostname)"
+        echo "Hello {name} on $(hostname) at $(date)"
         """
 
 if __name__ == "__main__":
