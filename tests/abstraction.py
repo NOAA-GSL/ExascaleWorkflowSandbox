@@ -122,7 +122,7 @@ class HelloBashTest:
         pass
 
     @bash_task
-    def hello(self, name, stdout=None, stderr=None):
+    def hello(self, name, stdout=None, stderr=None, dependency=None):
         return f"""
         echo "Hello {name} on $(hostname) at $(date)"
         """
@@ -136,7 +136,7 @@ class HelloMPITest:
         pass
 
     @mpi_task
-    def hello(self, name, stdout=None, stderr=None, compile=None, parsl_resource_specification=None):
+    def hello(self, name, stdout=None, stderr=None, dependency=None, parsl_resource_specification=None):
         return f"""
         echo "Hello {name} on $(hostname) at $(date)"
         """
@@ -216,8 +216,8 @@ if __name__ == "__main__":
         )
         print(python_parsl)
         print(python_gc)
-        print(python_parsl.result())
-        print(python_gc.result())
+        #print(python_parsl.result())
+        #print(python_gc.result())
         
         # Test Bash decorators
         bash = HelloBashTest()
@@ -226,17 +226,19 @@ if __name__ == "__main__":
             executor="default",
             stdout=os.path.join(pwd, "bash_parsl.out"),
             stderr=os.path.join(pwd, "bash_parsl.err"),
+            dependency=python_parsl,
         )
         bash_gc = bash.hello(
             "from Globus Compute",
             executor=gce_default,
             stdout=os.path.join(pwd, "bash_gc.out"),
             stderr=os.path.join(pwd, "bash_gc.err"),
+            dependency=python_gc,
         )
         print(bash_parsl)
         print(bash_gc)
-        print(bash_parsl.result())
-        print(bash_gc.result())
+        #print(bash_parsl.result())
+        #print(bash_gc.result())
         
         # Test MPI decorators
         mpi = HelloMPITest()
@@ -250,6 +252,7 @@ if __name__ == "__main__":
                 "num_ranks": 6,  # Number of ranks in total
                 "ranks_per_node": 2,  # Number of ranks / application elements to be launched per node
             },
+            dependency=bash_parsl,
         )
         mpi_gc = mpi.hello(
             "from Globus Compute",
@@ -261,9 +264,15 @@ if __name__ == "__main__":
                 "num_ranks": 6,  # Number of ranks in total
                 "ranks_per_node": 2,  # Number of ranks / application elements to be launched per node
             },
+            dependency=bash_gc,
         )
         print(mpi_parsl)
         print(mpi_gc)
+
+        print(python_parsl.result())
+        print(python_gc.result())
+        print(bash_parsl.result())
+        print(bash_gc.result())
         print(mpi_parsl.result())
         print(mpi_gc.result())
         
