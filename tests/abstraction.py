@@ -133,8 +133,8 @@ if __name__ == "__main__":
     from abstraction import HelloBashTest    
     from abstraction import HelloMPITest
     pwd = pathlib.Path(__file__).parent.resolve()
-    default_ep_id = "7be9aa18-6bd0-4968-a0dd-accc5378a8a8"
-    mpi_ep_id = "56c3463a-585f-409e-af6e-bbdf26821177"
+    default_ep_id = "1c4d10d1-913f-4339-98c9-3cc5e0630dc0"
+    mpi_ep_id = "bf938d9b-7479-4450-a098-e03e7aaf7e1d"
     gce_default = Executor(endpoint_id=default_ep_id)
     gce_mpi = Executor(endpoint_id=mpi_ep_id)
     with parsl.load(
