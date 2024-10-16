@@ -21,18 +21,14 @@ def python_task(func):
         if isinstance(executor, str):
             return python_app(func, executors=[executor])(*args, **kwargs)
         elif isinstance(executor, Executor):
-            # Wrap gc call in a Python Parsl App to enforce dependencies passed in as Futures in arguments
-            # Make sure the wrapper app doesn't run on an MPIExecutor
-            @python_app(executors=["threads"])
+            # Wrap gc call in a Join Parsl App to enforce dependencies passed in as Futures in arguments
+            @join_app
             def dependency_wrapper(gce, *args, **kwargs):
-                # How to avoid blocking this thread?
-                # Remove the .result() and force user to call .result().result() ?
-                # Implement a custom future that returns the nested result?
                 return gce.submit(
                     func,
                     *args,
                     **kwargs,
-                ).result()
+                )
             return dependency_wrapper(executor, *args, **kwargs)
         else:
             raise "Invalid executor"
@@ -51,16 +47,12 @@ def bash_task(func):
             return bash_app(func, executors=[executor])(*args, **kwargs)
         elif isinstance(executor, Executor):
             sf = ShellFunction(f"""{func(*args, **kwargs)}""", stdout=kwargs.get("stdout"), stderr=kwargs.get("stderr"))
-            # Wrap gc call in a Python Parsl App to enforce dependencies passed in as Futures in arguments
-            # Make sure the wrapper app doesn't run on an MPIExecutor
-            @python_app(executors=["threads"])
+            # Wrap gc call in a Join Parsl App to enforce dependencies passed in as Futures in arguments
+            @join_app
             def dependency_wrapper(gce, *args, **kwargs):
-                # How to avoid blocking this thread?
-                # Remove the .result() and force user to call .result().result() ?
-                # Implement a custom future that returns the nested result?
                 return gce.submit(
                     sf,
-                ).result()
+                )
             return dependency_wrapper(executor, *args, **kwargs)
         else:
             raise "Invalid executor"
@@ -80,19 +72,14 @@ def mpi_task(func):
             return app(*args, **kwargs)
         elif isinstance(executor, Executor):
             # Set GC executor parsl_resource_specification and remove it from kwargs
-            # so we can run the python_app dependency wrapper in the Parsl threads Executor
             executor.resource_specification = kwargs.pop("parsl_resource_specification", None)
             mpif = MPIFunction(f"""{func(*args, **kwargs)}""", stdout=kwargs.get("stdout"), stderr=kwargs.get("stderr"))
-            # Wrap gc call in a Python Parsl App to enforce dependencies passed in as Futures in arguments
-            # Make sure the wrapper app doesn't run on an MPIExecutor
-            @python_app(executors=["threads"])
+            # Wrap gc call in a Join Parsl App to enforce dependencies passed in as Futures in arguments
+            @join_app
             def dependency_wrapper(gce, *args, **kwargs):
-                # How to avoid blocking this thread?
-                # Remove the .result() and force user to call .result().result() ?
-                # Implement a custom future that returns the nested result?
                 return gce.submit(
                     mpif,
-                ).result()
+                )
             return dependency_wrapper(executor, *args, **kwargs)
         else:
             raise "Invalid executor"
@@ -166,7 +153,6 @@ if __name__ == "__main__":
                     cores_per_worker=1,
                     max_workers_per_node=40,
                     provider=SlurmProvider(
-                        #channel=LocalChannel(),
                         exclusive=False,
                         cores_per_node=40,
                         nodes_per_block=1,
@@ -187,7 +173,6 @@ if __name__ == "__main__":
                     mpi_launcher="srun",
                     max_workers_per_block=2,
                     provider=SlurmProvider(
-                        #channel=LocalChannel(),
                         exclusive=True,
                         cores_per_node=40,
                         nodes_per_block=3,
@@ -216,8 +201,6 @@ if __name__ == "__main__":
         )
         print(python_parsl)
         print(python_gc)
-        #print(python_parsl.result())
-        #print(python_gc.result())
         
         # Test Bash decorators
         bash = HelloBashTest()
@@ -237,8 +220,6 @@ if __name__ == "__main__":
         )
         print(bash_parsl)
         print(bash_gc)
-        #print(bash_parsl.result())
-        #print(bash_gc.result())
         
         # Test MPI decorators
         mpi = HelloMPITest()
