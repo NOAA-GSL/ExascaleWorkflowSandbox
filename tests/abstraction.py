@@ -5,7 +5,7 @@ import parsl
 from parsl.app.app import bash_app, join_app, python_app
 from globus_compute_sdk import Executor, ShellFunction, MPIFunction
 from parsl.config import Config
-from parsl.executors import ThreadPoolExecutor, MPIExecutor, HighThroughputExecutor
+from parsl.executors import ThreadPoolExecutor, MPIExecutor, HighThroughputExecutor, GlobusComputeExecutor
 from parsl.launchers import SimpleLauncher
 from parsl.providers import SlurmProvider
 
@@ -18,20 +18,7 @@ def python_task(func):
             executor=None,
             **kwargs,
     ):
-        if isinstance(executor, str):
-            return python_app(func, executors=[executor])(*args, **kwargs)
-        elif isinstance(executor, Executor):
-            # Wrap gc call in a Join Parsl App to enforce dependencies passed in as Futures in arguments
-            @join_app
-            def dependency_wrapper(gce, *args, **kwargs):
-                return gce.submit(
-                    func,
-                    *args,
-                    **kwargs,
-                )
-            return dependency_wrapper(executor, *args, **kwargs)
-        else:
-            raise "Invalid executor"
+        return python_app(func, executors=[executor])(*args, **kwargs)
     
     return func_wrapper
 
@@ -43,19 +30,7 @@ def bash_task(func):
             executor=None,
             **kwargs,
     ):
-        if isinstance(executor, str):
-            return bash_app(func, executors=[executor])(*args, **kwargs)
-        elif isinstance(executor, Executor):
-            sf = ShellFunction(f"""{func(*args, **kwargs)}""", stdout=kwargs.get("stdout"), stderr=kwargs.get("stderr"))
-            # Wrap gc call in a Join Parsl App to enforce dependencies passed in as Futures in arguments
-            @join_app
-            def dependency_wrapper(gce, *args, **kwargs):
-                return gce.submit(
-                    sf,
-                )
-            return dependency_wrapper(executor, *args, **kwargs)
-        else:
-            raise "Invalid executor"
+        return bash_app(func, executors=[executor])(*args, **kwargs)
     
     return func_wrapper
 
@@ -67,22 +42,7 @@ def mpi_task(func):
             executor=None,
             **kwargs,
     ):
-        if isinstance(executor, str):
-            app = bash_app(func, executors=[executor])
-            return app(*args, **kwargs)
-        elif isinstance(executor, Executor):
-            # Set GC executor parsl_resource_specification and remove it from kwargs
-            executor.resource_specification = kwargs.pop("parsl_resource_specification", None)
-            mpif = MPIFunction(f"""{func(*args, **kwargs)}""", stdout=kwargs.get("stdout"), stderr=kwargs.get("stderr"))
-            # Wrap gc call in a Join Parsl App to enforce dependencies passed in as Futures in arguments
-            @join_app
-            def dependency_wrapper(gce, *args, **kwargs):
-                return gce.submit(
-                    mpif,
-                )
-            return dependency_wrapper(executor, *args, **kwargs)
-        else:
-            raise "Invalid executor"
+        return bash_app(func, executors=[executor])(*args, **kwargs)
     
     return func_wrapper
 
@@ -125,7 +85,7 @@ class HelloMPITest:
     @mpi_task
     def hello(self, name, stdout=None, stderr=None, dependency=None, parsl_resource_specification=None):
         return f"""
-        echo "Hello {name} on $(hostname) at $(date)"
+         $PARSL_MPI_PREFIX --overcommit echo "Hello {name} on $(hostname) at $(date)"
         """
 
 if __name__ == "__main__":
@@ -135,58 +95,56 @@ if __name__ == "__main__":
     pwd = pathlib.Path(__file__).parent.resolve()
     default_ep_id = "1c4d10d1-913f-4339-98c9-3cc5e0630dc0"
     mpi_ep_id = "bf938d9b-7479-4450-a098-e03e7aaf7e1d"
-    gce_default = Executor(endpoint_id=default_ep_id)
-    gce_mpi = Executor(endpoint_id=mpi_ep_id)
     with parsl.load(
-            Config(executors=[
-                ThreadPoolExecutor(
-                    label='threads', 
-                    max_threads=2, 
-                    storage_access=None, 
-                    thread_name_prefix='', 
-                    working_dir=None
+        Config(executors=[
+            HighThroughputExecutor(
+                label="default",
+                cores_per_worker=1,
+                max_workers_per_node=40,
+                provider=SlurmProvider(
+                    exclusive=False,
+                    cores_per_node=40,
+                    nodes_per_block=1,
+                    init_blocks=1,
+                    min_blocks=1,
+                    max_blocks=3,
+                    partition="hercules",
+                    account="gsd-hpcs",
+                    walltime="00:30:00",
+                    launcher=SimpleLauncher(),
+                    worker_init="""
+                    """,
                 ),
+            ),
                 
-                
-                HighThroughputExecutor(
-                    label="default",
-                    cores_per_worker=1,
-                    max_workers_per_node=40,
-                    provider=SlurmProvider(
-                        exclusive=False,
-                        cores_per_node=40,
-                        nodes_per_block=1,
-                        init_blocks=1,
-                        min_blocks=1,
-                        max_blocks=3,
-                        partition="hercules",
-                        account="gsd-hpcs",
-                        walltime="00:30:00",
-                        launcher=SimpleLauncher(),
-                        worker_init="""
-                        """,
-                    ),
+            MPIExecutor(
+                label="mpi",
+                mpi_launcher="srun",
+                max_workers_per_block=2,
+                provider=SlurmProvider(
+                    exclusive=True,
+                    cores_per_node=40,
+                    nodes_per_block=3,
+                    init_blocks=1,
+                    partition="hercules",
+                    account="gsd-hpcs",
+                    walltime="00:30:00",
+                    launcher=SimpleLauncher(),
+                    worker_init="""
+                    """,
                 ),
-                
-                MPIExecutor(
-                    label="mpi",
-                    mpi_launcher="srun",
-                    max_workers_per_block=2,
-                    provider=SlurmProvider(
-                        exclusive=True,
-                        cores_per_node=40,
-                        nodes_per_block=3,
-                        init_blocks=1,
-                        partition="hercules",
-                        account="gsd-hpcs",
-                        walltime="00:30:00",
-                        launcher=SimpleLauncher(),
-                        worker_init="""
-                        """,
-                    ),
-                ),
-            ]
-                   )
+            ),
+
+            GlobusComputeExecutor(
+                label="gc_mpi",
+                endpoint_id=mpi_ep_id,
+            ),
+
+            GlobusComputeExecutor(
+                label="gc_default",
+                endpoint_id=default_ep_id,
+            ),]
+        )
     ):
 
         # Test Python decorators
@@ -197,7 +155,7 @@ if __name__ == "__main__":
         )
         python_gc = python.hello(
             "from Globus Compute",
-            executor=gce_default,
+            executor="gc_default",
         )
         print(python_parsl)
         print(python_gc)
@@ -213,7 +171,7 @@ if __name__ == "__main__":
         )
         bash_gc = bash.hello(
             "from Globus Compute",
-            executor=gce_default,
+            executor="gc_default",
             stdout=os.path.join(pwd, "bash_gc.out"),
             stderr=os.path.join(pwd, "bash_gc.err"),
             dependency=python_gc,
@@ -237,7 +195,7 @@ if __name__ == "__main__":
         )
         mpi_gc = mpi.hello(
             "from Globus Compute",
-            executor=gce_mpi,
+            executor="gc_mpi",
             stdout=os.path.join(pwd, "mpi_gc.out"),
             stderr=os.path.join(pwd, "mpi_gc.err"),
             parsl_resource_specification = {
@@ -256,6 +214,3 @@ if __name__ == "__main__":
         print(bash_gc.result())
         print(mpi_parsl.result())
         print(mpi_gc.result())
-        
-    gce_default.shutdown()
-    gce_mpi.shutdown()
