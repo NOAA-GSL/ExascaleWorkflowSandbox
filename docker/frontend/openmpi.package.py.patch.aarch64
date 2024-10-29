@@ -1,0 +1,10 @@
+--- var/spack/repos/builtin/packages/openmpi/package.py	2024-06-26 09:58:06
++++ var/spack/repos/builtin/packages/openmpi/package.py.aarch64	2024-06-26 10:07:39
+@@ -971,6 +971,7 @@
+ 
+         if spec.satisfies("+pmi"):
+             config_args.append("--with-pmi={0}".format(spec["slurm"].prefix))
++            config_args.append("--with-pmi-libdir=/usr/lib/aarch64-linux-gnu")
+         else:
+             config_args.extend(self.with_or_without("pmi"))
+ 
