@@ -110,6 +110,7 @@ def main(user_config_file: Path) -> None:
             stderr=experiment_path / "create_region.err",
             executor="service",
             install=install_limited_area,
+            executor="service",
         )
         create_region.result()
 
@@ -249,6 +250,7 @@ def main(user_config_file: Path) -> None:
                     "num_nodes": 1,
                     "num_ranks": 32,
                     "ranks_per_node": 32,
+
                 },
             )
 
