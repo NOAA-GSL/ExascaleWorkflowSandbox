@@ -17,10 +17,8 @@ def compile_mpi_hello(
     dirpath,
     stdout=None,
     stderr=None,
-    env="",
 ):
     return f"""
-    {env}
     cd {dirpath}
     $CHILTEPIN_MPIF90 -o mpi_hello.exe mpi_hello.f90
     """
@@ -29,10 +27,12 @@ def compile_mpi_hello(
 # Run the hello MPI program with environment passed in
 @bash_app(executors=["mpi"])
 def run_mpi_hello(
-    dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={}
+    dirpath,
+    stdout=None,
+    stderr=None,
+    parsl_resource_specification={},
 ):
     return f"""
-    {env}
     cd {dirpath}
     $PARSL_MPI_PREFIX --overcommit ./mpi_hello.exe
     """
@@ -44,10 +44,8 @@ def compile_mpi_pi(
     dirpath,
     stdout=None,
     stderr=None,
-    env="",
 ):
     return f"""
-    {env}
     cd {dirpath}
     $CHILTEPIN_MPIF90 -o mpi_pi.exe mpi_pi.f90
     """
@@ -56,10 +54,12 @@ def compile_mpi_pi(
 # Run the pi approximation MPI program with environment passed in
 @bash_app(executors=["mpi"])
 def run_mpi_pi(
-    dirpath, stdout=None, stderr=None, env="", parsl_resource_specification={}
+    dirpath,
+    stdout=None,
+    stderr=None,
+    parsl_resource_specification={},
 ):
     return f"""
-    {env}
     cd {dirpath}
     $PARSL_MPI_PREFIX --overcommit ./mpi_pi.exe
     """

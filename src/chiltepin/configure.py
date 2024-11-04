@@ -6,7 +6,7 @@ from parsl.config import Config
 from parsl.executors import GlobusComputeExecutor, HighThroughputExecutor, MPIExecutor
 from parsl.launchers import SimpleLauncher
 from parsl.providers import SlurmProvider
-
+from typing import Any, Dict
 
 def parse_file(filename: str) -> Dict[str, Any]:
     """Parse a YAML resource comfiguration file and return its contents as a dict
