@@ -68,7 +68,6 @@ class LimitedArea:
             region,
             stdout=None,
             stderr=None,
-            parsl_resource_specification={},
             install=None,
         ):
             resolution_cells = {
