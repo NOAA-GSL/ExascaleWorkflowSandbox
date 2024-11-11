@@ -85,7 +85,6 @@ class QG:
             stderr=None,
             jobs=8,
             configure=None,
-            parsl_resource_specification={"num_nodes": 1},
         ):
             return self.environment + textwrap.dedent(
                 f"""
@@ -167,14 +166,12 @@ class QG:
         stdout=None,
         stderr=None,
         executors=["serial"],
-        parsl_resource_specification={"num_nodes": 1},
     ):
         return self.get_make_task(executors=executors)(
             configure=configure,
             jobs=jobs,
             stdout=stdout,
             stderr=stderr,
-            parsl_resource_specification=parsl_resource_specification,
         )
 
     def install(
