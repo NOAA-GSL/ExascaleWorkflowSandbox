@@ -110,11 +110,17 @@ def test_endpoint_stop():
 def test_endpoint_delete():
     pwd = pathlib.Path(__file__).parent.resolve()
     p = subprocess.run(
-        f"echo y | globus-compute-endpoint -c {pwd}/globus_compute delete service",
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "delete",
+            "--yes",
+            "service",
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        shell=True,
         timeout=60,
     )
     assert p.returncode == 0
