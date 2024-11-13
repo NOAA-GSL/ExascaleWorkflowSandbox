@@ -51,7 +51,6 @@ class MPAS:
             stderr=None,
             jobs=8,
             clone=None,
-            parsl_resource_specification={"num_nodes": 1},
         ):
             repo_url = (
                 "https://raw.githubusercontent.com/NOAA-GSL/ExascaleWorkflowSandbox/"
@@ -206,14 +205,12 @@ class MPAS:
         stdout=None,
         stderr=None,
         executors=["service"],
-        parsl_resource_specification={"num_nodes": 1},
     ):
         return self.get_make_task(executors=executors)(
             clone=clone,
             jobs=jobs,
             stdout=stdout,
             stderr=stderr,
-            parsl_resource_specification=parsl_resource_specification,
         )
 
     def install(

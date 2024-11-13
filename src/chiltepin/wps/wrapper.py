@@ -51,7 +51,6 @@ class WPS:
             WRF_dir=None,
             jobs=8,
             clone=None,
-            parsl_resource_specification={"num_nodes": 1},
         ):
             if WRF_dir is None:
                 no_wrf = "--nowrf"
@@ -175,7 +174,6 @@ class WPS:
         stdout=None,
         stderr=None,
         executors=["service"],
-        parsl_resource_specification={"num_nodes": 1},
     ):
         return self.get_make_task(executors=executors)(
             clone=clone,
@@ -183,7 +181,6 @@ class WPS:
             WRF_dir=WRF_dir,
             stdout=stdout,
             stderr=stderr,
-            parsl_resource_specification=parsl_resource_specification,
         )
 
     def install(

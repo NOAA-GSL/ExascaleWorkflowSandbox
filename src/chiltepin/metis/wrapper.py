@@ -54,7 +54,6 @@ class Metis:
             stderr=None,
             jobs=8,
             clone=None,
-            parsl_resource_specification={"num_nodes": 1},
         ):
             return self.environment + textwrap.dedent(
                 f"""
@@ -149,7 +148,6 @@ class Metis:
             jobs=jobs,
             stdout=stdout,
             stderr=stderr,
-            parsl_resource_specification=parsl_resource_specification,
         )
 
     def install(

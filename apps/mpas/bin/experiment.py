@@ -164,6 +164,9 @@ def main(user_config_file: Path) -> None:
                 output_path=get_ics_dir,
             )
 
+            # Wait for the data to be retrieved
+            get_ics_data.result()
+
             # Get the lbcs data
             get_lbcs_data_config = experiment_config["get_lbcs_data"]
             get_lbcs_dir = Path(get_lbcs_data_config["run_dir"])
@@ -179,7 +182,6 @@ def main(user_config_file: Path) -> None:
             )
 
             # Wait for the data to be retrieved
-            get_ics_data.result()
             get_lbcs_data.result()
 
             # Run ungrib
