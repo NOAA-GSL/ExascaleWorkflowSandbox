@@ -1,7 +1,0 @@
-mirrors:
-  s3_spack_stack_buildcache_rw:
-    url: s3://chiltepin-us-east-2/spack-stack/
-    access_pair:
-      - $AWS_ACCESS_KEY_ID
-      - $AWS_SECRET_ACCESS_KEY
-    access_token: $AWS_SESSION_TOKEN
