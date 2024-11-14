@@ -96,6 +96,7 @@ jobs:
   test-mpas-app-arm64:
     if: ${{ github.event.label.name == 'Test-MPAS-App' }}
     runs-on: LinuxARM64-16core-64G-600Gb
+    timeout-minutes: 360
     permissions:
       packages: write
       contents: read
