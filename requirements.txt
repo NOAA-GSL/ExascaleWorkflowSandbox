@@ -5,8 +5,7 @@ pytest-isort
 awscli
 globus-compute-sdk
 globus-compute-endpoint
-parsl[monitoring]>=2024.06.03
-dill==0.3.8
+parsl[monitoring]<=2024.10.21
 uwtools @ git+https://github.com/ufs-community/uwtools@v2.3.2#subdirectory=src
 
 # Add uwtools dependencies to ensure they
