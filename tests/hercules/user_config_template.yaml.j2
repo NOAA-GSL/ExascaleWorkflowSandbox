@@ -1,0 +1,59 @@
+# This is the default user-template provided with newly-configured Multi-User
+# endpoints.  User endpoints generate a user-endpoint-specific configuration by
+# processing this YAML file as a Jinja template against user-provided
+# variables -- please modify this template to suit your site's requirements.
+#
+# Optionally, you can define a JSON schema for the user-provided variables in a
+# file named `user_config_schema.json` within the same directory. The variables
+# will be validated against the schema before rendering this template.
+#
+# For more information, please see the `user_endpoint_config` in Globus Compute
+# SDK's Executor.
+#
+# Some common options site-administrators may want to set:
+#  - address
+#  - provider (e.g., SlurmProvider, TorqueProvider, CobaltProvider, etc.)
+#  - account
+#  - scheduler_options
+#  - walltime
+#  - worker_init
+#
+# There are a number of example configurations available in the documentation:
+#    https://globus-compute.readthedocs.io/en/stable/endpoints.html#example-configurations
+
+debug: True
+
+endpoint_setup: {{ endpoint_setup|default() }}
+
+engine:
+  type: {{ engine_type|default("GlobusComputeEngine") }}
+  {% if engine_type == '"GlobusMPIEngine"' %}
+  max_workers_per_block: {{ max_mpi_apps|default(1) }}
+  mpi_launcher: srun
+  {% endif %}
+  run_in_sandbox: True
+
+  provider:
+    type: SlurmProvider
+    launcher:
+      type: SimpleLauncher
+    cores_per_node: {{ cores_per_node|default(1) }}
+    nodes_per_block: {{ nodes_per_block|default(1) }}
+    min_blocks: {{ min_blocks|default(1) }}
+    max_blocks: {{ max_blocks|default(1) }}
+    init_blocks: {{ init_blocks|default(0) }}
+    partition: {{ partition|default() }}
+    account: {{ account|default() }}
+    walltime: {{ walltime|default("00:10:00") }}
+    worker_init: {{ worker_init|default() }}
+
+# Endpoints will be restarted when a user submits new tasks to the
+# web-services, so eagerly shut down if endpoint is idle.  At 30s/hb (default
+# value), 10 heartbeats is 300s.
+idle_heartbeats_soft: 10
+
+# If endpoint is *apparently* idle (e.g., outstanding tasks, but no movement)
+# for this many heartbeats, then shutdown anyway.  At 30s/hb (default value),
+# 5,760 heartbeats == "48 hours".  (Note that this value will be ignored if
+# idle_heartbeats_soft is 0 or not set.)
+idle_heartbeats_hard: 5760

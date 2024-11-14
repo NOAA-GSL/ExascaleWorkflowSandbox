@@ -1,0 +1,3 @@
+display_name: null
+identity_mapping_config_path: /home/charrop/.globus_compute/hercules/example_identity_mapping_config.json
+multi_user: true
