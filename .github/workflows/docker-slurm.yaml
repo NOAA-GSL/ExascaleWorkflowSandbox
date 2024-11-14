@@ -57,15 +57,14 @@ jobs:
       -
         name: Start Slurm cluster containers
         run: |
+          cd tests
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
           docker compose version
-          #docker compose config
+          docker compose -f docker-compose-test.yml config
           docker images
           docker ps -a
-          cd tests
-          ls -al
-          docker compose -f ./docker-compose-test.yml up -d
+          docker compose -f docker-compose-test.yml up -d
       -
         name: Copy test files to work directory
         run: |
