@@ -382,22 +382,34 @@ def test_endpoint_delete(config):
 
     # Delete compute endpoint
     p = subprocess.run(
-        f"echo y | globus-compute-endpoint -c {pwd}/globus_compute delete compute",
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "delete",
+            "--yes",
+            "compute",
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        shell=True,
         timeout=60,
     )
     assert p.returncode == 0
 
     # Delete MPI endpoint
     p = subprocess.run(
-        f"echo y | globus-compute-endpoint -c {pwd}/globus_compute delete mpi",
+        [
+            "globus-compute-endpoint",
+            "-c",
+            f"{pwd}/globus_compute",
+            "delete",
+            "--yes",
+            "mpi",
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        shell=True,
         timeout=60,
     )
     assert p.returncode == 0

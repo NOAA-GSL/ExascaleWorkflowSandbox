@@ -6,10 +6,6 @@ on:
     types: [ labeled ]
   workflow_dispatch:
 
-env:
-  REGISTRY_IMAGE: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi
-  AWS_REGION: us-east-2
-
 jobs:
   mpas-app-lint-check:
     runs-on: ubuntu-latest
@@ -60,25 +56,27 @@ jobs:
       -
         name: Start Slurm cluster containers
         run: |
-          cd docker
+          cd tests
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
           docker compose version
-          docker compose config
+          docker compose -f docker-compose-test.yml config
           docker images
           docker ps -a
-          docker compose -f docker-compose.yml up -d --no-build
+          docker compose -f docker-compose-test.yml up -d
       -
         name: Copy test files to work directory
         run: |
           docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
       -
         name: Install chiltepin package
-        run: docker exec frontend bash -l -c "cd work ; pip install -e ."
+        run: |
+          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv create .chiltepin"
+          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip --use-deprecated=legacy-resolver install -r requirements.txt ; pip install -e ."
       -
         name: Run mpas workflow
         run: |
-          docker exec frontend bash -l -c "cd work/apps/mpas/bin ; PYTHONPATH=../../../ python experiment.py ../config/user_config.yaml"
+          docker exec frontend bash -l -c "cd work; source .chiltepin/bin/activate; cd apps/mpas/bin ; PYTHONPATH=../../../ python experiment.py ../config/user_config.yaml"
           docker exec frontend bash -l -c "cd work/apps/mpas/experiments/test ; ls -lrt ; tail 2023091500/forecast/log.atmosphere.0000.out"
       -
         name: Debug session
@@ -98,6 +96,7 @@ jobs:
   test-mpas-app-arm64:
     if: ${{ github.event.label.name == 'Test-MPAS-App' }}
     runs-on: LinuxARM64-16core-64G-600Gb
+    timeout-minutes: 360
     permissions:
       packages: write
       contents: read
@@ -155,26 +154,27 @@ jobs:
       -
         name: Start Slurm cluster containers
         run: |
-          cd docker
+          cd tests
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
           docker compose version
-          docker compose config
+          docker compose -f docker-compose-test.yml config
           docker images
           docker ps -a
-          docker compose -f docker-compose.yml up -d --no-build
+          docker compose -f docker-compose-test.yml up -d
       -
         name: Copy test files to work directory
         run: |
           docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
       -
         name: Install chiltepin package
-        run: docker exec frontend bash -l -c "cd work ; pip install -e ."
+        run: |
+          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv create .chiltepin"
+          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip --use-deprecated=legacy-resolver install -r requirements.txt ; pip install -e ."
       -
         name: Run mpas workflow
-        timeout-minutes: 30
         run: |
-          docker exec frontend bash -l -c "cd work/apps/mpas/bin ; PYTHONPATH=../../../ python experiment.py ../config/user_config.yaml"
+          docker exec frontend bash -l -c "cd work; source .chiltepin/bin/activate; cd apps/mpas/bin ; PYTHONPATH=../../../ python experiment.py ../config/user_config.yaml"
           docker exec frontend bash -l -c "cd work/apps/mpas/experiments/test ; ls -lrt ; tail 2023091500/forecast/log.atmosphere.0000.out"
       -
         name: Debug session

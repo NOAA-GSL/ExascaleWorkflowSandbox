@@ -7,6 +7,7 @@ services:
         volumes:
                 - home-vol:/home/admin
                 - opt-vol:/opt
+                - ..:/home/admin/chiltepin
         ports:
                 - 8888:8888
   slurmmaster:
@@ -17,6 +18,7 @@ services:
         volumes:
                 - home-vol:/home/admin:nocopy
                 - opt-vol:/opt:ro
+                - ..:/home/admin/chiltepin
         environment:
                 - SLURM_CPUS_ON_NODE=8
         ports:
@@ -31,6 +33,7 @@ services:
         volumes:
                 - home-vol:/home/admin:nocopy
                 - opt-vol:/opt:ro
+                - ..:/home/admin/chiltepin
         environment:
                 - SLURM_NODENAME=slurmnode1
                 - SLURM_CPUS_ON_NODE=8
@@ -44,6 +47,7 @@ services:
         volumes:
                 - home-vol:/home/admin:nocopy
                 - opt-vol:/opt:ro
+                - ..:/home/admin/chiltepin
         environment:
                 - SLURM_NODENAME=slurmnode2
                 - SLURM_CPUS_ON_NODE=8
@@ -57,6 +61,7 @@ services:
         volumes:
                 - home-vol:/home/admin:nocopy
                 - opt-vol:/opt:ro
+                - ..:/home/admin/chiltepin
         environment:
                 - SLURM_NODENAME=slurmnode3
                 - SLURM_CPUS_ON_NODE=8
@@ -70,6 +75,7 @@ services:
         volumes:
                 - home-vol:/home/admin:nocopy
                 - opt-vol:/opt:ro
+                - ..:/home/admin/chiltepin
         environment:
                 - SLURM_NODENAME=slurmnode4
                 - SLURM_CPUS_ON_NODE=8
@@ -83,6 +89,7 @@ services:
         volumes:
                 - home-vol:/home/admin:nocopy
                 - opt-vol:/opt:ro
+                - ..:/home/admin/chiltepin
         environment:
                 - SLURM_NODENAME=slurmnode5
                 - SLURM_CPUS_ON_NODE=8

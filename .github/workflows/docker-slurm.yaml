@@ -7,10 +7,6 @@ on:
     branches: [ develop, main ]
   workflow_dispatch:
 
-env:
-  REGISTRY_IMAGE: ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi
-  AWS_REGION: us-east-2
-
 jobs:
   lint-check:
     runs-on: ubuntu-latest
@@ -26,269 +22,8 @@ jobs:
           black src tests --check --diff
           isort src tests --check --diff --profile black
 
-  build-spack-stack-arm64:
-    runs-on: LinuxARM64-4core-16G-150Gb
-    timeout-minutes: 360
-    permissions:
-      packages: write
-      contents: read
-      id-token: write
-    steps:
-      -
-        # Beta ARM runners do not have Docker installed
-        name: Install Docker
-        run: |
-           # Uninstall incompatible packages
-           for pkg in docker.io containerd runc; do sudo apt-get remove $pkg; done
-           # Add Docker's official GPG key:
-           sudo apt-get update
-           sudo apt-get install ca-certificates curl
-           sudo install -m 0755 -d /etc/apt/keyrings
-           sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-           sudo chmod a+r /etc/apt/keyrings/docker.asc
-           # Add the repository to Apt sources:
-           echo \
-             "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-             $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-             sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-           sudo apt-get update -y
-           # Install docker packages
-           sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-           # Allow runner use to run docker without sudo
-           sudo usermod -aG docker $USER
-           sudo apt-get install acl
-           sudo setfacl --modify user:$USER:rw /var/run/docker.sock
-      -
-        name: Test Docker Installation
-        run: docker run hello-world
-      -
-        name: Install AWS CLI
-        run: sudo apt install -y awscli
-      -
-        name: Checkout repository
-        uses: actions/checkout@v4
-      -
-        name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_GITHUB_ROLE }}
-          role-duration-seconds: 21600 # 6 hours
-          role-session-name: chiltepin-github-actions
-      -
-        name: Test authentication
-        run: |
-          aws sts get-caller-identity
-      -
-        name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY_IMAGE }}
-          tags: |
-            type=raw,value=latest
-          flavor: |
-            latest=true
-            prefix=
-            suffix=
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      -
-        name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          logout: false
-      -
-        name: Prune pre-loaded GHA docker images
-        run: |
-          docker images
-          docker image prune -a -f
-          docker images
-      -
-        name: Create spack-stack Dockerfile and mirror
-        run: |
-          cd docker/spack-stack
-          cat mirrors.in.yaml | envsubst > mirrors.yaml
-          ./create_dockerfile.sh
-      -
-        name: Build spack-stack and push by digest
-        id: build
-        uses: docker/build-push-action@v5
-        with:
-          context: ./docker/spack-stack
-          file: ./docker/spack-stack/Dockerfile
-          platforms: linux/arm64
-          secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
-          secrets: |
-            "access_key_id=${{ env.AWS_ACCESS_KEY_ID }}"
-            "secret_access_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
-            "session_token=${{ env.AWS_SESSION_TOKEN }}"
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-arm64:cache,mode=max
-          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
-      -
-        name: Export digest
-        run: |
-          mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
-      -
-        name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          name: digests-linux-arm64
-          path: /tmp/digests/*
-          if-no-files-found: error
-          retention-days: 1
-
-  build-spack-stack-amd64:
-    runs-on: ubuntu2204-4c-16g-150ssd
-    timeout-minutes: 360
-    permissions:
-      packages: write
-      contents: read
-      id-token: write
-    steps:
-      -
-        name: Checkout repository
-        uses: actions/checkout@v4
-      -
-        name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_GITHUB_ROLE }}
-          role-duration-seconds: 21600 # 6 hours
-          role-session-name: chiltepin-github-actions
-      -
-        name: Test authentication
-        run: |
-          aws sts get-caller-identity
-      -
-        name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY_IMAGE }}
-          tags: |
-            type=raw,value=latest
-          flavor: |
-            latest=true
-            prefix=
-            suffix=
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      -
-        name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          logout: false
-      -
-        name: Prune pre-loaded GHA docker images
-        run: |
-          docker images
-          docker image prune -a -f
-          docker images
-      -
-        name: Create spack-stack Dockerfile and mirror
-        run: |
-          cd docker/spack-stack
-          cat mirrors.in.yaml | envsubst > mirrors.yaml
-          ./create_dockerfile.sh
-      -
-        name: Build spack-stack and push by digest
-        id: build
-        uses: docker/build-push-action@v5
-        with:
-          context: ./docker/spack-stack
-          file: ./docker/spack-stack/Dockerfile
-          platforms: linux/amd64
-          secret-files: "mirrors=./docker/spack-stack/mirrors.yaml"
-          secrets: |
-            "access_key_id=${{ env.AWS_ACCESS_KEY_ID }}"
-            "secret_access_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
-            "session_token=${{ env.AWS_SESSION_TOKEN }}"
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/spack-stack-gnu-openmpi-cache-amd64:cache,mode=max
-          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
-      -
-        name: Export digest
-        run: |
-          mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
-      -
-        name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          name: digests-linux-amd64
-          path: /tmp/digests/*
-          if-no-files-found: error
-          retention-days: 1
-
-  merge-spack-stack:
-    runs-on: ubuntu-latest
-    needs:
-      - build-spack-stack-amd64
-      - build-spack-stack-arm64
-    steps:
-      -
-        name: Checkout repository
-        uses: actions/checkout@v4
-      -
-        name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          path: /tmp/digests
-          pattern: digests-*
-          merge-multiple: true
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      -
-        name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY_IMAGE }}
-          tags: |
-            type=raw,value=latest
-          flavor: |
-            latest=true
-            prefix=
-            suffix=
-      -
-        name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          logout: false
-      -
-        name: Create manifest list and push
-        working-directory: /tmp/digests
-        run: |
-          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)          	
-      -
-        name: Inspect image
-        run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
 
   build-and-test-chiltepin:
-    needs:
-      - merge-spack-stack
     runs-on: ubuntu2204-16c-64g-600ssd
     timeout-minutes: 360
     permissions:
@@ -320,63 +55,32 @@ jobs:
           docker image prune -a -f
           docker images
       -
-        name: Build frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./docker
-          file: ./docker/frontend/Dockerfile
-          push: false
-          load: true
-          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
-      -
-        name: Build master
-        uses: docker/build-push-action@v5
-        with:
-          context: ./docker
-          file: ./docker/master/Dockerfile
-          push: false
-          load: true
-          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
-      -
-        name: Build node
-        uses: docker/build-push-action@v5
-        with:
-          context: ./docker
-          file: ./docker/node/Dockerfile
-          push: false
-          load: true
-          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
-      -
         name: Start Slurm cluster containers
         run: |
-          cd docker
+          cd tests
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
           docker compose version
-          docker compose config
+          docker compose -f docker-compose-test.yml config
           docker images
           docker ps -a
-          docker compose -f docker-compose.yml up -d --no-build
+          docker compose -f docker-compose-test.yml up -d
       -
         name: Copy test files to work directory
         run: |
           docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
       -
         name: Install chiltepin package
-        run: docker exec frontend bash -l -c "cd work ; pip install -e ."
+        run: |
+          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv create .chiltepin"
+          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip --use-deprecated=legacy-resolver install -r requirements.txt ; pip install -e ."
       -
         name: Run test suite
         env:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work/tests ; PYTHONPATH=.. pytest -s -v --assert=plain --config=config.yaml --platform=docker"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; cd tests ; PYTHONPATH=.. pytest -s -v --assert=plain --config=config.yaml --platform=docker"
       -
         name: Debug session
         if: ${{ failure() }}
@@ -387,43 +91,10 @@ jobs:
       -
         name: Shut down Slurm cluster containers
         run: |
-          cd docker
+          cd tests
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          docker compose -f docker-compose.yml down
-      -
-        name: Push frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./docker
-          file: ./docker/frontend/Dockerfile
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:latest
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/frontend:cache,mode=max
-      -
-        name: Push master
-        uses: docker/build-push-action@v5
-        with:
-          context: ./docker
-          file: ./docker/master/Dockerfile
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:latest
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/master:cache,mode=max
-      -
-        name: Push node
-        uses: docker/build-push-action@v5
-        with:
-          context: ./docker
-          file: ./docker/node/Dockerfile
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:latest
-          cache-from: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache
-          cache-to: type=registry,ref=ghcr.io/noaa-gsl/exascaleworkflowsandbox/node:cache,mode=max
+          docker compose -f docker-compose-test.yml down
       -
         name: Add Test-MPAS-App label
         run: |

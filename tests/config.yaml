@@ -74,7 +74,11 @@ docker:
       account: ""
 
   environment:
-    - "export OMPI_MCA_btl=self,tcp"
-    - "export rmaps_base_oversubscribe=true"
-    - "export CHILTEPIN_MPIF90=mpif90"
-    - "export jedi_cmake_ROOT=/opt/views/view"
+    - "source /usr/lmod/lmod/init/bash"
+    - "module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core"
+    - "module load stack-gcc"
+    - "module load stack-openmpi"
+    - "module load stack-python"
+    - "module load jedi-fv3-env"
+    - "module unload py-attrs"
+    - "export CHILTEPIN_MPIF90=$MPIF90"
