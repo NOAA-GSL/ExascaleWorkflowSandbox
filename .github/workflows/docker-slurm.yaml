@@ -75,9 +75,9 @@ jobs:
           docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
       -
         name: Install chiltepin package
-	run: |
-	  docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv create .chiltepin"
-	  docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip --use-deprecated=legacy-resolver install -r requirements.txt ; pip install -e ."
+        run: |
+          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv create .chiltepin"
+          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip --use-deprecated=legacy-resolver install -r requirements.txt ; pip install -e ."
       -
         name: Run test suite
         env:
