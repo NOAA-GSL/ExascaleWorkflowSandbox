@@ -1,6 +1,6 @@
 import textwrap
 
-from parsl.app.app import bash_app, join_app
+from chiltepin.tasks import bash_task, join_task
 
 
 class WPS:
@@ -15,17 +15,11 @@ class WPS:
         self.install_path = install_path
         self.tag = tag
 
-    def get_clone_task(
-        self,
-        executors=["service"],
-    ):
-        def clone(
-            stdout=None,
-            stderr=None,
-        ):
 
-            return self.environment + textwrap.dedent(
-                f"""
+    @bash_task
+    def clone(self, stdout=None, stderr=None):
+        return self.environment + textwrap.dedent(
+            f"""
             echo Started at $(date)
             echo Executing on $(hostname)
             git lfs install --skip-repo
@@ -37,29 +31,19 @@ class WPS:
             rm -f v{self.tag}.tar.gz
             echo Completed at $(date)
             """
-            )
+        )
 
-        return bash_app(clone, executors=executors)
 
-    def get_make_task(
-        self,
-        executors=["compute"],
-    ):
-        def make(
-            stdout=None,
-            stderr=None,
-            WRF_dir=None,
-            jobs=8,
-            clone=None,
-        ):
-            if WRF_dir is None:
-                no_wrf = "--nowrf"
-            else:
-                no_wrf = ""
-            repo_url = "https://raw.githubusercontent.com/spack/"
-            patch_url = repo_url + "spack/develop/var/spack/repos/builtin/packages/wps"
-            return self.environment + textwrap.dedent(
-                f"""
+    @bash_task
+    def make(self, WRF_dir=None, jobs=8, stdout=None, stderr=None, clone=None):
+        if WRF_dir is None:
+            no_wrf = "--nowrf"
+        else:
+            no_wrf = ""
+        repo_url = "https://raw.githubusercontent.com/spack/"
+        patch_url = repo_url + "spack/develop/var/spack/repos/builtin/packages/wps"
+        return self.environment + textwrap.dedent(
+            f"""
             echo Started at $(date)
             echo Executing on $(hostname)
             cd {self.install_path}/WPS/{self.tag}
@@ -97,124 +81,35 @@ class WPS:
             ./compile
             echo Completed at $(date)
             """
-            )
+        )
 
-        return bash_app(make, executors=executors)
 
-    def get_install_task(
-        self,
-        clone_executors=["service"],
-        make_executors=["service"],
-    ):
-        def install(
-            jobs=8,
-            WRF_dir=None,
-            stdout=None,
-            stderr=None,
-        ):
-            clone_task = self.get_clone_task(executors=clone_executors)
-            make_task = self.get_make_task(executors=make_executors)
+    @join_task
+    def install(self, WRF_dir=None, jobs=None, stdout=None, stderr=None, clone_executor="service", make_executor="service"):
+        clone = self.clone(
+            stdout=(stdout, "w"),
+            stderr=(stderr, "w"),
+            executor=clone_executor,
+        )
+        make = self.make(
+            jobs=jobs,
+            WRF_dir=WRF_dir,
+            stdout=(stdout, "a"),
+            stderr=(stderr, "a"),
+            executor=make_executor,
+            clone=clone,
+        )
+        return make
 
-            clone = clone_task(
-                stdout=(stdout, "w"),
-                stderr=(stderr, "w"),
-            )
-            make = make_task(
-                jobs=jobs,
-                WRF_dir=WRF_dir,
-                stdout=(stdout, "a"),
-                stderr=(stderr, "a"),
-                clone=clone,
-            )
-            return make
 
-        return join_app(install)
-
-    def get_ungrib_task(
-        self,
-        executors=["compute"],
-    ):
-        def ungrib(
-            config_path,
-            cycle_str,
-            stdout=None,
-            stderr=None,
-            install=None,
-        ):
-
-            return self.environment + textwrap.dedent(
-                f"""
+    @bash_task
+    def ungrib(self, config_path, cycle_str, stdout=None, stderr=None, install=None):
+        return self.environment + textwrap.dedent(
+            f"""
             echo Started at $(date)
             echo Executing on $(hostname)
             export PATH=$PATH:.
             uw ungrib run --cycle {cycle_str} --config-file {config_path} --key-path prepare_grib --verbose
             echo Completed at $(date)
             """
-            )
-
-        # return python_app(ungrib, executors=executors)
-        return bash_app(ungrib, executors=executors)
-
-    def clone(
-        self,
-        stdout=None,
-        stderr=None,
-        executors=["service"],
-    ):
-        return self.get_clone_task(executors=executors)(
-            stdout=stdout,
-            stderr=stderr,
-        )
-
-    def make(
-        self,
-        clone=None,
-        jobs=8,
-        WRF_dir=None,
-        stdout=None,
-        stderr=None,
-        executors=["service"],
-    ):
-        return self.get_make_task(executors=executors)(
-            clone=clone,
-            jobs=jobs,
-            WRF_dir=WRF_dir,
-            stdout=stdout,
-            stderr=stderr,
-        )
-
-    def install(
-        self,
-        jobs=8,
-        WRF_dir=None,
-        stdout=None,
-        stderr=None,
-        clone_executors=["service"],
-        make_executors=["service"],
-    ):
-        return self.get_install_task(
-            clone_executors=clone_executors,
-            make_executors=make_executors,
-        )(
-            jobs=jobs,
-            WRF_dir=WRF_dir,
-            stdout=stdout,
-            stderr=stderr,
-        )
-
-    def ungrib(
-        self,
-        config_path,
-        cycle_str,
-        stdout=None,
-        stderr=None,
-        install=None,
-        executors=["compute"],
-    ):
-        return self.get_ungrib_task(executors=executors)(
-            config_path,
-            cycle_str,
-            stdout=stdout,
-            stderr=stderr,
-            install=install,
         )

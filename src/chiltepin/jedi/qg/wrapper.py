@@ -1,6 +1,6 @@
 import textwrap
 
-from parsl.app.app import bash_app, join_app
+from chiltepin.tasks import bash_task, join_task
 
 
 class QG:
@@ -15,17 +15,10 @@ class QG:
         self.install_path = install_path
         self.tag = tag
 
-    def get_clone_task(
-        self,
-        executors=["service"],
-    ):
-        def clone(
-            stdout=None,
-            stderr=None,
-        ):
-
-            return self.environment + textwrap.dedent(
-                f"""
+    @bash_task
+    def clone(self, stdout=None, stderr=None):
+        return self.environment + textwrap.dedent(
+            f"""
             echo Started at $(date)
             echo Executing on $(hostname)
             git lfs install --skip-repo
@@ -35,21 +28,12 @@ class QG:
             git clone --branch {self.tag} https://github.com/JCSDA/jedi-bundle.git src
             echo Completed at $(date)
             """
-            )
+        )
 
-        return bash_app(clone, executors=executors)
-
-    def get_configure_task(
-        self,
-        executors=["service"],
-    ):
-        def configure(
-            stdout=None,
-            stderr=None,
-            clone=None,
-        ):
-            return self.environment + textwrap.dedent(
-                f"""
+    @bash_task
+    def configure(self, stdout=None, stderr=None, clone=None):
+        return self.environment + textwrap.dedent(
+            f"""
             echo Started at $(date)
             echo Executing on $(hostname)
             cd {self.install_path}/jedi-bundle/{self.tag}
@@ -72,22 +56,12 @@ class QG:
             ecbuild -DCMAKE_INSTALL_PREFIX=../ ../src
             echo Completed at $(date)
             """
-            )
+        )
 
-        return bash_app(configure, executors=executors)
-
-    def get_make_task(
-        self,
-        executors=["serial"],
-    ):
-        def make(
-            stdout=None,
-            stderr=None,
-            jobs=8,
-            configure=None,
-        ):
-            return self.environment + textwrap.dedent(
-                f"""
+    @bash_task
+    def make(self, jobs=8, stdout=None, stderr=None, configure=None):
+        return self.environment + textwrap.dedent(
+            f"""
             echo Started at $(date)
             echo Executing on $(hostname)
             spack env list
@@ -97,98 +71,26 @@ class QG:
             make install
             echo Completed at $(date)
             """
-            )
-
-        return bash_app(make, executors=executors)
-
-    def get_install_task(
-        self,
-        clone_executors=["service"],
-        configure_executors=["service"],
-        make_executors=["serial"],
-    ):
-        def install(
-            jobs=8,
-            stdout=None,
-            stderr=None,
-        ):
-            clone_task = self.get_clone_task(executors=clone_executors)
-            configure_task = self.get_configure_task(executors=configure_executors)
-            make_task = self.get_make_task(executors=make_executors)
-
-            clone = clone_task(
-                stdout=(stdout, "w"),
-                stderr=(stderr, "w"),
-            )
-            configure = configure_task(
-                stdout=(stdout, "a"),
-                stderr=(stderr, "a"),
-                clone=clone,
-            )
-            make = make_task(
-                jobs=jobs,
-                stdout=(stdout, "a"),
-                stderr=(stderr, "a"),
-                configure=configure,
-            )
-            return make
-
-        return join_app(install)
-
-    def clone(
-        self,
-        stdout=None,
-        stderr=None,
-        executors=["service"],
-    ):
-        return self.get_clone_task(executors=executors)(
-            stdout=stdout,
-            stderr=stderr,
         )
 
-    def configure(
-        self,
-        clone=None,
-        stdout=None,
-        stderr=None,
-        executors=["service"],
-    ):
-        return self.get_configure_task(executors=executors)(
-            stdout=stdout,
-            stderr=stderr,
+    @join_task
+    def install(self, jobs=8, stdout=None, stderr=None, clone_executor="service", configure_executor="service", make_executor="compute"):
+        clone = self.clone(
+            stdout=(stdout, "w"),
+            stderr=(stderr, "w"),
+            executor=clone_executor,
+        )
+        configure = self.configure(
+            stdout=(stdout, "a"),
+            stderr=(stderr, "a"),
+            executor=configure_executor,
             clone=clone,
         )
-
-    def make(
-        self,
-        configure=None,
-        jobs=8,
-        stdout=None,
-        stderr=None,
-        executors=["serial"],
-    ):
-        return self.get_make_task(executors=executors)(
+        make = self.make(
+            jobs=jobs,
+            stdout=(stdout, "a"),
+            stderr=(stderr, "a"),
+            executor=make_executor,
             configure=configure,
-            jobs=jobs,
-            stdout=stdout,
-            stderr=stderr,
         )
-
-    def install(
-        self,
-        jobs=8,
-        stdout=None,
-        stderr=None,
-        clone_executors=["service"],
-        configure_executors=["service"],
-        make_executors=["serial"],
-    ):
-        return self.get_install_task(
-            clone_executors=clone_executors,
-            configure_executors=configure_executors,
-            make_executors=make_executors,
-        )(
-            jobs=jobs,
-            stdout=stdout,
-            stderr=stderr,
-        )
+        return make

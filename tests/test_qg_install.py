@@ -31,9 +31,9 @@ def test_qg_install(config):
         jobs=8,
         stdout="qg_install.out",
         stderr="qg_install.err",
-        clone_executors=["service"],
-        configure_executors=["service"],
-        make_executors=["compute"],
+        clone_executor="service",
+        configure_executor="service",
+        make_executor="compute",
     ).result()
 
     assert install_result == 0
