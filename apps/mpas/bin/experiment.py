@@ -82,7 +82,7 @@ def main(user_config_file: Path) -> None:
         install_limited_area = limited_area.install(
             stdout=experiment_path / "install_limited_area.out",
             stderr=experiment_path / "install_limited_area.err",
-            executor="service"
+            executor="service",
         )
 
         # Intall Metis
@@ -213,7 +213,7 @@ def main(user_config_file: Path) -> None:
                     "num_nodes": 1,
                     "num_ranks": 4,
                     "ranks_per_node": 4,
-                }
+                },
             )
 
             # Wait for initial conditions
@@ -232,7 +232,7 @@ def main(user_config_file: Path) -> None:
                     "num_nodes": 1,
                     "num_ranks": 4,
                     "ranks_per_node": 4,
-                }
+                },
             )
 
             # Wait for lateral boundary conditions
@@ -251,7 +251,7 @@ def main(user_config_file: Path) -> None:
                     "num_nodes": 1,
                     "num_ranks": 32,
                     "ranks_per_node": 32,
-                }
+                },
             )
 
             # Wait for the forecast
