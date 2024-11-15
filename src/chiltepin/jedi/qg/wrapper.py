@@ -74,7 +74,15 @@ class QG:
         )
 
     @join_task
-    def install(self, jobs=8, stdout=None, stderr=None, clone_executor="service", configure_executor="service", make_executor="compute"):
+    def install(
+        self,
+        jobs=8,
+        stdout=None,
+        stderr=None,
+        clone_executor="service",
+        configure_executor="service",
+        make_executor="compute",
+    ):
         clone = self.clone(
             stdout=(stdout, "w"),
             stderr=(stderr, "w"),

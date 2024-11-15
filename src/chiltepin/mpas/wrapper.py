@@ -1,8 +1,9 @@
 import textwrap
 from datetime import datetime
 
-from chiltepin.tasks import bash_task, join_task
 from uwtools.api import config as uwconfig
+
+from chiltepin.tasks import bash_task, join_task
 
 
 class MPAS:
@@ -18,7 +19,11 @@ class MPAS:
         self.tag = tag
 
     @bash_task
-    def clone(self, stdout=None, stderr=None):
+    def clone(
+        self,
+        stdout=None,
+        stderr=None,
+    ):
         return self.environment + textwrap.dedent(
             f"""
             echo Started at $(date)
@@ -34,10 +39,14 @@ class MPAS:
         )
 
     @bash_task
-    def make(self, jobs=8, stdout=None, stderr=None, clone=None):
-        repo_url = (
-            "https://raw.githubusercontent.com/NOAA-GSL/ExascaleWorkflowSandbox/"
-        )
+    def make(
+        self,
+        jobs=8,
+        stdout=None,
+        stderr=None,
+        clone=None,
+    ):
+        repo_url = "https://raw.githubusercontent.com/NOAA-GSL/ExascaleWorkflowSandbox/"
         patch_url = repo_url + "main/apps/mpas/patches"
         return self.environment + textwrap.dedent(
             f"""
@@ -69,9 +78,15 @@ class MPAS:
             """
         )
 
-
     @join_task
-    def install(self, jobs=8, stdout=None, stderr=None, clone_executor="service", make_executor="service"):
+    def install(
+        self,
+        jobs=8,
+        stdout=None,
+        stderr=None,
+        clone_executor="service",
+        make_executor="service",
+    ):
         clone = self.clone(
             stdout=(stdout, "w"),
             stderr=(stderr, "w"),
@@ -86,9 +101,17 @@ class MPAS:
         )
         return make
 
-
     @bash_task
-    def mpas_init(self, config_path, cycle_str, key_path, stdout=None, stderr=None, install=None, parsl_resource_specification={}):
+    def mpas_init(
+        self,
+        config_path,
+        cycle_str,
+        key_path,
+        stdout=None,
+        stderr=None,
+        install=None,
+        parsl_resource_specification={},
+    ):
 
         cycle = datetime.fromisoformat(cycle_str)
 
@@ -110,9 +133,17 @@ class MPAS:
             """
         )
 
-
     @bash_task
-    def mpas_forecast(self, config_path, cycle_str, key_path, stdout=None, stderr=None, install=None, parsl_resource_specification={}):
+    def mpas_forecast(
+        self,
+        config_path,
+        cycle_str,
+        key_path,
+        stdout=None,
+        stderr=None,
+        install=None,
+        parsl_resource_specification={},
+    ):
         cycle = datetime.fromisoformat(cycle_str)
 
         # Extract driver config from experiment config

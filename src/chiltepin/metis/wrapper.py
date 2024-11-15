@@ -2,6 +2,7 @@ import textwrap
 
 from chiltepin.tasks import bash_task, join_task
 
+
 class Metis:
 
     def __init__(
@@ -14,9 +15,12 @@ class Metis:
         self.install_path = install_path
         self.tag = tag
 
-
     @bash_task
-    def clone(self, stdout=None, stderr=None):
+    def clone(
+        self,
+        stdout=None,
+        stderr=None,
+    ):
         return self.environment + textwrap.dedent(
             f"""
             set +e
@@ -36,9 +40,13 @@ class Metis:
             """
         )
 
-
     @bash_task
-    def make(self, stdout=None, stderr=None, clone=None):
+    def make(
+        self,
+        stdout=None,
+        stderr=None,
+        clone=None,
+    ):
         return self.environment + textwrap.dedent(
             f"""
             set +e
@@ -56,7 +64,13 @@ class Metis:
         )
 
     @join_task
-    def install(self, stdout=None, stderr=None, clone_executor="service", make_executor="service"):
+    def install(
+        self,
+        stdout=None,
+        stderr=None,
+        clone_executor="service",
+        make_executor="service",
+    ):
         clone = self.clone(
             stdout=(stdout, "w"),
             stderr=(stderr, "w"),
@@ -67,12 +81,18 @@ class Metis:
             stderr=(stderr, "a"),
             executor=make_executor,
             clone=clone,
-            )
+        )
         return make
 
-
     @bash_task
-    def gpmetis(self, mesh_file, nprocs, stdout=None, stderr=None, install=None):
+    def gpmetis(
+        self,
+        mesh_file,
+        nprocs,
+        stdout=None,
+        stderr=None,
+        install=None,
+    ):
         return self.environment + textwrap.dedent(
             f"""
             echo Started at $(date)

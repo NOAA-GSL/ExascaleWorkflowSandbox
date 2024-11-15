@@ -15,7 +15,6 @@ class WPS:
         self.install_path = install_path
         self.tag = tag
 
-
     @bash_task
     def clone(self, stdout=None, stderr=None):
         return self.environment + textwrap.dedent(
@@ -32,7 +31,6 @@ class WPS:
             echo Completed at $(date)
             """
         )
-
 
     @bash_task
     def make(self, WRF_dir=None, jobs=8, stdout=None, stderr=None, clone=None):
@@ -83,9 +81,16 @@ class WPS:
             """
         )
 
-
     @join_task
-    def install(self, WRF_dir=None, jobs=None, stdout=None, stderr=None, clone_executor="service", make_executor="service"):
+    def install(
+        self,
+        WRF_dir=None,
+        jobs=None,
+        stdout=None,
+        stderr=None,
+        clone_executor="service",
+        make_executor="service",
+    ):
         clone = self.clone(
             stdout=(stdout, "w"),
             stderr=(stderr, "w"),
@@ -100,7 +105,6 @@ class WPS:
             clone=clone,
         )
         return make
-
 
     @bash_task
     def ungrib(self, config_path, cycle_str, stdout=None, stderr=None, install=None):

@@ -1,6 +1,6 @@
 import textwrap
 
-from chiltepin.tasks import bash_task, join_task
+from chiltepin.tasks import bash_task
 
 
 class LimitedArea:
@@ -14,7 +14,6 @@ class LimitedArea:
         self.environment = environment
         self.install_path = install_path
         self.tag = tag
-
 
     @bash_task
     def install(self, stdout=None, stderr=None):
@@ -32,7 +31,6 @@ class LimitedArea:
             echo Completed at $(date)
             """
         )
-
 
     @bash_task
     def create_region(self, resolution, region, stdout=None, stderr=None, install=None):

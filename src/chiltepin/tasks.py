@@ -1,6 +1,8 @@
-from parsl.app.app import bash_app, join_app, python_app
 from functools import wraps
 from typing import Callable
+
+from parsl.app.app import bash_app, join_app, python_app
+
 
 def python_task(function: Callable) -> Callable:
     """Decorator function for making Chiltepin python tasks.
@@ -23,14 +25,15 @@ def python_task(function: Callable) -> Callable:
     Callable
 
     """
+
     @wraps(function)
     def function_wrapper(
-            *args,
-            executor='all',
-            **kwargs,
+        *args,
+        executor="all",
+        **kwargs,
     ):
         return python_app(function, executors=[executor])(*args, **kwargs)
-    
+
     return function_wrapper
 
 
@@ -47,7 +50,7 @@ def bash_task(function: Callable) -> Callable:
         The function to be decorated to yield a Bash workflow task. This function can be a
         stand-alone function or a class method. If it is a class method, it can make use of
         `self` to access object state. The function must return a string that contains a
-        series of bash commands to be executed.  
+        series of bash commands to be executed.
 
 
     Returns
@@ -56,14 +59,15 @@ def bash_task(function: Callable) -> Callable:
     Callable
 
     """
+
     @wraps(function)
     def function_wrapper(
-            *args,
-            executor='all',
-            **kwargs,
+        *args,
+        executor="all",
+        **kwargs,
     ):
         return bash_app(function, executors=[executor])(*args, **kwargs)
-    
+
     return function_wrapper
 
 
@@ -90,12 +94,12 @@ def join_task(function: Callable) -> Callable:
     Callable
 
     """
+
     @wraps(function)
     def function_wrapper(
-            *args,
-            **kwargs,
+        *args,
+        **kwargs,
     ):
         return join_app(function)(*args, **kwargs)
-    
+
     return function_wrapper
-            
