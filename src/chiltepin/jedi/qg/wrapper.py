@@ -16,7 +16,11 @@ class QG:
         self.tag = tag
 
     @bash_task
-    def clone(self, stdout=None, stderr=None):
+    def clone(
+        self,
+        stdout=None,
+        stderr=None,
+    ):
         return self.environment + textwrap.dedent(
             f"""
             echo Started at $(date)
@@ -31,7 +35,12 @@ class QG:
         )
 
     @bash_task
-    def configure(self, stdout=None, stderr=None, clone=None):
+    def configure(
+        self,
+        stdout=None,
+        stderr=None,
+        clone=None,
+    ):
         return self.environment + textwrap.dedent(
             f"""
             echo Started at $(date)
@@ -59,7 +68,13 @@ class QG:
         )
 
     @bash_task
-    def make(self, jobs=8, stdout=None, stderr=None, configure=None):
+    def make(
+        self,
+        jobs=8,
+        stdout=None,
+        stderr=None,
+        configure=None,
+    ):
         return self.environment + textwrap.dedent(
             f"""
             echo Started at $(date)

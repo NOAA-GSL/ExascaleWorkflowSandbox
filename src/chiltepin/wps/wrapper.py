@@ -16,7 +16,11 @@ class WPS:
         self.tag = tag
 
     @bash_task
-    def clone(self, stdout=None, stderr=None):
+    def clone(
+        self,
+        stdout=None,
+        stderr=None,
+    ):
         return self.environment + textwrap.dedent(
             f"""
             echo Started at $(date)
@@ -33,7 +37,14 @@ class WPS:
         )
 
     @bash_task
-    def make(self, WRF_dir=None, jobs=8, stdout=None, stderr=None, clone=None):
+    def make(
+        self,
+        WRF_dir=None,
+        jobs=8,
+        stdout=None,
+        stderr=None,
+        clone=None,
+    ):
         if WRF_dir is None:
             no_wrf = "--nowrf"
         else:
@@ -107,7 +118,14 @@ class WPS:
         return make
 
     @bash_task
-    def ungrib(self, config_path, cycle_str, stdout=None, stderr=None, install=None):
+    def ungrib(
+        self,
+        config_path,
+        cycle_str,
+        stdout=None,
+        stderr=None,
+        install=None,
+    ):
         return self.environment + textwrap.dedent(
             f"""
             echo Started at $(date)

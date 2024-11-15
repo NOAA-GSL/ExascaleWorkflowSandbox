@@ -16,7 +16,11 @@ class LimitedArea:
         self.tag = tag
 
     @bash_task
-    def install(self, stdout=None, stderr=None):
+    def install(
+        self,
+        stdout=None,
+        stderr=None,
+    ):
         return self.environment + textwrap.dedent(
             f"""
             echo Started at $(date)
@@ -33,7 +37,14 @@ class LimitedArea:
         )
 
     @bash_task
-    def create_region(self, resolution, region, stdout=None, stderr=None, install=None):
+    def create_region(
+        self,
+        resolution,
+        region,
+        stdout=None,
+        stderr=None,
+        install=None,
+    ):
         resolution_cells = {
             480: 2562,
             384: 4002,
