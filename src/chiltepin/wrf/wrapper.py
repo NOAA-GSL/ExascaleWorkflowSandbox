@@ -1,6 +1,6 @@
 import textwrap
 
-from parsl.app.app import bash_app, join_app
+from chiltepin.tasks import bash_task, join_task
 
 
 class WRF:
@@ -15,17 +15,14 @@ class WRF:
         self.install_path = install_path
         self.tag = tag
 
-    def get_clone_task(
+    @bash_task
+    def clone(
         self,
-        executors=["service"],
+        stdout=None,
+        stderr=None,
     ):
-        def clone(
-            stdout=None,
-            stderr=None,
-        ):
-
-            return self.environment + textwrap.dedent(
-                f"""
+        return self.environment + textwrap.dedent(
+            f"""
             echo Started at $(date)
             echo Executing on $(hostname)
             git lfs install --skip-repo
@@ -37,103 +34,47 @@ class WRF:
             rm -f v{self.tag}.tar.gz
             echo Completed at $(date)
             """
-            )
+        )
 
-        return bash_app(clone, executors=executors)
-
-    def get_make_task(
+    @bash_task
+    def make(
         self,
-        executors=["compute"],
+        jobs=8,
+        stdout=None,
+        stderr=None,
+        clone=None,
     ):
-        def make(
-            stdout=None,
-            stderr=None,
-            jobs=8,
-            clone=None,
-            parsl_resource_specification={"num_nodes": 1},
-        ):
-            return self.environment + textwrap.dedent(
-                f"""
+        return self.environment + textwrap.dedent(
+            f"""
             echo Started at $(date)
             echo Executing on $(hostname)
             cd {self.install_path}/WRF/{self.tag}
             export J="-j {jobs}"
             echo "15" | ./configure
             ./compile em_real
-            echo Completed at $(date)
+           echo Completed at $(date)
             """
-            )
-
-        return bash_app(make, executors=executors)
-
-    def get_install_task(
-        self,
-        clone_executors=["service"],
-        make_executors=["service"],
-    ):
-        def install(
-            jobs=8,
-            stdout=None,
-            stderr=None,
-        ):
-            clone_task = self.get_clone_task(executors=clone_executors)
-            make_task = self.get_make_task(executors=make_executors)
-
-            clone = clone_task(
-                stdout=(stdout, "w"),
-                stderr=(stderr, "w"),
-            )
-            make = make_task(
-                jobs=jobs,
-                stdout=(stdout, "a"),
-                stderr=(stderr, "a"),
-                clone=clone,
-            )
-            return make
-
-        return join_app(install)
-
-    def clone(
-        self,
-        stdout=None,
-        stderr=None,
-        executors=["service"],
-    ):
-        return self.get_clone_task(executors=executors)(
-            stdout=stdout,
-            stderr=stderr,
         )
 
-    def make(
-        self,
-        clone=None,
-        jobs=8,
-        stdout=None,
-        stderr=None,
-        executors=["service"],
-        parsl_resource_specification={"num_nodes": 1},
-    ):
-        return self.get_make_task(executors=executors)(
-            clone=clone,
-            jobs=jobs,
-            stdout=stdout,
-            stderr=stderr,
-            parsl_resource_specification=parsl_resource_specification,
-        )
-
+    @join_task
     def install(
         self,
         jobs=8,
         stdout=None,
         stderr=None,
-        clone_executors=["service"],
-        make_executors=["service"],
+        clone_executor="service",
+        make_executor="service",
     ):
-        return self.get_install_task(
-            clone_executors=clone_executors,
-            make_executors=make_executors,
-        )(
-            jobs=jobs,
-            stdout=stdout,
-            stderr=stderr,
+        clone = self.clone(
+            stdout=(stdout, "w"),
+            stderr=(stderr, "w"),
+            executor=clone_executor,
         )
+        make = self.make(
+            jobs=jobs,
+            stdout=(stdout, "a"),
+            stderr=(stderr, "a"),
+            executor=make_executor,
+            clone=clone,
+        )
+        return make
