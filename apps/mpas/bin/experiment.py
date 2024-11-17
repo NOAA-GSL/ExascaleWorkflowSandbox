@@ -110,7 +110,6 @@ def main(user_config_file: Path) -> None:
             stderr=experiment_path / "create_region.err",
             executor="service",
             install=install_limited_area,
-            executor="service",
         )
         create_region.result()
 
