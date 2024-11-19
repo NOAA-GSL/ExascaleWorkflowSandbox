@@ -1,22 +1,4 @@
-hercules:
-  resources:
-    mpi:
-      cores per node: 80
-      nodes per block: 3
-      max mpi apps: 2
-      partition: "hercules"
-      account: "gsd-hpcs"
-    service:
-      cores per node: 1
-      nodes per block: 1
-      partition: "service"
-      account: "gsd-hpcs"
-    compute:
-      cores per node: 80
-      nodes per block: 1
-      partition: "hercules"
-      account: "gsd-hpcs"
-  
+hercules-env: &hercules-env
   environment:
     - "module purge"
     - "module use /work/noaa/epic/role-epic/spack-stack/hercules/spack-stack-1.7.0/envs/ue-intel/install/modulefiles/Core"
@@ -28,25 +10,7 @@ hercules:
     - "export CHILTEPIN_MPIF90=$MPIF90"
     - "ulimit -s unlimited || true"
 
-hera:
-  resources:
-    mpi:
-      cores per node: 40
-      nodes per block: 3
-      max mpi apps: 2
-      partition: "hera"
-      account: "gsd-hpcs"
-    service:
-      cores per node: 1
-      nodes per block: 1
-      partition: "service"
-      account: "gsd-hpcs"
-    compute:
-      cores per node: 40
-      nodes per block: 1
-      partition: "hera"
-      account: "gsd-hpcs"
-  
+hera-env: &hera-env
   environment:
     - "module purge"
     - "module use /scratch1/NCEPDEV/nems/role.epic/spack-stack/spack-stack-1.7.0/envs/ue-intel/install/modulefiles/Core"
@@ -56,25 +20,7 @@ hera:
     - "module load jedi-mpas-env"
     - "export CHILTEPIN_MPIF90=$MPIF90"
 
-docker:
-  resources:
-    mpi:
-      cores per node: 8
-      nodes per block: 3
-      max mpi apps: 2
-      partition: "slurmpar"
-      account: ""
-    service:
-      cores per node: 1
-      nodes per block: 1
-      partition: "slurmpar"
-      account: ""
-    compute:
-      cores per node: 8
-      nodes per block: 1
-      partition: "slurmpar"
-      account: ""
-
+docker-env: &docker-env
   environment:
     - "source /usr/lmod/lmod/init/bash"
     - "module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core"
@@ -84,3 +30,80 @@ docker:
     - "module load jedi-mpas-env"
     - "module unload py-attrs"
     - "export CHILTEPIN_MPIF90=$MPIF90"
+
+hercules:
+  resources:
+    mpi:
+      engine: MPI
+      cores per node: 80
+      nodes per block: 3
+      max mpi apps: 2
+      partition: "hercules"
+      account: "gsd-hpcs"
+      <<: *hercules-env
+    service:
+      engine: HTEX
+      cores per node: 1
+      nodes per block: 1
+      partition: "service"
+      account: "gsd-hpcs"
+      <<: *hercules-env
+    compute:
+      engine: HTEX
+      cores per node: 80
+      nodes per block: 1
+      partition: "hercules"
+      account: "gsd-hpcs"
+      <<: *hercules-env
+
+hera:
+  resources:
+    mpi:
+      engine: MPI
+      cores per node: 40
+      nodes per block: 3
+      max mpi apps: 2
+      partition: "hera"
+      account: "gsd-hpcs"
+      <<: *hera-env
+    service:
+      engine: HTEX
+      cores per node: 1
+      nodes per block: 1
+      partition: "service"
+      account: "gsd-hpcs"
+      <<: *hera-env
+    compute:
+      engine: HTEX
+      cores per node: 40
+      nodes per block: 1
+      partition: "hera"
+      account: "gsd-hpcs"
+      <<: *hera-env
+  
+
+docker:
+  resources:
+    mpi:
+      engine: MPI
+      cores per node: 8
+      nodes per block: 3
+      max mpi apps: 2
+      partition: "slurmpar"
+      account: ""
+      <<: *docker-env
+    service:
+      engine: HTEX
+      cores per node: 1
+      nodes per block: 1
+      partition: "slurmpar"
+      account: ""
+      <<: *docker-env
+    compute:
+      engine: HTEX
+      cores per node: 8
+      nodes per block: 1
+      partition: "slurmpar"
+      account: ""
+      <<: *docker-env
+

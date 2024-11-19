@@ -16,7 +16,7 @@ import chiltepin.configure
 def config(config_file, platform):
     yaml_config = chiltepin.configure.parse_file(config_file)
     resources = yaml_config[platform]["resources"]
-    environment = "\n".join(yaml_config[platform]["environment"])
+    environment = "\n".join(resources["mpi"]["environment"])
 
     return {"resources": resources, "environment": environment}
 
@@ -100,6 +100,7 @@ def test_endpoint_configure(config):
         content = template.render(
             partition=config["resources"][endpoint]["partition"],
             account=config["resources"][endpoint]["account"],
+            worker_init=f"export PYTHONPATH={pwd.parent.resolve()}",
         )
         with open(
             f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8"
@@ -309,13 +310,13 @@ def test_endpoint_mpi_pi(config):
         assert r2.returncode == 0
 
     # Extract the hostnames used by pi1
-    with open("globus_compute_mpi_pi1_run.out", "r") as f:
+    with open(pwd / "globus_compute_mpi_pi1_run.out", "r") as f:
         pi1_hosts = []
         for line in f:
             if re.match(r"Host ", line):
                 pi1_hosts.append(line.split()[1])
     # Extract the hostnames used by pi2
-    with open("globus_compute_mpi_pi2_run.out", "r") as f:
+    with open(pwd / "globus_compute_mpi_pi2_run.out", "r") as f:
         pi2_hosts = []
         for line in f:
             if re.match(r"Host ", line):
@@ -323,12 +324,12 @@ def test_endpoint_mpi_pi(config):
     # Verify each pi test ran on a different set of nodes
     assert set(pi1_hosts).intersection(pi2_hosts) == set()
 
-    # Verify pi tests un concurrently
+    # Verify pi tests run concurrently
     start_time = []
     end_time = []
     files = ["globus_compute_mpi_pi1_run.out", "globus_compute_mpi_pi2_run.out"]
     for f in files:
-        with open(f, "r") as pi:
+        with open(pwd / f, "r") as pi:
             for line in pi:
                 if re.match(r"Start Time ", line):
                     line = line.strip().lstrip("Start Time = ")
