@@ -72,15 +72,15 @@ jobs:
       -
         name: Install chiltepin package
         run: |
-          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv create .chiltepin"
-          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip --use-deprecated=legacy-resolver install -r requirements.txt ; pip install -e ."
+          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
+          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip --use-deprecated=legacy-resolver install -e ."
       -
         name: Run test suite
         env:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; cd tests ; PYTHONPATH=.. pytest -s -v --assert=plain --config=config.yaml --platform=docker"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --config=tests/config.yaml --platform=docker"
       -
         name: Debug session
         if: ${{ failure() }}
