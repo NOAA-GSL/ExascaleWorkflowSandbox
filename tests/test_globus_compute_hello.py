@@ -13,9 +13,7 @@ import chiltepin.configure
 def config(config_file, platform):
     yaml_config = chiltepin.configure.parse_file(config_file)
     resources = yaml_config[platform]["resources"]
-    environment = "\n".join(yaml_config[platform]["environment"])
-
-    return {"resources": resources, "environment": environment}
+    return {"resources": resources}
 
 
 def test_endpoint_configure(config):
@@ -42,6 +40,7 @@ def test_endpoint_configure(config):
         content = template.render(
             partition=config["resources"][endpoint]["partition"],
             account=config["resources"][endpoint]["account"],
+            worker_init=f"export PYTHONPATH={pwd.parent.resolve()}",
         )
         with open(
             f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8"

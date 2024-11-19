@@ -17,3 +17,4 @@ engine:
     partition: {{ partition }}
     account: {{ account }}
     walltime: 00:10:00
+    worker_init: {{  worker_init|default() }}

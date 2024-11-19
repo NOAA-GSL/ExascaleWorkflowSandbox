@@ -1,36 +1,27 @@
-"""
-Chiltepin configure
-
-.. code-block:: python
-
-    # Import configure
-    import chiltepin.configure
-
-    # Parse a chiltepin config file
-    yaml_config = chiltepin.configure.parse_file(config_file)
-
-    # Extract Parsl resources and environment settings from config
-    resources, environments = chiltepin.configure.factory(yaml_config, platform)
-"""
-
-import os
+from typing import Any, Dict
 
 import yaml
-from parsl.channels import LocalChannel
 from parsl.config import Config
-from parsl.executors import FluxExecutor, HighThroughputExecutor, MPIExecutor
+from parsl.executors import GlobusComputeExecutor, HighThroughputExecutor, MPIExecutor
 from parsl.launchers import SimpleLauncher
 from parsl.providers import SlurmProvider
 
 
 # Define function to parse yaml config
-def parse_file(filename):
-    """
-    Return a dictionary for the configuration contained in a file.
+def parse_file(filename: str) -> Dict[str, Any]:
+    """Parse a YAML resource comfiguration file and return its contents as a dict
 
-    :param filename: Path of configuration file to parse
-    :return: The configuration dictionary
-    :rtype: dict
+
+    Parameters
+    ----------
+
+    filename: str
+        Name of configuration file to parse
+
+    Returns
+    -------
+
+    Dict[str, Any]
     """
     # Open and parse the yaml config
     with open(filename, "r") as stream:
@@ -42,97 +33,203 @@ def parse_file(filename):
     return yaml_config
 
 
-def configure_flux_executor(name, config):
+def make_htex_executor(name: str, config: Dict[str, Any]) -> HighThroughputExecutor:
+    """Construct a HighThroughputExecutor from the input configuration
 
-    # Setting FLUX_SSH is required on some systems
-    os.environ["FLUX_SSH"] = "ssh"
 
-    e = FluxExecutor(
+    Parameters
+    ----------
+
+    name: str
+        A label that will be assigned to the returned HighThroughputExecutor
+        for naming purposes
+
+    config: Dict[str, Any]
+        YAML configuration block that contains the following configuration options:
+
+        Option key                Defaulit value
+        "cores per node":         1
+        "cores per worker":       1
+        "max workers per node":   value of "cores per node"
+        "nodes per block":        1
+        "init blocks":            0
+        "min blocks":             0
+        "max blocks":             1
+        "partition":              None
+        "account":                None
+        "walltime":               1:00:00
+        "environment":            []
+
+    Returns
+    -------
+
+    HighThroughputExecutor
+    """
+    e = HighThroughputExecutor(
         label=name,
-        # Start Flux with srun and tell it how many cores per node to expect
-        launch_cmd=f'srun --mpi=pmi2 --tasks-per-node=1 -c{config["cores per node"]} '
-        + FluxExecutor.DEFAULT_LAUNCH_CMD,
+        cores_per_worker=config.get("cores per worker", 1),
+        max_workers_per_node=config.get("max workers per node", 1),
         provider=SlurmProvider(
-            channel=LocalChannel(),
-            cores_per_node=config["cores per node"],
-            nodes_per_block=config["nodes per block"],
-            init_blocks=1,
-            partition=config["partition"],
-            account=config["account"],
-            walltime="00:30:00",
+            exclusive=False,
+            cores_per_node=config.get("cores per node", None),
+            nodes_per_block=config.get("nodes per block", 1),
+            init_blocks=config.get("init blocks", 0),
+            min_blocks=config.get("min blocks", 0),
+            max_blocks=config.get("max blocks", 1),
+            partition=config.get("partition", None),
+            account=config.get("account", None),
+            walltime=config.get("walltime", "01:00:00"),
+            worker_init="\n".join(config.get("environment", [])),
             launcher=SimpleLauncher(),
-            worker_init="""
-            """,
         ),
     )
     return e
 
 
-def configure_mpi_executor(name, config):
+def make_mpi_executor(name: str, config: Dict[str, Any]) -> MPIExecutor:
+    """Construct a MPIExecutor from the input configuration
 
+
+    Parameters
+    ----------
+
+    name: str
+        A label that will be assigned to the returned MPIExecutor
+        for naming purposes
+
+    config: Dict[str, Any]
+        YAML configuration block that contains the following configuration options:
+
+        Option key                Defaulit value
+        "max mpi apps":           1
+        "cores per node":         1
+        "nodes per block":        1
+        "init blocks":            0
+        "min blocks":             0
+        "max blocks":             1
+        "partition":              None
+        "account":                None
+        "walltime":               1:00:00
+        "environment":            []
+
+    Returns
+    -------
+
+    MPIExecutor
+    """
     e = MPIExecutor(
         label=name,
         mpi_launcher="srun",
-        max_workers_per_block=config["max mpi apps"],
+        max_workers_per_block=config.get("max mpi apps", 1),
         provider=SlurmProvider(
-            channel=LocalChannel(),
             exclusive=True,
-            cores_per_node=config["cores per node"],
-            nodes_per_block=config["nodes per block"],
-            init_blocks=1,
-            partition=config["partition"],
-            account=config["account"],
-            walltime="00:30:00",
+            cores_per_node=config.get("cores per node", None),
+            nodes_per_block=config.get("nodes per block", 1),
+            init_blocks=config.get("init blocks", 0),
+            min_blocks=config.get("min blocks", 0),
+            max_blocks=config.get("max blocks", 1),
+            partition=config.get("partition", None),
+            account=config.get("account", None),
+            walltime=config.get("walltime", "01:00:00"),
+            worker_init="\n".join(config.get("environment", [])),
             launcher=SimpleLauncher(),
-            worker_init="""
-            """,
         ),
     )
     return e
 
 
-def configure_htex_executor(name, config):
+def make_globus_compute_executor(
+    name: str, config: Dict[str, Any]
+) -> GlobusComputeExecutor:
+    """Construct a GlobusComputeExecutor from the input configuration
 
-    e = HighThroughputExecutor(
+
+    Parameters
+    ----------
+
+    name: str
+        A label that will be assigned to the returned GlobusComputeExecutor
+        for naming purposes
+
+    config: Dict[str, Any]
+        YAML configuration block that contains the following configuration options:
+
+        Option key                Default value
+        "endpoint id":            No default, this option is required
+
+        For multi-user endpoints, the following additional options are recognized:
+
+        Option key                Defaulit value
+        "engine":                 GlobusComputeEngine
+        "max mpi apps":           1
+        "cores per node":         1
+        "nodes per block":        1
+        "init blocks":            0
+        "min blocks":             0
+        "max blocks":             1
+        "exclusive":              True
+        "partition":              None
+        "account":                None
+        "walltime":               1:00:00
+        "environment":            []
+
+    Returns
+    -------
+
+    GlobusComputeExecutor
+    """
+    e = GlobusComputeExecutor(
         label=name,
-        cores_per_worker=1,
-        max_workers_per_node=config["cores per node"],
-        provider=SlurmProvider(
-            channel=LocalChannel(),
-            exclusive=False,
-            cores_per_node=config["cores per node"],
-            nodes_per_block=config["nodes per block"],
-            init_blocks=1,
-            min_blocks=1,
-            max_blocks=3,
-            partition=config["partition"],
-            account=config["account"],
-            walltime="00:30:00",
-            launcher=SimpleLauncher(),
-            worker_init="""
-            """,
-        ),
+        endpoint_id=config["endpoint id"],
+        user_endpoint_config={
+            "engine": config.get("engine", "GlobusComputeEngine"),
+            "max_mpi_apps": config.get("max mpi apps", 1),
+            "cores_per_node": config.get("cores per node", 1),
+            "nodes_per_block": config.get("nodes per block", 1),
+            "init_blocks": config.get("init blocks", 0),
+            "min_blocks": config.get("min blocks", 0),
+            "max_blocks": config.get("max blocks", 1),
+            "exlusive": config.get("exclusive", True),
+            "partition": config["partition"],
+            "account=config": config["account"],
+            "worker_init": "\n".join(config.get("environment", [])),
+        },
     )
     return e
 
 
-def factory(yaml_config, platform):
+def load(config: Dict[str, Any]) -> Config:
+    """Construct a list of Executors from the input configuration dictionary
 
-    providers = yaml_config[platform]["resources"]
+    The list returned by this function can be used to construct a Parsl Config
+    object which is then used in parsl.load(config)
+
+
+    Parameters
+    ----------
+
+    config: Dict[str, Any]
+        YAML configuration block that contains the configuration for a list of
+        resources
+
+    Returns
+    -------
+
+    Config
+    """
     executors = []
-
-    # Make executors for mpi, service, and compute resources
-    for provider, provider_config in providers.items():
-        if provider == "mpi":
-            executors.append(configure_mpi_executor(provider, provider_config))
-        if provider == "service":
-            executors.append(configure_htex_executor(provider, provider_config))
-        if provider == "compute":
-            executors.append(configure_htex_executor(provider, provider_config))
-
-    resources = Config(executors=executors)
-    environments = {}
-    for platform, platform_config in yaml_config.items():
-        environments[platform] = "\n".join(platform_config["environment"])
-
-    return resources, environments
+    for name, spec in config["resources"].items():
+        match spec["engine"]:
+            case "HTEX":
+                # Make a HighThroughputExecutor
+                executors.append(make_htex_executor(name, spec))
+            case "MPI":
+                # Make an MPIExecutor
+                executors.append(make_mpi_executor(name, spec))
+            case "GlobusComputeEngine":
+                # Make a GlobusComputeExecutor for non-MPI jobs
+                executors.append(make_globus_compute_executor(name, spec))
+            case "GlobusMPIEngine":
+                # Make a GlobusComputeExecutor for MPI jobs
+                executors.append(make_globus_compute_executor(name, spec))
+    return Config(executors)

@@ -45,35 +45,30 @@ def main(user_config_file: Path) -> None:
 
     # Load Parsl resource configs
     resource_config_file = mpas_app / "config" / "resources.yaml"
-    resource_config = chiltepin.configure.parse_file(resource_config_file)
-    resources, environments = chiltepin.configure.factory(resource_config, machine)
-    environment = environments[machine]
+    yaml_config = chiltepin.configure.parse_file(resource_config_file)
+    resources = chiltepin.configure.load(yaml_config[machine])
     with parsl.load(resources):
 
         # Instantiate LimitedArea object
         limited_area = LimitedArea(
-            environment=environment,
             install_path=experiment_path,
             tag="2.1",
         )
 
         # Instantiate Metis object
         metis = Metis(
-            environment=environment,
             install_path=experiment_path,
             tag="5.2.1",
         )
 
         # Instantiate WPS object
         wps = WPS(
-            environment=environment,
             install_path=experiment_path,
             tag="4.5",
         )
 
         # Instantiate MPAS object
         mpas = MPAS(
-            environment=environment,
             install_path=experiment_path,
             tag="cbba5a4",
         )
@@ -155,7 +150,7 @@ def main(user_config_file: Path) -> None:
 
             # Get the ics data
             get_ics_data_config = experiment_config["get_ics_data"]
-            get_ics_dir = Path(get_ics_data_config["run_dir"])
+            get_ics_dir = Path(get_ics_data_config["rundir"])
             get_ics_data = retrieve_data(
                 stdout=experiment_path / f"get_ics_{yyyymmddhh}.out",
                 stderr=experiment_path / f"get_ics_{yyyymmddhh}.err",
@@ -172,7 +167,7 @@ def main(user_config_file: Path) -> None:
 
             # Get the lbcs data
             get_lbcs_data_config = experiment_config["get_lbcs_data"]
-            get_lbcs_dir = Path(get_lbcs_data_config["run_dir"])
+            get_lbcs_dir = Path(get_lbcs_data_config["rundir"])
             get_lbcs_data = retrieve_data(
                 stdout=experiment_path / f"get_lbcs_{yyyymmddhh}.out",
                 stderr=experiment_path / f"get_lbcs_{yyyymmddhh}.err",
@@ -259,9 +254,6 @@ def main(user_config_file: Path) -> None:
 
             # Increment experiment cycle
             cycle += timedelta(hours=experiment_config["user"]["cycle_frequency"])
-
-    # Clean up resources
-    parsl.clear()
 
 
 if __name__ == "__main__":
