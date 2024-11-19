@@ -150,7 +150,7 @@ def main(user_config_file: Path) -> None:
 
             # Get the ics data
             get_ics_data_config = experiment_config["get_ics_data"]
-            get_ics_dir = Path(get_ics_data_config["run_dir"])
+            get_ics_dir = Path(get_ics_data_config["rundir"])
             get_ics_data = retrieve_data(
                 stdout=experiment_path / f"get_ics_{yyyymmddhh}.out",
                 stderr=experiment_path / f"get_ics_{yyyymmddhh}.err",
@@ -167,7 +167,7 @@ def main(user_config_file: Path) -> None:
 
             # Get the lbcs data
             get_lbcs_data_config = experiment_config["get_lbcs_data"]
-            get_lbcs_dir = Path(get_lbcs_data_config["run_dir"])
+            get_lbcs_dir = Path(get_lbcs_data_config["rundir"])
             get_lbcs_data = retrieve_data(
                 stdout=experiment_path / f"get_lbcs_{yyyymmddhh}.out",
                 stderr=experiment_path / f"get_lbcs_{yyyymmddhh}.err",
