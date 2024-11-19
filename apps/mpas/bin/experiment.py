@@ -45,35 +45,30 @@ def main(user_config_file: Path) -> None:
 
     # Load Parsl resource configs
     resource_config_file = mpas_app / "config" / "resources.yaml"
-    resource_config = chiltepin.configure.parse_file(resource_config_file)
-    resources, environments = chiltepin.configure.factory(resource_config, machine)
-    environment = environments[machine]
+    yaml_config = chiltepin.configure.parse_file(resource_config_file)
+    resources = chiltepin.configure.load(yaml_config[machine])
     with parsl.load(resources):
 
         # Instantiate LimitedArea object
         limited_area = LimitedArea(
-            environment=environment,
             install_path=experiment_path,
             tag="2.1",
         )
 
         # Instantiate Metis object
         metis = Metis(
-            environment=environment,
             install_path=experiment_path,
             tag="5.2.1",
         )
 
         # Instantiate WPS object
         wps = WPS(
-            environment=environment,
             install_path=experiment_path,
             tag="4.5",
         )
 
         # Instantiate MPAS object
         mpas = MPAS(
-            environment=environment,
             install_path=experiment_path,
             tag="cbba5a4",
         )
@@ -259,9 +254,6 @@ def main(user_config_file: Path) -> None:
 
             # Increment experiment cycle
             cycle += timedelta(hours=experiment_config["user"]["cycle_frequency"])
-
-    # Clean up resources
-    parsl.clear()
 
 
 if __name__ == "__main__":
