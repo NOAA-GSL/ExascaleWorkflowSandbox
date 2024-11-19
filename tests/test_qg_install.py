@@ -1,6 +1,7 @@
 import os
 import os.path
 import pathlib
+
 import parsl
 import pytest
 
@@ -13,8 +14,12 @@ from chiltepin.jedi.qg.wrapper import QG
 def config(config_file, platform):
     pwd = pathlib.Path(__file__).parent.resolve()
     yaml_config = chiltepin.configure.parse_file(config_file)
-    yaml_config[platform]["resources"]["service"]["environment"].append(f"export PYTHONPATH={pwd.parent.resolve()}")
-    yaml_config[platform]["resources"]["compute"]["environment"].append(f"export PYTHONPATH={pwd.parent.resolve()}")
+    yaml_config[platform]["resources"]["service"]["environment"].append(
+        f"export PYTHONPATH={pwd.parent.resolve()}"
+    )
+    yaml_config[platform]["resources"]["compute"]["environment"].append(
+        f"export PYTHONPATH={pwd.parent.resolve()}"
+    )
     resources = chiltepin.configure.load(yaml_config[platform])
 
     with parsl.load(resources):
@@ -40,6 +45,8 @@ def test_qg_install(config):
     ).result()
 
     assert install_result == 0
-    assert os.path.exists(pwd / "jedi-bundle-test/jedi-bundle/develop/bin/qg_forecast.x")
+    assert os.path.exists(
+        pwd / "jedi-bundle-test/jedi-bundle/develop/bin/qg_forecast.x"
+    )
     assert os.path.exists(pwd / "jedi-bundle-test/jedi-bundle/develop/bin/qg_hofx.x")
     assert os.path.exists(pwd / "jedi-bundle-test/jedi-bundle/develop/bin/qg_4dvar.x")

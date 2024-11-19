@@ -70,8 +70,12 @@ def run_mpi_pi(
 def config(config_file, platform):
     pwd = pathlib.Path(__file__).parent.resolve()
     yaml_config = chiltepin.configure.parse_file(config_file)
-    yaml_config[platform]["resources"]["compute"]["environment"].append(f"export PYTHONPATH={pwd.parent.resolve()}")
-    yaml_config[platform]["resources"]["mpi"]["environment"].append(f"export PYTHONPATH={pwd.parent.resolve()}")
+    yaml_config[platform]["resources"]["compute"]["environment"].append(
+        f"export PYTHONPATH={pwd.parent.resolve()}"
+    )
+    yaml_config[platform]["resources"]["mpi"]["environment"].append(
+        f"export PYTHONPATH={pwd.parent.resolve()}"
+    )
     resources = chiltepin.configure.load(yaml_config[platform])
     with parsl.load(resources):
         yield {"resources": resources}

@@ -1,11 +1,11 @@
-import os
+from typing import Any, Dict
 
 import yaml
 from parsl.config import Config
 from parsl.executors import GlobusComputeExecutor, HighThroughputExecutor, MPIExecutor
 from parsl.launchers import SimpleLauncher
 from parsl.providers import SlurmProvider
-from typing import Any, Dict
+
 
 # Define function to parse yaml config
 def parse_file(filename: str) -> Dict[str, Any]:
@@ -80,7 +80,7 @@ def make_htex_executor(name: str, config: Dict[str, Any]) -> HighThroughputExecu
             account=config.get("account", None),
             walltime=config.get("walltime", "01:00:00"),
             worker_init="\n".join(config.get("environment", [])),
-            launcher=SimpleLauncher()
+            launcher=SimpleLauncher(),
         ),
     )
     return e
@@ -132,13 +132,15 @@ def make_mpi_executor(name: str, config: Dict[str, Any]) -> MPIExecutor:
             account=config.get("account", None),
             walltime=config.get("walltime", "01:00:00"),
             worker_init="\n".join(config.get("environment", [])),
-            launcher=SimpleLauncher()
+            launcher=SimpleLauncher(),
         ),
     )
     return e
 
 
-def make_globus_compute_executor(name: str, config: Dict[str, Any]) -> GlobusComputeExecutor:
+def make_globus_compute_executor(
+    name: str, config: Dict[str, Any]
+) -> GlobusComputeExecutor:
     """Construct a GlobusComputeExecutor from the input configuration
 
 
@@ -179,7 +181,7 @@ def make_globus_compute_executor(name: str, config: Dict[str, Any]) -> GlobusCom
     e = GlobusComputeExecutor(
         label=name,
         endpoint_id=config["endpoint id"],
-        user_endpoint_config = {
+        user_endpoint_config={
             "engine": config.get("engine", "GlobusComputeEngine"),
             "max_mpi_apps": config.get("max mpi apps", 1),
             "cores_per_node": config.get("cores per node", 1),
@@ -190,7 +192,7 @@ def make_globus_compute_executor(name: str, config: Dict[str, Any]) -> GlobusCom
             "exlusive": config.get("exclusive", True),
             "partition": config["partition"],
             "account=config": config["account"],
-            "worker_init": "\n".join(config.get("environment", []))
+            "worker_init": "\n".join(config.get("environment", [])),
         },
     )
     return e
@@ -226,8 +228,8 @@ def load(config: Dict[str, Any]) -> Config:
                 executors.append(make_mpi_executor(name, spec))
             case "GlobusComputeEngine":
                 # Make a GlobusComputeExecutor for non-MPI jobs
-                executors.append(make_gc_executor(name, spec))
+                executors.append(make_globus_compute_executor(name, spec))
             case "GlobusMPIEngine":
                 # Make a GlobusComputeExecutor for MPI jobs
-                executors.append(make_gc_executor(name, spec))
+                executors.append(make_globus_compute_executor(name, spec))
     return Config(executors)
