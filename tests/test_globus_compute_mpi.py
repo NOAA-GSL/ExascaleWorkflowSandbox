@@ -14,11 +14,16 @@ import chiltepin.configure
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
 def config(config_file, platform):
+    pwd = pathlib.Path(__file__).parent.resolve()
     yaml_config = chiltepin.configure.parse_file(config_file)
+    yaml_config[platform]["resources"]["gc-compute"]["environment"].append(
+        f"export PYTHONPATH={pwd.parent.resolve()}"
+    )
+    yaml_config[platform]["resources"]["gc-mpi"]["environment"].append(
+        f"export PYTHONPATH={pwd.parent.resolve()}"
+    )
     resources = yaml_config[platform]["resources"]
-    environment = "\n".join(resources["mpi"]["environment"])
-
-    return {"resources": resources, "environment": environment}
+    return {"resources": resources}
 
 
 # Local function to get endpoint ids
@@ -40,35 +45,37 @@ def _get_endpoint_ids():
     )
     assert p.returncode == 0
 
-    # Get the uuid of the mpi endpoint
-    mpi_endpoint_regex = re.compile(r"\| ([0-9a-f\-]{36}) \| Running\s+\| mpi\s+\|")
+    # Get the uuid of the gc-mpi endpoint
+    mpi_endpoint_regex = re.compile(
+        r"\| ([0-9a-f\-]{36}) \| Running\s+\| gc-mpi\s+\|"
+    )
     match = mpi_endpoint_regex.search(p.stdout)
-    mpi_endpoint_id = match.group(1)
-    assert len(mpi_endpoint_id) == 36
+    gc_mpi_endpoint_id = match.group(1)
+    assert len(gc_mpi_endpoint_id) == 36
 
-    # Get the uuid of the compute endpoint
+    # Get the uuid of the gc-compute endpoint
     compute_endpoint_regex = re.compile(
-        r"\| ([0-9a-f\-]{36}) \| Running\s+\| compute\s+\|"
+        r"\| ([0-9a-f\-]{36}) \| Running\s+\| gc-compute\s+\|"
     )
     match = compute_endpoint_regex.search(p.stdout)
-    compute_endpoint_id = match.group(1)
-    assert len(compute_endpoint_id) == 36
+    gc_compute_endpoint_id = match.group(1)
+    assert len(gc_compute_endpoint_id) == 36
 
-    return mpi_endpoint_id, compute_endpoint_id
+    return gc_mpi_endpoint_id, gc_compute_endpoint_id
 
 
 # Test endpoint configure
 def test_endpoint_configure(config):
     pwd = pathlib.Path(__file__).parent.resolve()
 
-    # Configure compute endpoint
+    # Configure gc-compute endpoint
     p = subprocess.run(
         [
             "globus-compute-endpoint",
             "-c",
             f"{pwd}/globus_compute",
             "configure",
-            "compute",
+            "gc-compute",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -77,14 +84,14 @@ def test_endpoint_configure(config):
     )
     assert p.returncode == 0
 
-    # Configure MPI endpoint
+    # Configure gc-mpi endpoint
     p = subprocess.run(
         [
             "globus-compute-endpoint",
             "-c",
             f"{pwd}/globus_compute",
             "configure",
-            "mpi",
+            "gc-mpi",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -95,12 +102,12 @@ def test_endpoint_configure(config):
 
     # Customize endpoint configs for this platform using Jinja2 templates
     jinja_env = Environment(loader=FileSystemLoader(f"{pwd}/templates/"))
-    for endpoint in ["compute", "mpi"]:
+    for endpoint in ["gc-compute", "gc-mpi"]:
         template = jinja_env.get_template(f"{endpoint}.yaml")
         content = template.render(
             partition=config["resources"][endpoint]["partition"],
             account=config["resources"][endpoint]["account"],
-            worker_init=f"export PYTHONPATH={pwd.parent.resolve()}",
+            worker_init=";".join(config["resources"][endpoint]["environment"])
         )
         with open(
             f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8"
@@ -112,14 +119,14 @@ def test_endpoint_configure(config):
 def test_endpoint_start():
     pwd = pathlib.Path(__file__).parent.resolve()
 
-    # Start compute endpoint
+    # Start gc-compute endpoint
     p = subprocess.run(
         [
             "globus-compute-endpoint",
             "-c",
             f"{pwd}/globus_compute",
             "start",
-            "compute",
+            "gc-compute",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -128,14 +135,14 @@ def test_endpoint_start():
     )
     assert p.returncode == 0
 
-    # Start MPI endpoint
+    # Start gc-mpi endpoint
     p = subprocess.run(
         [
             "globus-compute-endpoint",
             "-c",
             f"{pwd}/globus_compute",
             "start",
-            "mpi",
+            "gc-mpi",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -152,7 +159,6 @@ def test_endpoint_mpi_hello(config):
     # Define a ShellFunction to compile the MPI code
     compile_func = ShellFunction(
         """
-        {env}
         cd {dirpath}
         $CHILTEPIN_MPIF90 -o mpi_hello.exe mpi_hello.f90
         """,
@@ -163,7 +169,6 @@ def test_endpoint_mpi_hello(config):
     # Define a MPIFunction to run the MPI program
     hello_func = MPIFunction(
         """true;  # Force the default prefix to launch a no-op
-        {env}
         cd {dirpath}
         $PARSL_MPI_PREFIX --overcommit ./mpi_hello.exe
         """,
@@ -172,7 +177,7 @@ def test_endpoint_mpi_hello(config):
     )
 
     # Get a listing of the endpoints
-    mpi_endpoint_id, compute_endpoint_id = _get_endpoint_ids()
+    gc_mpi_endpoint_id, gc_compute_endpoint_id = _get_endpoint_ids()
 
     # Remove any previous output if necessary
     if os.path.exists(pwd / "globus_compute_mpi_hello_compile.out"):
@@ -184,18 +189,17 @@ def test_endpoint_mpi_hello(config):
     if os.path.exists(pwd / "globus_compute_mpi_hello_run.err"):
         os.remove(pwd / "globus_compute_mpi_hello_run.err")
 
-    # Compile the MPI program in the compute endpoint
-    with Executor(endpoint_id=compute_endpoint_id) as gce:
+    # Compile the MPI program in the gc-compute endpoint
+    with Executor(endpoint_id=gc_compute_endpoint_id) as gce:
         future = gce.submit(
             compile_func,
-            env=config["environment"],
             dirpath=pwd,
         )
         r = future.result()
         assert r.returncode == 0
 
-    # Run the MPI program in the MPI endpoint
-    with Executor(endpoint_id=mpi_endpoint_id) as gce:
+    # Run the MPI program in the gc-mpi endpoint
+    with Executor(endpoint_id=gc_mpi_endpoint_id) as gce:
         gce.resource_specification = {
             "num_nodes": 3,  # Number of nodes required for the application instance
             "num_ranks": 6,  # Number of ranks in total
@@ -203,7 +207,6 @@ def test_endpoint_mpi_hello(config):
         }
         future = gce.submit(
             hello_func,
-            env=config["environment"],
             dirpath=pwd,
         )
         r = future.result()
@@ -222,7 +225,6 @@ def test_endpoint_mpi_pi(config):
     # Define a ShellFunction to compile the MPI code
     compile_func = ShellFunction(
         """
-        {env}
         cd {dirpath}
         $CHILTEPIN_MPIF90 -o mpi_pi.exe mpi_pi.f90
         """,
@@ -233,7 +235,6 @@ def test_endpoint_mpi_pi(config):
     # Define a MPIFunction to run the MPI program
     pi1_func = MPIFunction(
         """true;  # Force the default prefix to launch a no-op
-        {env}
         cd {dirpath}
         $PARSL_MPI_PREFIX --overcommit ./mpi_pi.exe
         """,
@@ -244,7 +245,6 @@ def test_endpoint_mpi_pi(config):
     # Define a MPIFunction to run the MPI program
     pi2_func = MPIFunction(
         """true;  # Force the default prefix to launch a no-op
-        {env}
         cd {dirpath}
         $PARSL_MPI_PREFIX --overcommit ./mpi_pi.exe
         """,
@@ -253,7 +253,7 @@ def test_endpoint_mpi_pi(config):
     )
 
     # Get a listing of the endpoints
-    mpi_endpoint_id, compute_endpoint_id = _get_endpoint_ids()
+    gc_mpi_endpoint_id, gc_compute_endpoint_id = _get_endpoint_ids()
 
     # Remove any previous output if necessary
     if os.path.exists(pwd / "globus_compute_mpi_pi_compile.out"):
@@ -269,18 +269,17 @@ def test_endpoint_mpi_pi(config):
     if os.path.exists(pwd / "globus_compute_mpi_pi2_run.err"):
         os.remove(pwd / "globus_compute_mpi_pi2_run.err")
 
-    # Compile the MPI program in the compute endpoint
-    with Executor(endpoint_id=compute_endpoint_id) as gce:
+    # Compile the MPI program in the gc-compute endpoint
+    with Executor(endpoint_id=gc_compute_endpoint_id) as gce:
         future = gce.submit(
             compile_func,
-            env=config["environment"],
             dirpath=pwd,
         )
         r = future.result()
         assert r.returncode == 0
 
-    # Run the MPI program in the MPI endpoint
-    with Executor(endpoint_id=mpi_endpoint_id) as gce:
+    # Run the MPI program in the gc-mpi endpoint
+    with Executor(endpoint_id=gc_mpi_endpoint_id) as gce:
         cores_per_node = 8
         gce.resource_specification = {
             "num_nodes": 2,  # Number of nodes required for the application instance
@@ -289,7 +288,6 @@ def test_endpoint_mpi_pi(config):
         }
         future1 = gce.submit(
             pi1_func,
-            env=config["environment"],
             dirpath=pwd,
         )
 
@@ -300,7 +298,6 @@ def test_endpoint_mpi_pi(config):
         }
         future2 = gce.submit(
             pi2_func,
-            env=config["environment"],
             dirpath=pwd,
         )
 
@@ -344,14 +341,14 @@ def test_endpoint_mpi_pi(config):
 def test_endpoint_stop():
     pwd = pathlib.Path(__file__).parent.resolve()
 
-    # Stop the compute endpoint
+    # Stop the gc-compute endpoint
     p = subprocess.run(
         [
             "globus-compute-endpoint",
             "-c",
             f"{pwd}/globus_compute",
             "stop",
-            "compute",
+            "gc-compute",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -360,14 +357,14 @@ def test_endpoint_stop():
     )
     assert p.returncode == 0
 
-    # Stop the MPI endpoint
+    # Stop the gc-mpi endpoint
     p = subprocess.run(
         [
             "globus-compute-endpoint",
             "-c",
             f"{pwd}/globus_compute",
             "stop",
-            "mpi",
+            "gc-mpi",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -381,7 +378,7 @@ def test_endpoint_stop():
 def test_endpoint_delete(config):
     pwd = pathlib.Path(__file__).parent.resolve()
 
-    # Delete compute endpoint
+    # Delete gc-compute endpoint
     p = subprocess.run(
         [
             "globus-compute-endpoint",
@@ -389,7 +386,7 @@ def test_endpoint_delete(config):
             f"{pwd}/globus_compute",
             "delete",
             "--yes",
-            "compute",
+            "gc-compute",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -398,7 +395,7 @@ def test_endpoint_delete(config):
     )
     assert p.returncode == 0
 
-    # Delete MPI endpoint
+    # Delete gc-mpi endpoint
     p = subprocess.run(
         [
             "globus-compute-endpoint",
@@ -406,7 +403,7 @@ def test_endpoint_delete(config):
             f"{pwd}/globus_compute",
             "delete",
             "--yes",
-            "mpi",
+            "gc-mpi",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

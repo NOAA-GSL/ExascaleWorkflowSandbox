@@ -11,7 +11,11 @@ import chiltepin.configure
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
 def config(config_file, platform):
+    pwd = pathlib.Path(__file__).parent.resolve()
     yaml_config = chiltepin.configure.parse_file(config_file)
+    yaml_config[platform]["resources"]["gc-service"]["environment"].append(
+        f"export PYTHONPATH={pwd.parent.resolve()}"
+    )
     resources = yaml_config[platform]["resources"]
     return {"resources": resources}
 
@@ -24,7 +28,7 @@ def test_endpoint_configure(config):
             "-c",
             f"{pwd}/globus_compute",
             "configure",
-            "service",
+            "gc-service",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -35,12 +39,12 @@ def test_endpoint_configure(config):
 
     # Customize endpoint configs for this platform using Jinja2 templates
     jinja_env = Environment(loader=FileSystemLoader(f"{pwd}/templates/"))
-    for endpoint in ["service"]:
+    for endpoint in ["gc-service"]:
         template = jinja_env.get_template(f"{endpoint}.yaml")
         content = template.render(
             partition=config["resources"][endpoint]["partition"],
             account=config["resources"][endpoint]["account"],
-            worker_init=f"export PYTHONPATH={pwd.parent.resolve()}",
+            worker_init=";".join(config["resources"][endpoint]["environment"])
         )
         with open(
             f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8"
@@ -56,7 +60,7 @@ def test_endpoint_start():
             "-c",
             f"{pwd}/globus_compute",
             "start",
-            "service",
+            "gc-service",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -72,7 +76,7 @@ def test_hello_endpoint():
 
     pwd = pathlib.Path(__file__).parent.resolve()
     p = subprocess.run(
-        f"globus-compute-endpoint -c {pwd}/globus_compute list | grep service | cut -d' ' -f 2",
+        f"globus-compute-endpoint -c {pwd}/globus_compute list | grep gc-service | cut -d' ' -f 2",
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -96,7 +100,7 @@ def test_endpoint_stop():
             "-c",
             f"{pwd}/globus_compute",
             "stop",
-            "service",
+            "gc-service",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -115,7 +119,7 @@ def test_endpoint_delete():
             f"{pwd}/globus_compute",
             "delete",
             "--yes",
-            "service",
+            "gc-service",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
