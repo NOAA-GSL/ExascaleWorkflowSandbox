@@ -1,6 +1,8 @@
 name: MPAS App
 
 on:
+  push:
+    branches: [ develop, main ]
   pull_request:
     branches: [ develop, main ]
     types: [ labeled ]
@@ -72,7 +74,7 @@ jobs:
         name: Install chiltepin package
         run: |
           docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
-          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip --use-deprecated=legacy-resolver install -e ."
+          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip --use-deprecated=legacy-resolver install -e .[test]"
       -
         name: Run mpas workflow
         run: |

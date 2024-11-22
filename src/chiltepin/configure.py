@@ -1,6 +1,7 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import yaml
+from globus_compute_sdk import Executor
 from parsl.config import Config
 from parsl.executors import GlobusComputeExecutor, HighThroughputExecutor, MPIExecutor
 from parsl.launchers import SimpleLauncher
@@ -180,7 +181,7 @@ def make_globus_compute_executor(
     """
     e = GlobusComputeExecutor(
         label=name,
-        endpoint_id=config["endpoint id"],
+        executor=Executor(endpoint_id=config["endpoint id"]),
         user_endpoint_config={
             "engine": config.get("engine", "GlobusComputeEngine"),
             "max_mpi_apps": config.get("max mpi apps", 1),
@@ -198,7 +199,7 @@ def make_globus_compute_executor(
     return e
 
 
-def load(config: Dict[str, Any]) -> Config:
+def load(config: Dict[str, Any], resources: List[str] | None = None) -> Config:
     """Construct a list of Executors from the input configuration dictionary
 
     The list returned by this function can be used to construct a Parsl Config
@@ -212,24 +213,30 @@ def load(config: Dict[str, Any]) -> Config:
         YAML configuration block that contains the configuration for a list of
         resources
 
+    resources: List[str] | None
+        A list of the labels of the resources to load. The default is None.
+        If None, all resources are loaded.  Otherwise the resources whose
+        labels are in the list will be loaded.
+
     Returns
     -------
 
     Config
     """
     executors = []
-    for name, spec in config["resources"].items():
-        match spec["engine"]:
-            case "HTEX":
-                # Make a HighThroughputExecutor
-                executors.append(make_htex_executor(name, spec))
-            case "MPI":
-                # Make an MPIExecutor
-                executors.append(make_mpi_executor(name, spec))
-            case "GlobusComputeEngine":
-                # Make a GlobusComputeExecutor for non-MPI jobs
-                executors.append(make_globus_compute_executor(name, spec))
-            case "GlobusMPIEngine":
-                # Make a GlobusComputeExecutor for MPI jobs
-                executors.append(make_globus_compute_executor(name, spec))
+    for name, spec in config.items():
+        if resources is None or name in resources:
+            match spec["engine"]:
+                case "HTEX":
+                    # Make a HighThroughputExecutor
+                    executors.append(make_htex_executor(name, spec))
+                case "MPI":
+                    # Make an MPIExecutor
+                    executors.append(make_mpi_executor(name, spec))
+                case "GlobusComputeEngine":
+                    # Make a GlobusComputeExecutor for non-MPI jobs
+                    executors.append(make_globus_compute_executor(name, spec))
+                case "GlobusMPIEngine":
+                    # Make a GlobusComputeExecutor for MPI jobs
+                    executors.append(make_globus_compute_executor(name, spec))
     return Config(executors)

@@ -20,7 +20,9 @@ def config(config_file, platform):
     yaml_config[platform]["resources"]["compute"]["environment"].append(
         f"export PYTHONPATH={pwd.parent.resolve()}"
     )
-    resources = chiltepin.configure.load(yaml_config[platform])
+    resources = chiltepin.configure.load(
+        yaml_config[platform]["resources"], resources=["service", "compute"]
+    )
 
     with parsl.load(resources):
         yield {"resources": resources}

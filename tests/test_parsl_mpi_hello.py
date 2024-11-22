@@ -76,7 +76,9 @@ def config(config_file, platform):
     yaml_config[platform]["resources"]["mpi"]["environment"].append(
         f"export PYTHONPATH={pwd.parent.resolve()}"
     )
-    resources = chiltepin.configure.load(yaml_config[platform])
+    resources = chiltepin.configure.load(
+        yaml_config[platform]["resources"], resources=["compute", "mpi"]
+    )
     with parsl.load(resources):
         yield {"resources": resources}
     parsl.clear()

@@ -46,7 +46,10 @@ def main(user_config_file: Path) -> None:
     # Load Parsl resource configs
     resource_config_file = mpas_app / "config" / "resources.yaml"
     yaml_config = chiltepin.configure.parse_file(resource_config_file)
-    resources = chiltepin.configure.load(yaml_config[machine])
+    resources = chiltepin.configure.load(
+        yaml_config[machine]["resources"],
+        resources=["service", "compute", "mpi"],
+    )
     with parsl.load(resources):
 
         # Instantiate LimitedArea object

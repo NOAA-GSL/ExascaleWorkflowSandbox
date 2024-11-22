@@ -1,4 +1,5 @@
-[![ExascaleSandboxTests](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yml/badge.svg)](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yml)
+[![ExascaleSandboxTests](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yaml/badge.svg)](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yaml)
+[![MPAS App](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/mpas-app.yaml/badge.svg)](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/mpas-app.yaml)
 
 ```
 This repository is a scientific product and is not official communication
@@ -34,7 +35,7 @@ Python >= 3.9 is available.
 ```
 python -m venv .chiltepin
 source .chiltepin/bin/activate
-pip --use-deprecated=legacy-resolver install -e .  # Do not forget the dot at the end
+pip --use-deprecated=legacy-resolver install -e .[test]
 ```
 
 Alternatively, a conda environment (anaconda3, miniconda3, miniforge, etc.)
@@ -44,18 +45,17 @@ of certain known (and accepted) dependency conflicts that must be ignored.
 ```
 conda create -n "chiltepin" python=3.10
 source activate chiltepin
-pip --use-deprecated=legacy-resolver install -e .  # Do not forget the dot at the end
+pip --use-deprecated=legacy-resolver install -e .[test]
 ```
+
+NOTE: The `[test]` ensures that dependencies required for running the tests are installed.
 
 NOTE: There may be some warnings about incompatible package versions similar
 to the following:
 
 ```
 ERROR: pip's legacy dependency resolver does not consider dependency conflicts when selecting packages. This behaviour is the source of the following dependency conflicts.
-globus-compute-sdk 2.22.0 requires dill==0.3.6; python_version >= "3.11", but you'll have dill 0.3.8 which is incompatible.
 globus-identity-mapping 0.3.0 requires typing-extensions<4.10,>=4.9, but you'll have typing-extensions 4.12.2 which is incompatible.
-globus-compute-endpoint 2.22.0 requires jsonschema<4.20,>=4.19.0, but you'll have jsonschema 4.22.0 which is incompatible.
-globus-compute-endpoint 2.22.0 requires parsl==2024.3.18, but you'll have parsl 2024.6.3 which is incompatible.
 ```
 
 Those dependency conflicts can be safely ignored.
@@ -113,9 +113,11 @@ container environment), and run the tests
 
 ```
 cd chiltepin
-pip --use-deprecated=legacy-resolver install -e .
+pip --use-deprecated=legacy-resolver install -e .[test]
 pytest --assert=plain --config=tests/config.yaml --platform=docker
 ```
+
+NOTE: the `[test]` ensures that dependencies required for running the tests are installed.
 
 NOTE: Depending on how many cores your machine has and how many you've allocated to Docker,
 you may need to modify the `cores per node` setting in the configuration yaml file to match
