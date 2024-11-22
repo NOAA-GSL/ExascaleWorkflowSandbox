@@ -4,9 +4,12 @@ import re
 import subprocess
 from datetime import datetime as dt
 
+from chiltepin.tasks import bash_task
 import pytest
 from globus_compute_sdk import Executor, MPIFunction, ShellFunction
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import BaseLoader, Environment, FileSystemLoader
+import yaml
+import parsl
 
 import chiltepin.configure
 
@@ -23,7 +26,7 @@ def config(config_file, platform):
         f"export PYTHONPATH={pwd.parent.resolve()}"
     )
     resources = yaml_config[platform]["resources"]
-    return {"resources": resources}
+    return resources
 
 
 # Local function to get endpoint ids
@@ -105,9 +108,9 @@ def test_endpoint_configure(config):
     for endpoint in ["gc-compute", "gc-mpi"]:
         template = jinja_env.get_template(f"{endpoint}.yaml")
         content = template.render(
-            partition=config["resources"][endpoint]["partition"],
-            account=config["resources"][endpoint]["account"],
-            worker_init=";".join(config["resources"][endpoint]["environment"])
+            partition=config[endpoint]["partition"],
+            account=config[endpoint]["account"],
+            worker_init=";".join(config[endpoint]["environment"])
         )
         with open(
             f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8"
@@ -156,28 +159,26 @@ def test_endpoint_start():
 def test_endpoint_mpi_hello(config):
     pwd = pathlib.Path(__file__).parent.resolve()
 
-    # Define a ShellFunction to compile the MPI code
-    compile_func = ShellFunction(
-        """
+    # Define a bash task to compile the MPI code
+    @bash_task
+    def compile_func(dirpath, stdout=None, stderr=None):
+        return f"""
         cd {dirpath}
         $CHILTEPIN_MPIF90 -o mpi_hello.exe mpi_hello.f90
-        """,
-        stdout=os.path.join(pwd, "globus_compute_mpi_hello_compile.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_hello_compile.err"),
-    )
+        """
 
-    # Define a MPIFunction to run the MPI program
-    hello_func = MPIFunction(
-        """true;  # Force the default prefix to launch a no-op
+    # Define a bash task to run the MPI program
+    @bash_task
+    def hello_func(dirpath, stdout=None, stderr=None, parsl_resource_specification=None):
+        return f"""
         cd {dirpath}
         $PARSL_MPI_PREFIX --overcommit ./mpi_hello.exe
-        """,
-        stdout=os.path.join(pwd, "globus_compute_mpi_hello_run.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_hello_run.err"),
-    )
+        """
 
     # Get a listing of the endpoints
     gc_mpi_endpoint_id, gc_compute_endpoint_id = _get_endpoint_ids()
+    assert len(gc_mpi_endpoint_id) == 36
+    assert len(gc_compute_endpoint_id) == 36
 
     # Remove any previous output if necessary
     if os.path.exists(pwd / "globus_compute_mpi_hello_compile.out"):
@@ -189,28 +190,38 @@ def test_endpoint_mpi_hello(config):
     if os.path.exists(pwd / "globus_compute_mpi_hello_run.err"):
         os.remove(pwd / "globus_compute_mpi_hello_run.err")
 
-    # Compile the MPI program in the gc-compute endpoint
-    with Executor(endpoint_id=gc_compute_endpoint_id) as gce:
-        future = gce.submit(
-            compile_func,
-            dirpath=pwd,
-        )
-        r = future.result()
-        assert r.returncode == 0
+    config_string = yaml.dump(config)
+    template = Environment(loader=BaseLoader()).from_string(config_string)
+    content = template.render(
+        compute_endpoint_id=gc_compute_endpoint_id,
+        mpi_endpoint_id=gc_mpi_endpoint_id,
+    )
 
-    # Run the MPI program in the gc-mpi endpoint
-    with Executor(endpoint_id=gc_mpi_endpoint_id) as gce:
-        gce.resource_specification = {
-            "num_nodes": 3,  # Number of nodes required for the application instance
-            "num_ranks": 6,  # Number of ranks in total
-            "ranks_per_node": 2,  # Number of ranks / application elements to be launched per node
-        }
-        future = gce.submit(
-            hello_func,
-            dirpath=pwd,
+    content_yaml = yaml.safe_load(content)
+    resources = chiltepin.configure.load(content_yaml, resources=["gc-compute", "gc-mpi"])
+    with parsl.load(resources):
+        future = compile_func(
+            pwd,
+            stdout=os.path.join(pwd, "globus_compute_mpi_hello_compile.out"),
+            stderr=os.path.join(pwd, "globus_compute_mpi_hello_compile.err"),
+            executor="gc-compute"
         )
         r = future.result()
-        assert r.returncode == 0
+        assert r == 0
+
+        future = hello_func(
+            pwd,
+            stdout=os.path.join(pwd, "globus_compute_mpi_hello_run.out"),
+            stderr=os.path.join(pwd, "globus_compute_mpi_hello_run.err"),
+            executor="gc-mpi",
+            parsl_resource_specification = {
+                "num_nodes": 3,  # Number of nodes required for the application instance
+                "num_ranks": 6,  # Number of ranks in total
+                "ranks_per_node": 2,  # Number of ranks / application elements to be launched per node
+            },
+        )
+        r = future.result()
+        assert r == 0
 
     # Check output
     with open(pwd / "globus_compute_mpi_hello_run.out", "r") as f:
@@ -222,38 +233,26 @@ def test_endpoint_mpi_hello(config):
 def test_endpoint_mpi_pi(config):
     pwd = pathlib.Path(__file__).parent.resolve()
 
-    # Define a ShellFunction to compile the MPI code
-    compile_func = ShellFunction(
-        """
+    # Define a bash task to compile the MPI code
+    @bash_task
+    def compile_func(dirpath, stdout=None, stderr=None):
+        return f"""
         cd {dirpath}
         $CHILTEPIN_MPIF90 -o mpi_pi.exe mpi_pi.f90
-        """,
-        stdout=os.path.join(pwd, "globus_compute_mpi_pi_compile.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_pi_compile.err"),
-    )
+        """
 
-    # Define a MPIFunction to run the MPI program
-    pi1_func = MPIFunction(
-        """true;  # Force the default prefix to launch a no-op
+    # Define a bash task to run the MPI program
+    @bash_task
+    def pi_func(dirpath, stdout=None, stderr=None, parsl_resource_specification=None):
+        return f"""
         cd {dirpath}
         $PARSL_MPI_PREFIX --overcommit ./mpi_pi.exe
-        """,
-        stdout=os.path.join(pwd, "globus_compute_mpi_pi1_run.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_pi1_run.err"),
-    )
-
-    # Define a MPIFunction to run the MPI program
-    pi2_func = MPIFunction(
-        """true;  # Force the default prefix to launch a no-op
-        cd {dirpath}
-        $PARSL_MPI_PREFIX --overcommit ./mpi_pi.exe
-        """,
-        stdout=os.path.join(pwd, "globus_compute_mpi_pi2_run.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_pi2_run.err"),
-    )
+        """
 
     # Get a listing of the endpoints
     gc_mpi_endpoint_id, gc_compute_endpoint_id = _get_endpoint_ids()
+    assert len(gc_mpi_endpoint_id) == 36
+    assert len(gc_compute_endpoint_id) == 36
 
     # Remove any previous output if necessary
     if os.path.exists(pwd / "globus_compute_mpi_pi_compile.out"):
@@ -269,42 +268,54 @@ def test_endpoint_mpi_pi(config):
     if os.path.exists(pwd / "globus_compute_mpi_pi2_run.err"):
         os.remove(pwd / "globus_compute_mpi_pi2_run.err")
 
-    # Compile the MPI program in the gc-compute endpoint
-    with Executor(endpoint_id=gc_compute_endpoint_id) as gce:
-        future = gce.submit(
-            compile_func,
-            dirpath=pwd,
+    config_string = yaml.dump(config)
+    template = Environment(loader=BaseLoader()).from_string(config_string)
+    content = template.render(
+        compute_endpoint_id=gc_compute_endpoint_id,
+        mpi_endpoint_id=gc_mpi_endpoint_id,
+    )
+
+    content_yaml = yaml.safe_load(content)
+    resources = chiltepin.configure.load(content_yaml, resources=["gc-compute", "gc-mpi"])
+    with parsl.load(resources):
+        cores_per_node = 8
+        future = compile_func(
+            pwd,
+            stdout=os.path.join(pwd, "globus_compute_mpi_pi_compile.out"),
+            stderr=os.path.join(pwd, "globus_compute_mpi_pi_compile.err"),
+            executor="gc-compute",
         )
         r = future.result()
-        assert r.returncode == 0
+        assert r == 0
 
-    # Run the MPI program in the gc-mpi endpoint
-    with Executor(endpoint_id=gc_mpi_endpoint_id) as gce:
-        cores_per_node = 8
-        gce.resource_specification = {
+        future1 = pi_func(
+            pwd,
+            stdout=os.path.join(pwd, "globus_compute_mpi_pi1_run.out"),
+            stderr=os.path.join(pwd, "globus_compute_mpi_pi1_run.err"),
+            executor="gc-mpi",
+            parsl_resource_specification = {
             "num_nodes": 2,  # Number of nodes required for the application instance
             "num_ranks": 2 * cores_per_node,  # Number of ranks in total
             "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
-        }
-        future1 = gce.submit(
-            pi1_func,
-            dirpath=pwd,
+            },
         )
 
-        gce.resource_specification = {
+        future2 = pi_func(
+            pwd,
+            stdout=os.path.join(pwd, "globus_compute_mpi_pi2_run.out"),
+            stderr=os.path.join(pwd, "globus_compute_mpi_pi2_run.err"),
+            executor="gc-mpi",
+            parsl_resource_specification = {
             "num_nodes": 1,  # Number of nodes required for the application instance
             "num_ranks": cores_per_node,  # Number of ranks in total
             "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
-        }
-        future2 = gce.submit(
-            pi2_func,
-            dirpath=pwd,
+            },
         )
 
         r1 = future1.result()
-        assert r1.returncode == 0
+        assert r1 == 0
         r2 = future2.result()
-        assert r2.returncode == 0
+        assert r2 == 0
 
     # Extract the hostnames used by pi1
     with open(pwd / "globus_compute_mpi_pi1_run.out", "r") as f:
@@ -375,7 +386,7 @@ def test_endpoint_stop():
 
 
 # Test endpoint delete
-def test_endpoint_delete(config):
+def test_endpoint_delete():
     pwd = pathlib.Path(__file__).parent.resolve()
 
     # Delete gc-compute endpoint

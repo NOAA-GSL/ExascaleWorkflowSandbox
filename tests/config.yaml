@@ -54,7 +54,8 @@ hercules:
       account: "gsd-hpcs"
       <<: *hercules-env
     gc-mpi:
-      engine: MPI
+      engine: GlobusMPIEngine
+      endpoint id: "{{ mpi_endpoint_id }}"
       cores per node: 80
       nodes per block: 3
       max mpi apps: 2
@@ -62,14 +63,16 @@ hercules:
       account: "gsd-hpcs"
       <<: *hercules-env
     gc-service:
-      engine: HTEX
+      engine: GlobusComputeEngine
+      endpoint id: "{{ service_endpoint_id }}"
       cores per node: 1
       nodes per block: 1
       partition: "service"
       account: "gsd-hpcs"
       <<: *hercules-env
     gc-compute:
-      engine: HTEX
+      engine: GlobusComputeEngine
+      endpoint id: "{{ compute_endpoint_id }}"
       cores per node: 80
       nodes per block: 1
       partition: "hercules"
@@ -101,7 +104,8 @@ hera:
       account: "gsd-hpcs"
       <<: *hera-env
     gc-mpi:
-      engine: MPI
+      engine: GlobusMPIEngine
+      endpoint id: "{{ mpi_endpoint_id }}"
       cores per node: 40
       nodes per block: 3
       max mpi apps: 2
@@ -109,14 +113,16 @@ hera:
       account: "gsd-hpcs"
       <<: *hera-env
     gc-service:
-      engine: HTEX
+      engine: GlobusComputeEngine
+      endpoint id: "{{ service_endpoint_id }}"
       cores per node: 1
       nodes per block: 1
       partition: "service"
       account: "gsd-hpcs"
       <<: *hera-env
     gc-compute:
-      engine: HTEX
+      engine: GlobusComputeEngine
+      endpoint id: "{{ compute_endpoint_id }}"
       cores per node: 40
       nodes per block: 1
       partition: "hera"
@@ -148,7 +154,8 @@ docker:
       account: ""
       <<: *docker-env
     gc-mpi:
-      engine: MPI
+      engine: GlobusMPIEngine
+      endpoint id: "{{ mpi_endpoint_id }}"
       cores per node: 8
       nodes per block: 3
       max mpi apps: 2
@@ -156,14 +163,16 @@ docker:
       account: ""
       <<: *docker-env
     gc-service:
-      engine: HTEX
+      engine: GlobusComputeEngine
+      endpoint id: "{{ service_endpoint_id }}"
       cores per node: 1
       nodes per block: 1
       partition: "slurmpar"
       account: ""
       <<: *docker-env
     gc-compute:
-      engine: HTEX
+      engine: GlobusComputeEngine
+      endpoint id: "{{ compute_endpoint_id }}"
       cores per node: 8
       nodes per block: 1
       partition: "slurmpar"
