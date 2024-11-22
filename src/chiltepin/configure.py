@@ -1,11 +1,11 @@
 from typing import Any, Dict, List
 
 import yaml
+from globus_compute_sdk import Executor
 from parsl.config import Config
 from parsl.executors import GlobusComputeExecutor, HighThroughputExecutor, MPIExecutor
 from parsl.launchers import SimpleLauncher
 from parsl.providers import SlurmProvider
-from globus_compute_sdk import Executor
 
 
 # Define function to parse yaml config
@@ -199,7 +199,7 @@ def make_globus_compute_executor(
     return e
 
 
-def load(config: Dict[str, Any], resources: List[str]|None=None) -> Config:
+def load(config: Dict[str, Any], resources: List[str] | None = None) -> Config:
     """Construct a list of Executors from the input configuration dictionary
 
     The list returned by this function can be used to construct a Parsl Config

@@ -18,9 +18,9 @@ jobs:
         name: Format Check
         run:  |
           pip install flake8 black isort
-          flake8 src tests
-          black src tests --check --diff
-          isort src tests --check --diff --profile black
+          flake8 src tests apps/mpas/bin
+          black src tests apps/mpas/bin --check --diff
+          isort src tests apps/mpas/bin --check --diff --profile black
 
 
   build-and-test-chiltepin:

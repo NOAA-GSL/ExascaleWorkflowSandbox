@@ -2,13 +2,12 @@ import pathlib
 import subprocess
 
 import parsl
-from chiltepin.tasks import python_task
 import pytest
-from globus_compute_sdk import Executor
-from jinja2 import BaseLoader, Environment, FileSystemLoader
 import yaml
+from jinja2 import BaseLoader, Environment, FileSystemLoader
 
 import chiltepin.configure
+from chiltepin.tasks import python_task
 
 
 # Set up fixture to initialize and cleanup Parsl
@@ -47,7 +46,7 @@ def test_endpoint_configure(config):
     content = template.render(
         partition=config[endpoint]["partition"],
         account=config[endpoint]["account"],
-        worker_init=";".join(config[endpoint]["environment"])
+        worker_init=";".join(config[endpoint]["environment"]),
     )
     with open(
         f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8"
@@ -95,15 +94,14 @@ def test_hello_endpoint(config):
 
     config_string = yaml.dump(config)
     template = Environment(loader=BaseLoader()).from_string(config_string)
-    content = template.render(
-        service_endpoint_id=hello_endpoint_id
-    )
+    content = template.render(service_endpoint_id=hello_endpoint_id)
 
     content_yaml = yaml.safe_load(content)
     resources = chiltepin.configure.load(content_yaml, resources=[endpoint])
     with parsl.load(resources):
         future = hello(executor=endpoint)
         assert future.result() == "Hello"
+
 
 def test_endpoint_stop():
     pwd = pathlib.Path(__file__).parent.resolve()

@@ -4,14 +4,13 @@ import re
 import subprocess
 from datetime import datetime as dt
 
-from chiltepin.tasks import bash_task
-import pytest
-from globus_compute_sdk import Executor, MPIFunction, ShellFunction
-from jinja2 import BaseLoader, Environment, FileSystemLoader
-import yaml
 import parsl
+import pytest
+import yaml
+from jinja2 import BaseLoader, Environment, FileSystemLoader
 
 import chiltepin.configure
+from chiltepin.tasks import bash_task
 
 
 # Set up fixture to initialize and cleanup Parsl
@@ -49,9 +48,7 @@ def _get_endpoint_ids():
     assert p.returncode == 0
 
     # Get the uuid of the gc-mpi endpoint
-    mpi_endpoint_regex = re.compile(
-        r"\| ([0-9a-f\-]{36}) \| Running\s+\| gc-mpi\s+\|"
-    )
+    mpi_endpoint_regex = re.compile(r"\| ([0-9a-f\-]{36}) \| Running\s+\| gc-mpi\s+\|")
     match = mpi_endpoint_regex.search(p.stdout)
     gc_mpi_endpoint_id = match.group(1)
     assert len(gc_mpi_endpoint_id) == 36
@@ -110,7 +107,7 @@ def test_endpoint_configure(config):
         content = template.render(
             partition=config[endpoint]["partition"],
             account=config[endpoint]["account"],
-            worker_init=";".join(config[endpoint]["environment"])
+            worker_init=";".join(config[endpoint]["environment"]),
         )
         with open(
             f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8"
@@ -161,7 +158,11 @@ def test_endpoint_mpi_hello(config):
 
     # Define a bash task to compile the MPI code
     @bash_task
-    def compile_func(dirpath, stdout=None, stderr=None):
+    def compile_func(
+        dirpath,
+        stdout=None,
+        stderr=None,
+    ):
         return f"""
         cd {dirpath}
         $CHILTEPIN_MPIF90 -o mpi_hello.exe mpi_hello.f90
@@ -169,7 +170,12 @@ def test_endpoint_mpi_hello(config):
 
     # Define a bash task to run the MPI program
     @bash_task
-    def hello_func(dirpath, stdout=None, stderr=None, parsl_resource_specification=None):
+    def hello_func(
+        dirpath,
+        stdout=None,
+        stderr=None,
+        parsl_resource_specification=None,
+    ):
         return f"""
         cd {dirpath}
         $PARSL_MPI_PREFIX --overcommit ./mpi_hello.exe
@@ -198,13 +204,16 @@ def test_endpoint_mpi_hello(config):
     )
 
     content_yaml = yaml.safe_load(content)
-    resources = chiltepin.configure.load(content_yaml, resources=["gc-compute", "gc-mpi"])
+    resources = chiltepin.configure.load(
+        content_yaml,
+        resources=["gc-compute", "gc-mpi"],
+    )
     with parsl.load(resources):
         future = compile_func(
             pwd,
             stdout=os.path.join(pwd, "globus_compute_mpi_hello_compile.out"),
             stderr=os.path.join(pwd, "globus_compute_mpi_hello_compile.err"),
-            executor="gc-compute"
+            executor="gc-compute",
         )
         r = future.result()
         assert r == 0
@@ -214,7 +223,7 @@ def test_endpoint_mpi_hello(config):
             stdout=os.path.join(pwd, "globus_compute_mpi_hello_run.out"),
             stderr=os.path.join(pwd, "globus_compute_mpi_hello_run.err"),
             executor="gc-mpi",
-            parsl_resource_specification = {
+            parsl_resource_specification={
                 "num_nodes": 3,  # Number of nodes required for the application instance
                 "num_ranks": 6,  # Number of ranks in total
                 "ranks_per_node": 2,  # Number of ranks / application elements to be launched per node
@@ -276,7 +285,10 @@ def test_endpoint_mpi_pi(config):
     )
 
     content_yaml = yaml.safe_load(content)
-    resources = chiltepin.configure.load(content_yaml, resources=["gc-compute", "gc-mpi"])
+    resources = chiltepin.configure.load(
+        content_yaml,
+        resources=["gc-compute", "gc-mpi"],
+    )
     with parsl.load(resources):
         cores_per_node = 8
         future = compile_func(
@@ -293,10 +305,10 @@ def test_endpoint_mpi_pi(config):
             stdout=os.path.join(pwd, "globus_compute_mpi_pi1_run.out"),
             stderr=os.path.join(pwd, "globus_compute_mpi_pi1_run.err"),
             executor="gc-mpi",
-            parsl_resource_specification = {
-            "num_nodes": 2,  # Number of nodes required for the application instance
-            "num_ranks": 2 * cores_per_node,  # Number of ranks in total
-            "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
+            parsl_resource_specification={
+                "num_nodes": 2,  # Number of nodes required for the application instance
+                "num_ranks": 2 * cores_per_node,  # Number of ranks in total
+                "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
             },
         )
 
@@ -305,10 +317,10 @@ def test_endpoint_mpi_pi(config):
             stdout=os.path.join(pwd, "globus_compute_mpi_pi2_run.out"),
             stderr=os.path.join(pwd, "globus_compute_mpi_pi2_run.err"),
             executor="gc-mpi",
-            parsl_resource_specification = {
-            "num_nodes": 1,  # Number of nodes required for the application instance
-            "num_ranks": cores_per_node,  # Number of ranks in total
-            "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
+            parsl_resource_specification={
+                "num_nodes": 1,  # Number of nodes required for the application instance
+                "num_ranks": cores_per_node,  # Number of ranks in total
+                "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
             },
         )
 
