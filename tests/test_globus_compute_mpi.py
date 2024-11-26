@@ -1,7 +1,6 @@
 import os.path
 import pathlib
 import re
-import subprocess
 from datetime import datetime as dt
 
 import parsl
@@ -10,6 +9,7 @@ import yaml
 from jinja2 import BaseLoader, Environment, FileSystemLoader
 
 import chiltepin.configure
+import chiltepin.endpoint as endpoint
 from chiltepin.tasks import bash_task
 
 
@@ -17,139 +17,91 @@ from chiltepin.tasks import bash_task
 @pytest.fixture(scope="module")
 def config(config_file, platform):
     pwd = pathlib.Path(__file__).parent.resolve()
+
+    # Parse the configuration for the chosen platform
     yaml_config = chiltepin.configure.parse_file(config_file)
-    yaml_config[platform]["resources"]["gc-compute"]["environment"].append(
+    resource_config = yaml_config[platform]["resources"]
+
+    # Ensure PYTHONPATH is set in the environment so that pytest
+    # can import this test module on the remote workers
+    resource_config["gc-compute"]["environment"].append(
         f"export PYTHONPATH={pwd.parent.resolve()}"
     )
-    yaml_config[platform]["resources"]["gc-mpi"]["environment"].append(
+    resource_config["gc-mpi"]["environment"].append(
         f"export PYTHONPATH={pwd.parent.resolve()}"
     )
-    resources = yaml_config[platform]["resources"]
-    return resources
 
+    # Configure the test endpoints
+    endpoint.configure("gc-compute", config_dir=f"{pwd}/.globus_compute")
+    endpoint.configure("gc-mpi", config_dir=f"{pwd}/.globus_compute")
 
-# Local function to get endpoint ids
-def _get_endpoint_ids():
-    pwd = pathlib.Path(__file__).parent.resolve()
+    # Apply endpoint configuration template for the chosen platform
+    _apply_endpoint_template(resource_config)
 
-    # Get a listing of the endpoints
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "list",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
+    # Start the test endpoints
+    endpoint.start("gc-compute", config_dir=f"{pwd}/.globus_compute")
+    endpoint.start("gc-mpi", config_dir=f"{pwd}/.globus_compute")
+
+    # Update resource config with the test endpoint ids
+    resource_config = _set_endpoint_ids(resource_config)
+
+    # Load the finalized resource configuration
+    resources = chiltepin.configure.load(
+        resource_config,
+        resources=["gc-compute", "gc-mpi"],
     )
-    assert p.returncode == 0
 
-    # Get the uuid of the gc-mpi endpoint
-    mpi_endpoint_regex = re.compile(r"\| ([0-9a-f\-]{36}) \| Running\s+\| gc-mpi\s+\|")
-    match = mpi_endpoint_regex.search(p.stdout)
-    gc_mpi_endpoint_id = match.group(1)
-    assert len(gc_mpi_endpoint_id) == 36
+    # Run the tests with the loaded resources
+    with parsl.load(resources):
+        yield
 
-    # Get the uuid of the gc-compute endpoint
-    compute_endpoint_regex = re.compile(
-        r"\| ([0-9a-f\-]{36}) \| Running\s+\| gc-compute\s+\|"
-    )
-    match = compute_endpoint_regex.search(p.stdout)
-    gc_compute_endpoint_id = match.group(1)
-    assert len(gc_compute_endpoint_id) == 36
+    # Stop the test endpoints now that tests are done
+    endpoint.stop("gc-compute", config_dir=f"{pwd}/.globus_compute")
+    endpoint.stop("gc-mpi", config_dir=f"{pwd}/.globus_compute")
 
-    return gc_mpi_endpoint_id, gc_compute_endpoint_id
+    # Delete the test endpoints
+    endpoint.delete("gc-compute", config_dir=f"{pwd}/.globus_compute")
+    endpoint.delete("gc-mpi", config_dir=f"{pwd}/.globus_compute")
 
 
 # Test endpoint configure
-def test_endpoint_configure(config):
+def _apply_endpoint_template(config):
     pwd = pathlib.Path(__file__).parent.resolve()
-
-    # Configure gc-compute endpoint
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "configure",
-            "gc-compute",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-    )
-    assert p.returncode == 0
-
-    # Configure gc-mpi endpoint
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "configure",
-            "gc-mpi",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-    )
-    assert p.returncode == 0
 
     # Customize endpoint configs for this platform using Jinja2 templates
     jinja_env = Environment(loader=FileSystemLoader(f"{pwd}/templates/"))
-    for endpoint in ["gc-compute", "gc-mpi"]:
-        template = jinja_env.get_template(f"{endpoint}.yaml")
+    for name in ["gc-compute", "gc-mpi"]:
+        template = jinja_env.get_template(f"{name}.yaml")
         content = template.render(
-            partition=config[endpoint]["partition"],
-            account=config[endpoint]["account"],
-            worker_init=";".join(config[endpoint]["environment"]),
+            partition=config[name]["partition"],
+            account=config[name]["account"],
+            worker_init=";".join(config[name]["environment"]),
         )
         with open(
-            f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8"
+            f"{pwd}/.globus_compute/{name}/config.yaml", mode="w", encoding="utf-8"
         ) as gc_config:
             gc_config.write(content)
 
 
-# Test endpoint startup
-def test_endpoint_start():
+# Set endpoint ids in configuration
+def _set_endpoint_ids(config):
     pwd = pathlib.Path(__file__).parent.resolve()
 
-    # Start gc-compute endpoint
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "start",
-            "gc-compute",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-    )
-    assert p.returncode == 0
+    # Get a listing of the endpoints
+    ep_list = endpoint.list(config_dir=f"{pwd}/.globus_compute")
+    gc_compute_endpoint_id = ep_list["gc-compute"]["id"]
+    gc_mpi_endpoint_id = ep_list["gc-mpi"]["id"]
+    assert len(gc_mpi_endpoint_id) == 36
+    assert len(gc_compute_endpoint_id) == 36
 
-    # Start gc-mpi endpoint
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "start",
-            "gc-mpi",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
+    config_string = yaml.dump(config)
+    template = Environment(loader=BaseLoader()).from_string(config_string)
+    content = template.render(
+        compute_endpoint_id=gc_compute_endpoint_id,
+        mpi_endpoint_id=gc_mpi_endpoint_id,
     )
-    assert p.returncode == 0
+    content_yaml = yaml.safe_load(content)
+    return content_yaml
 
 
 # Test endpoint use
@@ -181,11 +133,6 @@ def test_endpoint_mpi_hello(config):
         $PARSL_MPI_PREFIX --overcommit ./mpi_hello.exe
         """
 
-    # Get a listing of the endpoints
-    gc_mpi_endpoint_id, gc_compute_endpoint_id = _get_endpoint_ids()
-    assert len(gc_mpi_endpoint_id) == 36
-    assert len(gc_compute_endpoint_id) == 36
-
     # Remove any previous output if necessary
     if os.path.exists(pwd / "globus_compute_mpi_hello_compile.out"):
         os.remove(pwd / "globus_compute_mpi_hello_compile.out")
@@ -196,41 +143,28 @@ def test_endpoint_mpi_hello(config):
     if os.path.exists(pwd / "globus_compute_mpi_hello_run.err"):
         os.remove(pwd / "globus_compute_mpi_hello_run.err")
 
-    config_string = yaml.dump(config)
-    template = Environment(loader=BaseLoader()).from_string(config_string)
-    content = template.render(
-        compute_endpoint_id=gc_compute_endpoint_id,
-        mpi_endpoint_id=gc_mpi_endpoint_id,
+    future = compile_func(
+        pwd,
+        stdout=os.path.join(pwd, "globus_compute_mpi_hello_compile.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_hello_compile.err"),
+        executor="gc-compute",
     )
+    r = future.result()
+    assert r == 0
 
-    content_yaml = yaml.safe_load(content)
-    resources = chiltepin.configure.load(
-        content_yaml,
-        resources=["gc-compute", "gc-mpi"],
+    future = hello_func(
+        pwd,
+        stdout=os.path.join(pwd, "globus_compute_mpi_hello_run.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_hello_run.err"),
+        executor="gc-mpi",
+        parsl_resource_specification={
+            "num_nodes": 3,  # Number of nodes required for the application instance
+            "num_ranks": 6,  # Number of ranks in total
+            "ranks_per_node": 2,  # Number of ranks / application elements to be launched per node
+        },
     )
-    with parsl.load(resources):
-        future = compile_func(
-            pwd,
-            stdout=os.path.join(pwd, "globus_compute_mpi_hello_compile.out"),
-            stderr=os.path.join(pwd, "globus_compute_mpi_hello_compile.err"),
-            executor="gc-compute",
-        )
-        r = future.result()
-        assert r == 0
-
-        future = hello_func(
-            pwd,
-            stdout=os.path.join(pwd, "globus_compute_mpi_hello_run.out"),
-            stderr=os.path.join(pwd, "globus_compute_mpi_hello_run.err"),
-            executor="gc-mpi",
-            parsl_resource_specification={
-                "num_nodes": 3,  # Number of nodes required for the application instance
-                "num_ranks": 6,  # Number of ranks in total
-                "ranks_per_node": 2,  # Number of ranks / application elements to be launched per node
-            },
-        )
-        r = future.result()
-        assert r == 0
+    r = future.result()
+    assert r == 0
 
     # Check output
     with open(pwd / "globus_compute_mpi_hello_run.out", "r") as f:
@@ -258,11 +192,6 @@ def test_endpoint_mpi_pi(config):
         $PARSL_MPI_PREFIX --overcommit ./mpi_pi.exe
         """
 
-    # Get a listing of the endpoints
-    gc_mpi_endpoint_id, gc_compute_endpoint_id = _get_endpoint_ids()
-    assert len(gc_mpi_endpoint_id) == 36
-    assert len(gc_compute_endpoint_id) == 36
-
     # Remove any previous output if necessary
     if os.path.exists(pwd / "globus_compute_mpi_pi_compile.out"):
         os.remove(pwd / "globus_compute_mpi_pi_compile.out")
@@ -277,57 +206,44 @@ def test_endpoint_mpi_pi(config):
     if os.path.exists(pwd / "globus_compute_mpi_pi2_run.err"):
         os.remove(pwd / "globus_compute_mpi_pi2_run.err")
 
-    config_string = yaml.dump(config)
-    template = Environment(loader=BaseLoader()).from_string(config_string)
-    content = template.render(
-        compute_endpoint_id=gc_compute_endpoint_id,
-        mpi_endpoint_id=gc_mpi_endpoint_id,
+    cores_per_node = 8
+    future = compile_func(
+        pwd,
+        stdout=os.path.join(pwd, "globus_compute_mpi_pi_compile.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_pi_compile.err"),
+        executor="gc-compute",
+    )
+    r = future.result()
+    assert r == 0
+
+    future1 = pi_func(
+        pwd,
+        stdout=os.path.join(pwd, "globus_compute_mpi_pi1_run.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_pi1_run.err"),
+        executor="gc-mpi",
+        parsl_resource_specification={
+            "num_nodes": 2,  # Number of nodes required for the application instance
+            "num_ranks": 2 * cores_per_node,  # Number of ranks in total
+            "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
+        },
     )
 
-    content_yaml = yaml.safe_load(content)
-    resources = chiltepin.configure.load(
-        content_yaml,
-        resources=["gc-compute", "gc-mpi"],
+    future2 = pi_func(
+        pwd,
+        stdout=os.path.join(pwd, "globus_compute_mpi_pi2_run.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_pi2_run.err"),
+        executor="gc-mpi",
+        parsl_resource_specification={
+            "num_nodes": 1,  # Number of nodes required for the application instance
+            "num_ranks": cores_per_node,  # Number of ranks in total
+            "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
+        },
     )
-    with parsl.load(resources):
-        cores_per_node = 8
-        future = compile_func(
-            pwd,
-            stdout=os.path.join(pwd, "globus_compute_mpi_pi_compile.out"),
-            stderr=os.path.join(pwd, "globus_compute_mpi_pi_compile.err"),
-            executor="gc-compute",
-        )
-        r = future.result()
-        assert r == 0
 
-        future1 = pi_func(
-            pwd,
-            stdout=os.path.join(pwd, "globus_compute_mpi_pi1_run.out"),
-            stderr=os.path.join(pwd, "globus_compute_mpi_pi1_run.err"),
-            executor="gc-mpi",
-            parsl_resource_specification={
-                "num_nodes": 2,  # Number of nodes required for the application instance
-                "num_ranks": 2 * cores_per_node,  # Number of ranks in total
-                "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
-            },
-        )
-
-        future2 = pi_func(
-            pwd,
-            stdout=os.path.join(pwd, "globus_compute_mpi_pi2_run.out"),
-            stderr=os.path.join(pwd, "globus_compute_mpi_pi2_run.err"),
-            executor="gc-mpi",
-            parsl_resource_specification={
-                "num_nodes": 1,  # Number of nodes required for the application instance
-                "num_ranks": cores_per_node,  # Number of ranks in total
-                "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
-            },
-        )
-
-        r1 = future1.result()
-        assert r1 == 0
-        r2 = future2.result()
-        assert r2 == 0
+    r1 = future1.result()
+    assert r1 == 0
+    r2 = future2.result()
+    assert r2 == 0
 
     # Extract the hostnames used by pi1
     with open(pwd / "globus_compute_mpi_pi1_run.out", "r") as f:
@@ -358,79 +274,3 @@ def test_endpoint_mpi_pi(config):
                     line = line.strip().lstrip("End Time = ")
                     end_time.append(dt.strptime(line, "%d/%m/%Y %H:%M:%S"))
     assert start_time[0] < end_time[1] and start_time[1] < end_time[0]
-
-
-# Test stopping of  endpoints
-def test_endpoint_stop():
-    pwd = pathlib.Path(__file__).parent.resolve()
-
-    # Stop the gc-compute endpoint
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "stop",
-            "gc-compute",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-    )
-    assert p.returncode == 0
-
-    # Stop the gc-mpi endpoint
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "stop",
-            "gc-mpi",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-    )
-    assert p.returncode == 0
-
-
-# Test endpoint delete
-def test_endpoint_delete():
-    pwd = pathlib.Path(__file__).parent.resolve()
-
-    # Delete gc-compute endpoint
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "delete",
-            "--yes",
-            "gc-compute",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-    )
-    assert p.returncode == 0
-
-    # Delete gc-mpi endpoint
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "delete",
-            "--yes",
-            "gc-mpi",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-    )
-    assert p.returncode == 0
