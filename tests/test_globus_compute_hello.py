@@ -1,5 +1,4 @@
 import pathlib
-import subprocess
 
 import parsl
 import pytest
@@ -7,6 +6,7 @@ import yaml
 from jinja2 import BaseLoader, Environment, FileSystemLoader
 
 import chiltepin.configure
+import chiltepin.endpoint as endpoint
 from chiltepin.tasks import python_task
 
 
@@ -14,63 +14,75 @@ from chiltepin.tasks import python_task
 @pytest.fixture(scope="module")
 def config(config_file, platform):
     pwd = pathlib.Path(__file__).parent.resolve()
+
+    # Parse the configuration for the chosen platform
     yaml_config = chiltepin.configure.parse_file(config_file)
-    yaml_config[platform]["resources"]["gc-service"]["environment"].append(
+    resource_config = yaml_config[platform]["resources"]
+
+    # Ensure PYTHONPATH is set in the environment so that pytest
+    # can import this test module on the remote workers
+    resource_config["gc-service"]["environment"].append(
         f"export PYTHONPATH={pwd.parent.resolve()}"
     )
-    resources = yaml_config[platform]["resources"]
-    return resources
+
+    # Configure the test endpoint
+    endpoint.configure("gc-service", config_dir=f"{pwd}/.globus_compute")
+
+    # Apply endpoint configuration template for the chosen platform
+    _apply_endpoint_template(resource_config)
+
+    # Start the test endpoint
+    endpoint.start("gc-service", config_dir=f"{pwd}/.globus_compute")
+
+    # Update resource config with the test endpoint id
+    resource_config = _set_endpoint_ids(resource_config)
+
+    # Load the finalized resource configuration
+    resources = chiltepin.configure.load(resource_config, resources=["gc-service"])
+
+    # Run the tests with the loaded resources
+    with parsl.load(resources):
+        yield
+
+    # Stop the test endpoint now that tests are done
+    endpoint.stop("gc-service", config_dir=f"{pwd}/.globus_compute")
+
+    # Delete the test endpoint
+    endpoint.delete("gc-service", config_dir=f"{pwd}/.globus_compute")
 
 
-def test_endpoint_configure(config):
+def _apply_endpoint_template(config):
     pwd = pathlib.Path(__file__).parent.resolve()
-    endpoint = "gc-service"
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "configure",
-            f"{endpoint}",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-    )
-    assert p.returncode == 0
 
     # Customize endpoint configs for this platform using Jinja2 templates
     jinja_env = Environment(loader=FileSystemLoader(f"{pwd}/templates/"))
-    template = jinja_env.get_template(f"{endpoint}.yaml")
-    content = template.render(
-        partition=config[endpoint]["partition"],
-        account=config[endpoint]["account"],
-        worker_init=";".join(config[endpoint]["environment"]),
-    )
-    with open(
-        f"{pwd}/globus_compute/{endpoint}/config.yaml", mode="w", encoding="utf-8"
-    ) as gc_config:
-        gc_config.write(content)
+    for name in ["gc-service"]:
+        template = jinja_env.get_template(f"{name}.yaml")
+        content = template.render(
+            partition=config[name]["partition"],
+            account=config[name]["account"],
+            worker_init=";".join(config[name]["environment"]),
+        )
+        with open(
+            f"{pwd}/.globus_compute/{name}/config.yaml", mode="w", encoding="utf-8"
+        ) as gc_config:
+            gc_config.write(content)
 
 
-def test_endpoint_start():
+# Set endpoint ids in configuration
+def _set_endpoint_ids(config):
     pwd = pathlib.Path(__file__).parent.resolve()
-    endpoint = "gc-service"
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "start",
-            f"{endpoint}",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-    )
-    assert p.returncode == 0
+
+    # Set endpoint id in resource config using Jinja2 tempates
+    ep_list = endpoint.list(config_dir=f"{pwd}/.globus_compute")
+    endpoint_id = ep_list["gc-service"]["id"]
+    assert len(endpoint_id) == 36
+
+    config_string = yaml.dump(config)
+    template = Environment(loader=BaseLoader()).from_string(config_string)
+    content = template.render(service_endpoint_id=endpoint_id)
+    content_yaml = yaml.safe_load(content)
+    return content_yaml
 
 
 def test_hello_endpoint(config):
@@ -78,65 +90,5 @@ def test_hello_endpoint(config):
     def hello():
         return "Hello"
 
-    pwd = pathlib.Path(__file__).parent.resolve()
-    endpoint = "gc-service"
-    p = subprocess.run(
-        f"globus-compute-endpoint -c {pwd}/globus_compute list | grep {endpoint} | cut -d' ' -f 2",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-        shell=True,
-    )
-    assert p.returncode == 0
-    hello_endpoint_id = p.stdout.strip()
-    assert len(hello_endpoint_id) == 36
-
-    config_string = yaml.dump(config)
-    template = Environment(loader=BaseLoader()).from_string(config_string)
-    content = template.render(service_endpoint_id=hello_endpoint_id)
-
-    content_yaml = yaml.safe_load(content)
-    resources = chiltepin.configure.load(content_yaml, resources=[endpoint])
-    with parsl.load(resources):
-        future = hello(executor=endpoint)
-        assert future.result() == "Hello"
-
-
-def test_endpoint_stop():
-    pwd = pathlib.Path(__file__).parent.resolve()
-    endpoint = "gc-service"
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "stop",
-            f"{endpoint}",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-    )
-    assert p.returncode == 0
-
-
-def test_endpoint_delete():
-    pwd = pathlib.Path(__file__).parent.resolve()
-    endpoint = "gc-service"
-    p = subprocess.run(
-        [
-            "globus-compute-endpoint",
-            "-c",
-            f"{pwd}/globus_compute",
-            "delete",
-            "--yes",
-            f"{endpoint}",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=60,
-    )
-    assert p.returncode == 0
+    future = hello(executor="gc-service")
+    assert future.result() == "Hello"

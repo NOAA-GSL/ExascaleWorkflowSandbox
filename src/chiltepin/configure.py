@@ -8,7 +8,6 @@ from parsl.launchers import SimpleLauncher
 from parsl.providers import SlurmProvider
 
 
-# Define function to parse yaml config
 def parse_file(filename: str) -> Dict[str, Any]:
     """Parse a YAML resource comfiguration file and return its contents as a dict
 
