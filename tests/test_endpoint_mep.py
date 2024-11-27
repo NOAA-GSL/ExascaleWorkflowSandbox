@@ -2,6 +2,7 @@ import os
 import pathlib
 import shutil
 import time
+
 import chiltepin.endpoint as endpoint
 
 
@@ -26,12 +27,12 @@ def test_endpoint_configure():
     # Configure an endpoint without a config_dir
     endpoint.configure("foo", multi=True)
     assert os.path.exists(f"{os.environ['HOME']}/.globus_compute/foo/config.yaml")
-    assert endpoint.is_multi("foo") == True
-    
+    assert endpoint.is_multi("foo")
+
     # Configure an endpoint with a config_dir
     endpoint.configure("bar", config_dir=f"{pwd}/.globus_compute", multi=True)
     assert os.path.exists(f"{pwd}/.globus_compute/bar/config.yaml")
-    assert endpoint.is_multi("bar", config_dir=f"{pwd}/.globus_compute") == True
+    assert endpoint.is_multi("bar", config_dir=f"{pwd}/.globus_compute")
 
     # Set init_blocks in configs to 0 so we don't have to wait for workers
     # to shut down before we can delete the endpoint
