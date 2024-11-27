@@ -35,8 +35,8 @@ debug: True
 endpoint_setup: {{ endpoint_setup|default() }}
 
 engine:
-  type: {{ engine_type|default("GlobusComputeEngine") }}
-  {% if engine_type == '"GlobusMPIEngine"' %}
+  type: {{ engine|default("GlobusComputeEngine") }}
+  {% if engine == '"GlobusMPIEngine"' %}
   max_workers_per_block: {{ max_mpi_apps|default(1) }}
   mpi_launcher: srun
   {% endif %}
@@ -46,6 +46,7 @@ engine:
     type: SlurmProvider
     launcher:
       type: SimpleLauncher
+    exclusive: {{ exclusive|default("True") }}
     cores_per_node: {{ cores_per_node|default(1) }}
     nodes_per_block: {{ nodes_per_block|default(1) }}
     min_blocks: {{ min_blocks|default(1) }}
@@ -158,7 +159,7 @@ def configure(
         login_path = p.stdout.strip()
         chiltepin_path = pathlib.Path(sys.argv[0]).parent.resolve()
         with open(config_path / "user_environment.yaml", "a") as f:
-            f.write(f"PATH={chiltepin_path}:{login_path}\n")
+            f.write(f"PATH: {chiltepin_path}:{login_path}\n")
 
 
 def is_multi(name: str, config_dir: str | None = None) -> bool:

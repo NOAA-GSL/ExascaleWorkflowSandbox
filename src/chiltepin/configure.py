@@ -55,6 +55,7 @@ def make_htex_executor(name: str, config: Dict[str, Any]) -> HighThroughputExecu
         "init blocks":            0
         "min blocks":             0
         "max blocks":             1
+        "exclusive":              True
         "partition":              None
         "account":                None
         "walltime":               1:00:00
@@ -70,7 +71,7 @@ def make_htex_executor(name: str, config: Dict[str, Any]) -> HighThroughputExecu
         cores_per_worker=config.get("cores per worker", 1),
         max_workers_per_node=config.get("max workers per node", 1),
         provider=SlurmProvider(
-            exclusive=False,
+            exclusive=config.get("exclusive", True),
             cores_per_node=config.get("cores per node", None),
             nodes_per_block=config.get("nodes per block", 1),
             init_blocks=config.get("init blocks", 0),
@@ -107,6 +108,7 @@ def make_mpi_executor(name: str, config: Dict[str, Any]) -> MPIExecutor:
         "init blocks":            0
         "min blocks":             0
         "max blocks":             1
+        "exclusive":              True
         "partition":              None
         "account":                None
         "walltime":               1:00:00
@@ -122,7 +124,7 @@ def make_mpi_executor(name: str, config: Dict[str, Any]) -> MPIExecutor:
         mpi_launcher="srun",
         max_workers_per_block=config.get("max mpi apps", 1),
         provider=SlurmProvider(
-            exclusive=True,
+            exclusive=config.get("exclusive", True),
             cores_per_node=config.get("cores per node", None),
             nodes_per_block=config.get("nodes per block", 1),
             init_blocks=config.get("init blocks", 0),
@@ -189,7 +191,7 @@ def make_globus_compute_executor(
             "init_blocks": config.get("init blocks", 0),
             "min_blocks": config.get("min blocks", 0),
             "max_blocks": config.get("max blocks", 1),
-            "exlusive": config.get("exclusive", True),
+            "exclusive": config.get("exclusive", True),
             "partition": config["partition"],
             "account=config": config["account"],
             "worker_init": "\n".join(config.get("environment", [])),
