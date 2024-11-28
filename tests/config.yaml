@@ -1,5 +1,6 @@
 hercules-env: &hercules-env
   environment:
+    - "source /apps/systools/hercules/etc/HPC2-lmod.sh"
     - "module purge"
     - "module use /work/noaa/epic/role-epic/spack-stack/hercules/spack-stack-1.6.0/envs/unified-env/install/modulefiles/Core"
     - "module load stack-intel/2021.9.0"
