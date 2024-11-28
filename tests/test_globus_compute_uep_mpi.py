@@ -134,19 +134,19 @@ def test_endpoint_mpi_hello(config):
         """
 
     # Remove any previous output if necessary
-    if os.path.exists(pwd / "globus_compute_mpi_hello_compile.out"):
-        os.remove(pwd / "globus_compute_mpi_hello_compile.out")
-    if os.path.exists(pwd / "globus_compute_mpi_hello_compile.err"):
-        os.remove(pwd / "globus_compute_mpi_hello_compile.err")
-    if os.path.exists(pwd / "globus_compute_mpi_hello_run.out"):
-        os.remove(pwd / "globus_compute_mpi_hello_run.out")
-    if os.path.exists(pwd / "globus_compute_mpi_hello_run.err"):
-        os.remove(pwd / "globus_compute_mpi_hello_run.err")
+    if os.path.exists(pwd / "globus_compute_mpi_hello_compile_uep.out"):
+        os.remove(pwd / "globus_compute_mpi_hello_compile_uep.out")
+    if os.path.exists(pwd / "globus_compute_mpi_hello_compile_uep.err"):
+        os.remove(pwd / "globus_compute_mpi_hello_compile_uep.err")
+    if os.path.exists(pwd / "globus_compute_mpi_hello_run_uep.out"):
+        os.remove(pwd / "globus_compute_mpi_hello_run_uep.out")
+    if os.path.exists(pwd / "globus_compute_mpi_hello_run_uep.err"):
+        os.remove(pwd / "globus_compute_mpi_hello_run_uep.err")
 
     future = compile_func(
         pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_hello_compile.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_hello_compile.err"),
+        stdout=os.path.join(pwd, "globus_compute_mpi_hello_compile_uep.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_hello_compile_uep.err"),
         executor="gc-compute",
     )
     r = future.result()
@@ -154,8 +154,8 @@ def test_endpoint_mpi_hello(config):
 
     future = hello_func(
         pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_hello_run.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_hello_run.err"),
+        stdout=os.path.join(pwd, "globus_compute_mpi_hello_run_uep.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_hello_run_uep.err"),
         executor="gc-mpi",
         parsl_resource_specification={
             "num_nodes": 3,  # Number of nodes required for the application instance
@@ -167,7 +167,7 @@ def test_endpoint_mpi_hello(config):
     assert r == 0
 
     # Check output
-    with open(pwd / "globus_compute_mpi_hello_run.out", "r") as f:
+    with open(pwd / "globus_compute_mpi_hello_run_uep.out", "r") as f:
         for line in f:
             assert re.match(r"Hello world from host \S+, rank \d+ out of 6", line)
 
@@ -193,24 +193,24 @@ def test_endpoint_mpi_pi(config):
         """
 
     # Remove any previous output if necessary
-    if os.path.exists(pwd / "globus_compute_mpi_pi_compile.out"):
-        os.remove(pwd / "globus_compute_mpi_pi_compile.out")
-    if os.path.exists(pwd / "globus_compute_mpi_pi_compile.err"):
-        os.remove(pwd / "globus_compute_mpi_pi_compile.err")
-    if os.path.exists(pwd / "globus_compute_mpi_pi1_run.out"):
-        os.remove(pwd / "globus_compute_mpi_pi1_run.out")
-    if os.path.exists(pwd / "globus_compute_mpi_pi1_run.err"):
-        os.remove(pwd / "globus_compute_mpi_pi1_run.err")
-    if os.path.exists(pwd / "globus_compute_mpi_pi2_run.out"):
-        os.remove(pwd / "globus_compute_mpi_pi2_run.out")
-    if os.path.exists(pwd / "globus_compute_mpi_pi2_run.err"):
-        os.remove(pwd / "globus_compute_mpi_pi2_run.err")
+    if os.path.exists(pwd / "globus_compute_mpi_pi_compile_uep.out"):
+        os.remove(pwd / "globus_compute_mpi_pi_compile_uep.out")
+    if os.path.exists(pwd / "globus_compute_mpi_pi_compile_uep.err"):
+        os.remove(pwd / "globus_compute_mpi_pi_compile_uep.err")
+    if os.path.exists(pwd / "globus_compute_mpi_pi1_run_uep.out"):
+        os.remove(pwd / "globus_compute_mpi_pi1_run_uep.out")
+    if os.path.exists(pwd / "globus_compute_mpi_pi1_run_uep.err"):
+        os.remove(pwd / "globus_compute_mpi_pi1_run_uep.err")
+    if os.path.exists(pwd / "globus_compute_mpi_pi2_run_uep.out"):
+        os.remove(pwd / "globus_compute_mpi_pi2_run_uep.out")
+    if os.path.exists(pwd / "globus_compute_mpi_pi2_run_uep.err"):
+        os.remove(pwd / "globus_compute_mpi_pi2_run_uep.err")
 
     cores_per_node = 8
     future = compile_func(
         pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_pi_compile.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_pi_compile.err"),
+        stdout=os.path.join(pwd, "globus_compute_mpi_pi_compile_uep.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_pi_compile_uep.err"),
         executor="gc-compute",
     )
     r = future.result()
@@ -218,8 +218,8 @@ def test_endpoint_mpi_pi(config):
 
     future1 = pi_func(
         pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_pi1_run.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_pi1_run.err"),
+        stdout=os.path.join(pwd, "globus_compute_mpi_pi1_run_uep.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_pi1_run_uep.err"),
         executor="gc-mpi",
         parsl_resource_specification={
             "num_nodes": 2,  # Number of nodes required for the application instance
@@ -230,8 +230,8 @@ def test_endpoint_mpi_pi(config):
 
     future2 = pi_func(
         pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_pi2_run.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_pi2_run.err"),
+        stdout=os.path.join(pwd, "globus_compute_mpi_pi2_run_uep.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_pi2_run_uep.err"),
         executor="gc-mpi",
         parsl_resource_specification={
             "num_nodes": 1,  # Number of nodes required for the application instance
@@ -246,13 +246,13 @@ def test_endpoint_mpi_pi(config):
     assert r2 == 0
 
     # Extract the hostnames used by pi1
-    with open(pwd / "globus_compute_mpi_pi1_run.out", "r") as f:
+    with open(pwd / "globus_compute_mpi_pi1_run_uep.out", "r") as f:
         pi1_hosts = []
         for line in f:
             if re.match(r"Host ", line):
                 pi1_hosts.append(line.split()[1])
     # Extract the hostnames used by pi2
-    with open(pwd / "globus_compute_mpi_pi2_run.out", "r") as f:
+    with open(pwd / "globus_compute_mpi_pi2_run_uep.out", "r") as f:
         pi2_hosts = []
         for line in f:
             if re.match(r"Host ", line):
@@ -263,7 +263,7 @@ def test_endpoint_mpi_pi(config):
     # Verify pi tests run concurrently
     start_time = []
     end_time = []
-    files = ["globus_compute_mpi_pi1_run.out", "globus_compute_mpi_pi2_run.out"]
+    files = ["globus_compute_mpi_pi1_run_uep.out", "globus_compute_mpi_pi2_run_uep.out"]
     for f in files:
         with open(pwd / f, "r") as pi:
             for line in pi:
