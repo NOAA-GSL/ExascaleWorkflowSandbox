@@ -1,13 +1,13 @@
 import os.path
 import pathlib
 import re
+import time
 from datetime import datetime as dt
 
 import parsl
 import pytest
-import time
 import yaml
-from jinja2 import BaseLoader, Environment, FileSystemLoader
+from jinja2 import BaseLoader, Environment
 
 import chiltepin.configure
 import chiltepin.endpoint as endpoint

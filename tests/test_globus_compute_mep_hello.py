@@ -1,10 +1,10 @@
 import pathlib
+import time
 
 import parsl
 import pytest
-import time
 import yaml
-from jinja2 import BaseLoader, Environment, FileSystemLoader
+from jinja2 import BaseLoader, Environment
 
 import chiltepin.configure
 import chiltepin.endpoint as endpoint
