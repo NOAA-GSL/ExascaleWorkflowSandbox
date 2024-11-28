@@ -88,25 +88,25 @@ def test_compile_mpi_hello(config):
     pwd = pathlib.Path(__file__).parent.resolve()
     c = compile_mpi_hello(
         dirpath=pwd,
-        stdout=(os.path.join(pwd, "parsl_flux_mpi_hello_compile.out"), "w"),
-        stderr=(os.path.join(pwd, "parsl_flux_mpi_hello_compile.err"), "w"),
+        stdout=(os.path.join(pwd, "parsl_mpi_hello_compile.out"), "w"),
+        stderr=(os.path.join(pwd, "parsl_mpi_hello_compile.err"), "w"),
     ).result()
     assert c == 0
     assert os.path.isfile(pwd / "mpi_hello.exe")
-    assert os.stat(pwd / "parsl_flux_mpi_hello_compile.out").st_size == 0
+    assert os.stat(pwd / "parsl_mpi_hello_compile.out").st_size == 0
 
 
 def test_run_mpi_hello(config):
     pwd = pathlib.Path(__file__).parent.resolve()
     # Remove any previous output if necessary
-    if os.path.exists(pwd / "parsl_flux_mpi_hello_run.out"):
-        os.remove(pwd / "parsl_flux_mpi_hello_run.out")
-    if os.path.exists(pwd / "parsl_flux_mpi_hello_run.err"):
-        os.remove(pwd / "parsl_flux_mpi_hello_run.err")
+    if os.path.exists(pwd / "parsl_mpi_hello_run.out"):
+        os.remove(pwd / "parsl_mpi_hello_run.out")
+    if os.path.exists(pwd / "parsl_mpi_hello_run.err"):
+        os.remove(pwd / "parsl_mpi_hello_run.err")
     hello = run_mpi_hello(
         dirpath=pwd,
-        stdout=os.path.join(pwd, "parsl_flux_mpi_hello_run.out"),
-        stderr=os.path.join(pwd, "parsl_flux_mpi_hello_run.err"),
+        stdout=os.path.join(pwd, "parsl_mpi_hello_run.out"),
+        stderr=os.path.join(pwd, "parsl_mpi_hello_run.err"),
         parsl_resource_specification={
             "num_nodes": 3,  # Number of nodes required for the application instance
             "num_ranks": 6,  # Number of ranks in total
@@ -114,7 +114,7 @@ def test_run_mpi_hello(config):
         },
     ).result()
     assert hello == 0
-    with open(pwd / "parsl_flux_mpi_hello_run.out", "r") as f:
+    with open(pwd / "parsl_mpi_hello_run.out", "r") as f:
         for line in f:
             assert re.match(r"Hello world from host \S+, rank \d+ out of 6", line)
 
@@ -123,31 +123,31 @@ def test_compile_mpi_pi(config):
     pwd = pathlib.Path(__file__).parent.resolve()
     c = compile_mpi_pi(
         dirpath=pwd,
-        stdout=(os.path.join(pwd, "parsl_flux_mpi_pi_compile.out"), "w"),
-        stderr=(os.path.join(pwd, "parsl_flux_mpi_pi_compile.err"), "w"),
+        stdout=(os.path.join(pwd, "parsl_mpi_pi_compile.out"), "w"),
+        stderr=(os.path.join(pwd, "parsl_mpi_pi_compile.err"), "w"),
     ).result()
     assert c == 0
     assert os.path.isfile(pwd / "mpi_pi.exe")
-    assert os.stat(pwd / "parsl_flux_mpi_pi_compile.out").st_size == 0
+    assert os.stat(pwd / "parsl_mpi_pi_compile.out").st_size == 0
 
 
 def test_run_mpi_pi(config):
     pwd = pathlib.Path(__file__).parent.resolve()
     # Remove any previous output if necessary
-    if os.path.exists(pwd / "parsl_flux_mpi_pi1_run.out"):
-        os.remove(pwd / "parsl_flux_mpi_pi1_run.out")
-    if os.path.exists(pwd / "parsl_flux_mpi_pi1_run.err"):
-        os.remove(pwd / "parsl_flux_mpi_pi1_run.err")
-    if os.path.exists(pwd / "parsl_flux_mpi_pi2_run.out"):
-        os.remove(pwd / "parsl_flux_mpi_pi2_run.out")
-    if os.path.exists(pwd / "parsl_flux_mpi_pi2_run.err"):
-        os.remove(pwd / "parsl_flux_mpi_pi2_run.err")
+    if os.path.exists(pwd / "parsl_mpi_pi1_run.out"):
+        os.remove(pwd / "parsl_mpi_pi1_run.out")
+    if os.path.exists(pwd / "parsl_mpi_pi1_run.err"):
+        os.remove(pwd / "parsl_mpi_pi1_run.err")
+    if os.path.exists(pwd / "parsl_mpi_pi2_run.out"):
+        os.remove(pwd / "parsl_mpi_pi2_run.out")
+    if os.path.exists(pwd / "parsl_mpi_pi2_run.err"):
+        os.remove(pwd / "parsl_mpi_pi2_run.err")
     cores_per_node = config["resources"].executors[0].provider.cores_per_node
     assert config["resources"].executors[0].label == "mpi"
     pi1 = run_mpi_pi(
         dirpath=pwd,
-        stdout=os.path.join(pwd, "parsl_flux_mpi_pi1_run.out"),
-        stderr=os.path.join(pwd, "parsl_flux_mpi_pi1_run.err"),
+        stdout=os.path.join(pwd, "parsl_mpi_pi1_run.out"),
+        stderr=os.path.join(pwd, "parsl_mpi_pi1_run.err"),
         parsl_resource_specification={
             "num_nodes": 2,  # Number of nodes required for the application instance
             "num_ranks": 2 * cores_per_node,  # Number of ranks in total
@@ -156,8 +156,8 @@ def test_run_mpi_pi(config):
     )
     pi2 = run_mpi_pi(
         dirpath=pwd,
-        stdout=os.path.join(pwd, "parsl_flux_mpi_pi2_run.out"),
-        stderr=os.path.join(pwd, "parsl_flux_mpi_pi2_run.err"),
+        stdout=os.path.join(pwd, "parsl_mpi_pi2_run.out"),
+        stderr=os.path.join(pwd, "parsl_mpi_pi2_run.err"),
         parsl_resource_specification={
             "num_nodes": 1,  # Number of nodes required for the application instance
             "num_ranks": cores_per_node,  # Number of ranks in total
@@ -167,13 +167,13 @@ def test_run_mpi_pi(config):
     assert pi1.result() == 0
     assert pi2.result() == 0
     # Extract the hostnames used by pi1
-    with open(pwd / "parsl_flux_mpi_pi1_run.out", "r") as f:
+    with open(pwd / "parsl_mpi_pi1_run.out", "r") as f:
         pi1_hosts = []
         for line in f:
             if re.match(r"Host ", line):
                 pi1_hosts.append(line.split()[1])
     # Extract the hostnames used by pi2
-    with open(pwd / "parsl_flux_mpi_pi2_run.out", "r") as f:
+    with open(pwd / "parsl_mpi_pi2_run.out", "r") as f:
         pi2_hosts = []
         for line in f:
             if re.match(r"Host ", line):
@@ -184,7 +184,7 @@ def test_run_mpi_pi(config):
     # Verify pi tests un concurrently
     start_time = []
     end_time = []
-    files = ["parsl_flux_mpi_pi1_run.out", "parsl_flux_mpi_pi2_run.out"]
+    files = ["parsl_mpi_pi1_run.out", "parsl_mpi_pi2_run.out"]
     for f in files:
         with open(pwd / f, "r") as pi:
             for line in pi:

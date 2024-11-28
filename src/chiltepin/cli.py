@@ -8,7 +8,7 @@ def cli_list(config_dir=None):
     if ep_list:
         name_len = max(len(key) for key in ep_list)
         for name, props in ep_list.items():
-            print(f"{name:<{name_len}} {props['id']} {props['state']}")
+            print(f"{name:<{name_len}} {props['id']:<36} {props['state']}")
     else:
         print("No endpoints are configured")
 
@@ -46,6 +46,12 @@ configure_parser = endpoint_parsers.add_parser(
     help="configure an endpoint",
 )
 configure_parser.add_argument("name", help="name of endpoint to configure")
+configure_parser.add_argument(
+    "-m",
+    "--multi",
+    action="store_true",
+    help="configure a multi templatable endpoint",
+)
 configure_parser.set_defaults(func=endpoint.configure)
 
 # Add parser for endpoint list command
@@ -69,8 +75,6 @@ delete_parser.set_defaults(func=endpoint.delete)
 
 
 def main():
-    args = root_parser.parse_args()
-    if hasattr(args, "name"):
-        args.func(args.name, config_dir=args.config_dir)
-    else:
-        args.func(config_dir=args.config_dir)
+    args = vars(root_parser.parse_args())
+    func = args.pop("func")
+    func(**args)

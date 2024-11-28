@@ -1,5 +1,6 @@
 hercules-env: &hercules-env
   environment:
+    - "source /apps/systools/hercules/etc/HPC2-lmod.sh"
     - "module purge"
     - "module use /work/noaa/epic/role-epic/spack-stack/hercules/spack-stack-1.6.0/envs/unified-env/install/modulefiles/Core"
     - "module load stack-intel/2021.9.0"
@@ -35,6 +36,7 @@ hercules:
       engine: MPI
       cores per node: 80
       nodes per block: 3
+      exclusive: True
       max mpi apps: 2
       partition: "hercules"
       account: "gsd-hpcs"
@@ -43,6 +45,7 @@ hercules:
       engine: HTEX
       cores per node: 1
       nodes per block: 1
+      exclusive: False
       partition: "service"
       account: "gsd-hpcs"
       <<: *hercules-env
@@ -50,6 +53,7 @@ hercules:
       engine: HTEX
       cores per node: 80
       nodes per block: 1
+      exclusive: True
       partition: "hercules"
       account: "gsd-hpcs"
       <<: *hercules-env
@@ -58,6 +62,7 @@ hercules:
       endpoint id: "{{ mpi_endpoint_id }}"
       cores per node: 80
       nodes per block: 3
+      exclusive: True
       max mpi apps: 2
       partition: "hercules"
       account: "gsd-hpcs"
@@ -67,6 +72,7 @@ hercules:
       endpoint id: "{{ service_endpoint_id }}"
       cores per node: 1
       nodes per block: 1
+      exclusive: False
       partition: "service"
       account: "gsd-hpcs"
       <<: *hercules-env
@@ -75,6 +81,7 @@ hercules:
       endpoint id: "{{ compute_endpoint_id }}"
       cores per node: 80
       nodes per block: 1
+      exclusive: True
       partition: "hercules"
       account: "gsd-hpcs"
       <<: *hercules-env
@@ -85,6 +92,7 @@ hera:
       engine: MPI
       cores per node: 40
       nodes per block: 3
+      exclusive: True
       max mpi apps: 2
       partition: "hera"
       account: "gsd-hpcs"
@@ -93,6 +101,7 @@ hera:
       engine: HTEX
       cores per node: 1
       nodes per block: 1
+      exclusive: False
       partition: "service"
       account: "gsd-hpcs"
       <<: *hera-env
@@ -100,6 +109,7 @@ hera:
       engine: HTEX
       cores per node: 40
       nodes per block: 1
+      exclusive: True
       partition: "hera"
       account: "gsd-hpcs"
       <<: *hera-env
@@ -108,6 +118,7 @@ hera:
       endpoint id: "{{ mpi_endpoint_id }}"
       cores per node: 40
       nodes per block: 3
+      exclusive: True
       max mpi apps: 2
       partition: "hera"
       account: "gsd-hpcs"
@@ -117,6 +128,7 @@ hera:
       endpoint id: "{{ service_endpoint_id }}"
       cores per node: 1
       nodes per block: 1
+      exclusive: False
       partition: "service"
       account: "gsd-hpcs"
       <<: *hera-env
@@ -125,6 +137,7 @@ hera:
       endpoint id: "{{ compute_endpoint_id }}"
       cores per node: 40
       nodes per block: 1
+      exclusive: True
       partition: "hera"
       account: "gsd-hpcs"
       <<: *hera-env
@@ -135,6 +148,7 @@ docker:
       engine: MPI
       cores per node: 8
       nodes per block: 3
+      exclusive: True
       max mpi apps: 2
       partition: "slurmpar"
       account: ""
@@ -143,6 +157,7 @@ docker:
       engine: HTEX
       cores per node: 1
       nodes per block: 1
+      exclusive: False
       partition: "slurmpar"
       account: ""
       <<: *docker-env
@@ -150,6 +165,7 @@ docker:
       engine: HTEX
       cores per node: 8
       nodes per block: 1
+      exclusive: True
       partition: "slurmpar"
       account: ""
       <<: *docker-env
@@ -158,6 +174,7 @@ docker:
       endpoint id: "{{ mpi_endpoint_id }}"
       cores per node: 8
       nodes per block: 3
+      exclusive: True
       max mpi apps: 2
       partition: "slurmpar"
       account: ""
@@ -167,6 +184,7 @@ docker:
       endpoint id: "{{ service_endpoint_id }}"
       cores per node: 1
       nodes per block: 1
+      exclusive: False
       partition: "slurmpar"
       account: ""
       <<: *docker-env
@@ -175,6 +193,7 @@ docker:
       endpoint id: "{{ compute_endpoint_id }}"
       cores per node: 8
       nodes per block: 1
+      exclusive: True
       partition: "slurmpar"
       account: ""
       <<: *docker-env

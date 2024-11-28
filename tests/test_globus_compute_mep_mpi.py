@@ -6,7 +6,7 @@ from datetime import datetime as dt
 import parsl
 import pytest
 import yaml
-from jinja2 import BaseLoader, Environment, FileSystemLoader
+from jinja2 import BaseLoader, Environment
 
 import chiltepin.configure
 import chiltepin.endpoint as endpoint
@@ -31,16 +31,11 @@ def config(config_file, platform):
         f"export PYTHONPATH={pwd.parent.resolve()}"
     )
 
-    # Configure the test endpoints
-    endpoint.configure("gc-compute", config_dir=f"{pwd}/.globus_compute")
-    endpoint.configure("gc-mpi", config_dir=f"{pwd}/.globus_compute")
+    # Configure the test endpoint
+    endpoint.configure("test", config_dir=f"{pwd}/.globus_compute", multi=True)
 
-    # Apply endpoint configuration template for the chosen platform
-    _apply_endpoint_template(resource_config)
-
-    # Start the test endpoints
-    endpoint.start("gc-compute", config_dir=f"{pwd}/.globus_compute")
-    endpoint.start("gc-mpi", config_dir=f"{pwd}/.globus_compute")
+    # Start the test endpoint
+    endpoint.start("test", config_dir=f"{pwd}/.globus_compute")
 
     # Update resource config with the test endpoint ids
     resource_config = _set_endpoint_ids(resource_config)
@@ -55,32 +50,11 @@ def config(config_file, platform):
     with parsl.load(resources):
         yield
 
-    # Stop the test endpoints now that tests are done
-    endpoint.stop("gc-compute", config_dir=f"{pwd}/.globus_compute")
-    endpoint.stop("gc-mpi", config_dir=f"{pwd}/.globus_compute")
+    # Stop the test endpoint now that tests are done
+    endpoint.stop("test", config_dir=f"{pwd}/.globus_compute")
 
-    # Delete the test endpoints
-    endpoint.delete("gc-compute", config_dir=f"{pwd}/.globus_compute")
-    endpoint.delete("gc-mpi", config_dir=f"{pwd}/.globus_compute")
-
-
-# Test endpoint configure
-def _apply_endpoint_template(config):
-    pwd = pathlib.Path(__file__).parent.resolve()
-
-    # Customize endpoint configs for this platform using Jinja2 templates
-    jinja_env = Environment(loader=FileSystemLoader(f"{pwd}/templates/"))
-    for name in ["gc-compute", "gc-mpi"]:
-        template = jinja_env.get_template(f"{name}.yaml")
-        content = template.render(
-            partition=config[name]["partition"],
-            account=config[name]["account"],
-            worker_init=";".join(config[name]["environment"]),
-        )
-        with open(
-            f"{pwd}/.globus_compute/{name}/config.yaml", mode="w", encoding="utf-8"
-        ) as gc_config:
-            gc_config.write(content)
+    # Delete the test endpoint
+    endpoint.delete("test", config_dir=f"{pwd}/.globus_compute")
 
 
 # Set endpoint ids in configuration
@@ -89,8 +63,8 @@ def _set_endpoint_ids(config):
 
     # Get a listing of the endpoints
     ep_list = endpoint.list(config_dir=f"{pwd}/.globus_compute")
-    gc_compute_endpoint_id = ep_list["gc-compute"]["id"]
-    gc_mpi_endpoint_id = ep_list["gc-mpi"]["id"]
+    gc_compute_endpoint_id = ep_list["test"]["id"]
+    gc_mpi_endpoint_id = ep_list["test"]["id"]
     assert len(gc_mpi_endpoint_id) == 36
     assert len(gc_compute_endpoint_id) == 36
 
@@ -134,19 +108,19 @@ def test_endpoint_mpi_hello(config):
         """
 
     # Remove any previous output if necessary
-    if os.path.exists(pwd / "globus_compute_mpi_hello_compile.out"):
-        os.remove(pwd / "globus_compute_mpi_hello_compile.out")
-    if os.path.exists(pwd / "globus_compute_mpi_hello_compile.err"):
-        os.remove(pwd / "globus_compute_mpi_hello_compile.err")
-    if os.path.exists(pwd / "globus_compute_mpi_hello_run.out"):
-        os.remove(pwd / "globus_compute_mpi_hello_run.out")
-    if os.path.exists(pwd / "globus_compute_mpi_hello_run.err"):
-        os.remove(pwd / "globus_compute_mpi_hello_run.err")
+    if os.path.exists(pwd / "globus_compute_mpi_hello_compile_mep.out"):
+        os.remove(pwd / "globus_compute_mpi_hello_compile_mep.out")
+    if os.path.exists(pwd / "globus_compute_mpi_hello_compile_mep.err"):
+        os.remove(pwd / "globus_compute_mpi_hello_compile_mep.err")
+    if os.path.exists(pwd / "globus_compute_mpi_hello_run_mep.out"):
+        os.remove(pwd / "globus_compute_mpi_hello_run_mep.out")
+    if os.path.exists(pwd / "globus_compute_mpi_hello_run_mep.err"):
+        os.remove(pwd / "globus_compute_mpi_hello_run_mep.err")
 
     future = compile_func(
         pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_hello_compile.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_hello_compile.err"),
+        stdout=os.path.join(pwd, "globus_compute_mpi_hello_compile_mep.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_hello_compile_mep.err"),
         executor="gc-compute",
     )
     r = future.result()
@@ -154,8 +128,8 @@ def test_endpoint_mpi_hello(config):
 
     future = hello_func(
         pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_hello_run.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_hello_run.err"),
+        stdout=os.path.join(pwd, "globus_compute_mpi_hello_run_mep.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_hello_run_mep.err"),
         executor="gc-mpi",
         parsl_resource_specification={
             "num_nodes": 3,  # Number of nodes required for the application instance
@@ -167,7 +141,7 @@ def test_endpoint_mpi_hello(config):
     assert r == 0
 
     # Check output
-    with open(pwd / "globus_compute_mpi_hello_run.out", "r") as f:
+    with open(pwd / "globus_compute_mpi_hello_run_mep.out", "r") as f:
         for line in f:
             assert re.match(r"Hello world from host \S+, rank \d+ out of 6", line)
 
@@ -193,24 +167,24 @@ def test_endpoint_mpi_pi(config):
         """
 
     # Remove any previous output if necessary
-    if os.path.exists(pwd / "globus_compute_mpi_pi_compile.out"):
-        os.remove(pwd / "globus_compute_mpi_pi_compile.out")
-    if os.path.exists(pwd / "globus_compute_mpi_pi_compile.err"):
-        os.remove(pwd / "globus_compute_mpi_pi_compile.err")
-    if os.path.exists(pwd / "globus_compute_mpi_pi1_run.out"):
-        os.remove(pwd / "globus_compute_mpi_pi1_run.out")
-    if os.path.exists(pwd / "globus_compute_mpi_pi1_run.err"):
-        os.remove(pwd / "globus_compute_mpi_pi1_run.err")
-    if os.path.exists(pwd / "globus_compute_mpi_pi2_run.out"):
-        os.remove(pwd / "globus_compute_mpi_pi2_run.out")
-    if os.path.exists(pwd / "globus_compute_mpi_pi2_run.err"):
-        os.remove(pwd / "globus_compute_mpi_pi2_run.err")
+    if os.path.exists(pwd / "globus_compute_mpi_pi_compile_mep.out"):
+        os.remove(pwd / "globus_compute_mpi_pi_compile_mep.out")
+    if os.path.exists(pwd / "globus_compute_mpi_pi_compile_mep.err"):
+        os.remove(pwd / "globus_compute_mpi_pi_compile_mep.err")
+    if os.path.exists(pwd / "globus_compute_mpi_pi1_run_mep.out"):
+        os.remove(pwd / "globus_compute_mpi_pi1_run_mep.out")
+    if os.path.exists(pwd / "globus_compute_mpi_pi1_run_mep.err"):
+        os.remove(pwd / "globus_compute_mpi_pi1_run_mep.err")
+    if os.path.exists(pwd / "globus_compute_mpi_pi2_run_mep.out"):
+        os.remove(pwd / "globus_compute_mpi_pi2_run_mep.out")
+    if os.path.exists(pwd / "globus_compute_mpi_pi2_run_mep.err"):
+        os.remove(pwd / "globus_compute_mpi_pi2_run_mep.err")
 
     cores_per_node = 8
     future = compile_func(
         pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_pi_compile.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_pi_compile.err"),
+        stdout=os.path.join(pwd, "globus_compute_mpi_pi_compile_mep.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_pi_compile_mep.err"),
         executor="gc-compute",
     )
     r = future.result()
@@ -218,8 +192,8 @@ def test_endpoint_mpi_pi(config):
 
     future1 = pi_func(
         pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_pi1_run.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_pi1_run.err"),
+        stdout=os.path.join(pwd, "globus_compute_mpi_pi1_run_mep.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_pi1_run_mep.err"),
         executor="gc-mpi",
         parsl_resource_specification={
             "num_nodes": 2,  # Number of nodes required for the application instance
@@ -230,8 +204,8 @@ def test_endpoint_mpi_pi(config):
 
     future2 = pi_func(
         pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_pi2_run.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_pi2_run.err"),
+        stdout=os.path.join(pwd, "globus_compute_mpi_pi2_run_mep.out"),
+        stderr=os.path.join(pwd, "globus_compute_mpi_pi2_run_mep.err"),
         executor="gc-mpi",
         parsl_resource_specification={
             "num_nodes": 1,  # Number of nodes required for the application instance
@@ -246,13 +220,13 @@ def test_endpoint_mpi_pi(config):
     assert r2 == 0
 
     # Extract the hostnames used by pi1
-    with open(pwd / "globus_compute_mpi_pi1_run.out", "r") as f:
+    with open(pwd / "globus_compute_mpi_pi1_run_mep.out", "r") as f:
         pi1_hosts = []
         for line in f:
             if re.match(r"Host ", line):
                 pi1_hosts.append(line.split()[1])
     # Extract the hostnames used by pi2
-    with open(pwd / "globus_compute_mpi_pi2_run.out", "r") as f:
+    with open(pwd / "globus_compute_mpi_pi2_run_mep.out", "r") as f:
         pi2_hosts = []
         for line in f:
             if re.match(r"Host ", line):
@@ -263,7 +237,7 @@ def test_endpoint_mpi_pi(config):
     # Verify pi tests run concurrently
     start_time = []
     end_time = []
-    files = ["globus_compute_mpi_pi1_run.out", "globus_compute_mpi_pi2_run.out"]
+    files = ["globus_compute_mpi_pi1_run_mep.out", "globus_compute_mpi_pi2_run_mep.out"]
     for f in files:
         with open(pwd / f, "r") as pi:
             for line in pi:
