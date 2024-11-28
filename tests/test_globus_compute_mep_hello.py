@@ -1,5 +1,4 @@
 import pathlib
-import time
 
 import parsl
 import pytest
@@ -31,9 +30,6 @@ def config(config_file, platform):
 
     # Start the test endpoint
     endpoint.start("test", config_dir=f"{pwd}/.globus_compute")
-
-    # Wait a few seconds for the mep to start up
-    time.sleep(5)
 
     # Update resource config with the test endpoint id
     resource_config = _set_endpoint_ids(resource_config)

@@ -3,6 +3,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import time
 from typing import Dict
 
 import yaml
@@ -246,6 +247,34 @@ def list(config_dir: str | None = None, timeout: int = 60) -> Dict[str, str]:
     return ep_list
 
 
+def is_running(name: str, config_dir: str | None = None) -> bool:
+    """Return True if the endpoint is running, otherwise False
+
+    Parameters
+    ----------
+
+    name: str
+        Name of the endpoint to check
+
+    config_dir: str | None
+        Path to endpoint configuration directory where endpoint information
+        is stored. If None (the default), then $HOME/.globus_compute is used
+
+    Returns
+    -------
+
+    bool
+    """
+    # Get a list of endpoints
+    ep_list = list(config_dir)
+
+    # Get the endpoint info
+    ep_info = ep_list.get(name, {})
+
+    # Return whether endpoint state is "Running"
+    return ep_info.get("state", None) == "Running"
+
+
 def start(name: str, config_dir: str | None = None, timeout: int = 60):
     """Start the specified Globus Compute Endpoint
 
@@ -289,6 +318,10 @@ def start(name: str, config_dir: str | None = None, timeout: int = 60):
         # Write the pid to the endpoint pid file
         with open(config_path / "daemon.pid", "w") as f:
             f.write(f"{p.pid}\n")
+        # Wait for endpoint to enter "Running" state
+        while not is_running(name, config_dir):
+            time.sleep(1)
+
     else:
         # Run the command as a normal subprocess
         p = subprocess.run(

@@ -1,7 +1,6 @@
 import os
 import pathlib
 import shutil
-import time
 
 import chiltepin.endpoint as endpoint
 
@@ -63,8 +62,6 @@ def test_endpoint_start():
     endpoint.start("foo")
     # Start an endpoint with a config_dir
     endpoint.start("bar", config_dir=f"{pwd}/.globus_compute")
-    # Wait a few seconds for the endpoints to get started
-    time.sleep(3)
     # Verify they are running
     ep_list = endpoint.list()
     assert ep_list["foo"]["state"] == "Running"

@@ -1,7 +1,6 @@
 import os.path
 import pathlib
 import re
-import time
 from datetime import datetime as dt
 
 import parsl
@@ -37,9 +36,6 @@ def config(config_file, platform):
 
     # Start the test endpoint
     endpoint.start("test", config_dir=f"{pwd}/.globus_compute")
-
-    # Wait a few seconds for the endpoint to be ready
-    time.sleep(3)
 
     # Update resource config with the test endpoint ids
     resource_config = _set_endpoint_ids(resource_config)
