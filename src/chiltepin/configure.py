@@ -1,7 +1,7 @@
 from typing import Any, Dict, List
 
 import yaml
-from globus_compute_sdk import Executor
+from globus_compute_sdk import Client, Executor
 from parsl.config import Config
 from parsl.executors import GlobusComputeExecutor, HighThroughputExecutor, MPIExecutor
 from parsl.launchers import SimpleLauncher
@@ -141,7 +141,7 @@ def make_mpi_executor(name: str, config: Dict[str, Any]) -> MPIExecutor:
 
 
 def make_globus_compute_executor(
-    name: str, config: Dict[str, Any]
+    name: str, config: Dict[str, Any], client: Client | None = None
 ) -> GlobusComputeExecutor:
     """Construct a GlobusComputeExecutor from the input configuration
 
@@ -175,6 +175,10 @@ def make_globus_compute_executor(
         "walltime":               1:00:00
         "environment":            []
 
+    client: Client | None
+        The Globus Compute client to use for instantiating the GlobusComputeExecutor.
+        If not specified, Globus Compute will instantiate and use a default client.
+
     Returns
     -------
 
@@ -182,7 +186,7 @@ def make_globus_compute_executor(
     """
     e = GlobusComputeExecutor(
         label=name,
-        executor=Executor(endpoint_id=config["endpoint id"]),
+        executor=Executor(endpoint_id=config["endpoint id"], client=client),
         user_endpoint_config={
             "engine": config.get("engine", "GlobusComputeEngine"),
             "max_mpi_apps": config.get("max mpi apps", 1),
@@ -200,7 +204,11 @@ def make_globus_compute_executor(
     return e
 
 
-def load(config: Dict[str, Any], resources: List[str] | None = None) -> Config:
+def load(
+    config: Dict[str, Any],
+    resources: List[str] | None = None,
+    client: Client | None = None,
+) -> Config:
     """Construct a list of Executors from the input configuration dictionary
 
     The list returned by this function can be used to construct a Parsl Config
@@ -219,6 +227,11 @@ def load(config: Dict[str, Any], resources: List[str] | None = None) -> Config:
         If None, all resources are loaded.  Otherwise the resources whose
         labels are in the list will be loaded.
 
+    client: Client | None
+        A Globus Compute client to use when instantiating Globus Compute resources.
+        The default is None.  If None, one will be instantiated automatically for
+        any Globus Compute resources in the configuration.
+
     Returns
     -------
 
@@ -236,8 +249,8 @@ def load(config: Dict[str, Any], resources: List[str] | None = None) -> Config:
                     executors.append(make_mpi_executor(name, spec))
                 case "GlobusComputeEngine":
                     # Make a GlobusComputeExecutor for non-MPI jobs
-                    executors.append(make_globus_compute_executor(name, spec))
+                    executors.append(make_globus_compute_executor(name, spec, client))
                 case "GlobusMPIEngine":
                     # Make a GlobusComputeExecutor for MPI jobs
-                    executors.append(make_globus_compute_executor(name, spec))
+                    executors.append(make_globus_compute_executor(name, spec, client))
     return Config(executors)

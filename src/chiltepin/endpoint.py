@@ -7,6 +7,9 @@ import time
 from typing import Dict
 
 import yaml
+from globus_compute_sdk import Client
+from globus_compute_sdk.sdk.auth.globus_app import get_globus_app
+from globus_sdk import TransferClient
 
 multi_endpoint_template = """# This is the default user-template provided with newly-configured Multi-User
 # endpoints.  User endpoints generate a user-endpoint-specific configuration by
@@ -69,6 +72,42 @@ idle_heartbeats_soft: 10
 # idle_heartbeats_soft is 0 or not set.)
 idle_heartbeats_hard: 5760
 """
+
+
+CHILTEPIN_CLIENT_UUID = "42e9e804-0bcd-4c3d-881b-8e270e3c2163"
+
+
+def login() -> Dict[str, Client | TransferClient]:
+    """Log in to the Chiltepin app
+
+    This initiates the Globus login flow to log the user in to the registered
+    Chiltepin thick client app. It uses those credentials to instantiate and
+    return a Globus Compute client and a Globus Transfer client in a dictionary.
+    Those clients can then be used for accessing those services.
+
+    Returns
+    -------
+
+    Dict[str, Client | TransferClient]
+    """
+    os.environ["GLOBUS_COMPUTE_CLIENT_ID"] = CHILTEPIN_CLIENT_UUID
+    app = get_globus_app()
+    compute_client = Client(app=app)
+    transfer_client = TransferClient(app=app)
+    if app.login_required():
+        app.login()
+    return {"compute": compute_client, "transfer": transfer_client}
+
+
+def logout():
+    """Log out of the Chiltepin app
+
+    This logs the user out of the Chiltepin thick client app and revokes all
+    credentials associated with it.
+    """
+    os.environ["GLOBUS_COMPUTE_CLIENT_ID"] = CHILTEPIN_CLIENT_UUID
+    app = get_globus_app()
+    app.logout()
 
 
 def configure(

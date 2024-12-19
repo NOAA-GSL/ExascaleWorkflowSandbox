@@ -1,9 +1,8 @@
 import textwrap
 from datetime import datetime
 
-from uwtools.api import config as uwconfig
-
 from chiltepin.tasks import bash_task, join_task
+from uwtools.api import config as uwconfig
 
 
 class MPAS:
