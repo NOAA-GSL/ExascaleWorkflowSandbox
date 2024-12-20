@@ -74,6 +74,7 @@ idle_heartbeats_hard: 5760
 """
 
 
+# Set the UUID of the default Chiltepin thick client
 CHILTEPIN_CLIENT_UUID = "42e9e804-0bcd-4c3d-881b-8e270e3c2163"
 
 
@@ -90,7 +91,15 @@ def login() -> Dict[str, Client | TransferClient]:
 
     Dict[str, Client | TransferClient]
     """
-    os.environ["GLOBUS_COMPUTE_CLIENT_ID"] = CHILTEPIN_CLIENT_UUID
+    # Ensure appropriate client app is specified
+    if os.environ["GLOBUS_COMPUTE_CLIENT_SECRET"]:
+        if not os.environ["GLOBUS_COMPUTE_CLIENT_ID"]:
+            raise Exception(
+                "$GLOBUS_COMPUTE_CLIENT_SECRET is set but $GLOBUS_COMPUTE_CLIENT_ID is not"
+            )
+    else:
+        if not os.environ["GLOBUS_COMPUTE_CLIENT_ID"]:
+            os.environ["GLOBUS_COMPUTE_CLIENT_ID"] = CHILTEPIN_CLIENT_UUID
     app = get_globus_app()
     compute_client = Client(app=app)
     transfer_client = TransferClient(app=app)

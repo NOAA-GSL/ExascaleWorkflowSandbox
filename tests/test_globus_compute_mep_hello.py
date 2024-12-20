@@ -15,6 +15,10 @@ from chiltepin.tasks import python_task
 def config(config_file, platform):
     pwd = pathlib.Path(__file__).parent.resolve()
 
+    # Log in
+    clients = endpoint.login()
+    compute_client = clients["compute"]
+
     # Parse the configuration for the chosen platform
     yaml_config = chiltepin.configure.parse_file(config_file)
     resource_config = yaml_config[platform]["resources"]
@@ -35,7 +39,11 @@ def config(config_file, platform):
     resource_config = _set_endpoint_ids(resource_config)
 
     # Load the finalized resource configuration
-    resources = chiltepin.configure.load(resource_config, resources=["gc-service"])
+    resources = chiltepin.configure.load(
+        resource_config,
+        resources=["gc-service"],
+        client=compute_client,
+    )
 
     # Run the tests with the loaded resources
     with parsl.load(resources):

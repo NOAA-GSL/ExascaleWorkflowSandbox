@@ -18,6 +18,10 @@ from chiltepin.tasks import bash_task
 def config(config_file, platform):
     pwd = pathlib.Path(__file__).parent.resolve()
 
+    # Log in
+    clients = endpoint.login()
+    compute_client = clients["compute"]
+
     # Parse the configuration for the chosen platform
     yaml_config = chiltepin.configure.parse_file(config_file)
     resource_config = yaml_config[platform]["resources"]
@@ -44,6 +48,7 @@ def config(config_file, platform):
     resources = chiltepin.configure.load(
         resource_config,
         resources=["gc-compute", "gc-mpi"],
+        client=compute_client,
     )
 
     # Run the tests with the loaded resources
