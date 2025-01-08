@@ -94,9 +94,9 @@ class QG:
         jobs=8,
         stdout=None,
         stderr=None,
-        clone_executor="service",
-        configure_executor="service",
-        make_executor="compute",
+        clone_executor=["service"],
+        configure_executor=["service"],
+        make_executor=["compute"],
     ):
         clone = self.clone(
             stdout=(stdout, "w"),

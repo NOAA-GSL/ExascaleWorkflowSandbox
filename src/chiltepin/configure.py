@@ -5,7 +5,7 @@ from globus_compute_sdk import Client, Executor
 from parsl.config import Config
 from parsl.executors import GlobusComputeExecutor, HighThroughputExecutor, MPIExecutor
 from parsl.launchers import SimpleLauncher
-from parsl.providers import SlurmProvider
+from parsl.providers import LocalProvider, SlurmProvider
 
 
 def parse_file(filename: str) -> Dict[str, Any]:
@@ -237,7 +237,17 @@ def load(
 
     Config
     """
-    executors = []
+    executors = [
+        HighThroughputExecutor(
+            label="local",
+            worker_debug=True,
+            cores_per_worker=1,
+            provider=LocalProvider(
+                init_blocks=0,
+                max_blocks=1,
+            ),
+        )
+    ]
     for name, spec in config.items():
         if resources is None or name in resources:
             match spec["engine"]:

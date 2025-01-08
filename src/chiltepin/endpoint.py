@@ -9,7 +9,8 @@ from typing import Dict
 import yaml
 from globus_compute_sdk import Client
 from globus_compute_sdk.sdk.auth.globus_app import get_globus_app
-from globus_sdk import TransferClient
+from globus_sdk import ClientApp, GlobusApp, TransferClient, UserApp
+from globus_sdk.gare import GlobusAuthorizationParameters
 
 multi_endpoint_template = """# This is the default user-template provided with newly-configured Multi-User
 # endpoints.  User endpoints generate a user-endpoint-specific configuration by
@@ -73,17 +74,78 @@ idle_heartbeats_soft: 10
 idle_heartbeats_hard: 5760
 """
 
-
 # Set the UUID of the default Chiltepin thick client
 CHILTEPIN_CLIENT_UUID = "42e9e804-0bcd-4c3d-881b-8e270e3c2163"
+
+
+def get_chiltepin_apps() -> (GlobusApp, GlobusApp):
+    """Log in to the Chiltepin app
+
+    This instantiates GlobusApp objects for use in creating Globus Compute
+    and Globus Transfer clients.  If the environment contains settings that
+    specify client ids and/or client secrets, those will be used to create the
+    Globus Apps.  Otherwise, the default Chiltepin thick client will be used.
+    If a secret is present in the environment, ClientApp objects will be created.
+    Otherwise, UserApp objects will be created. This is used by the login() and
+    logout() functions where login and logout flows are initiated after the apps
+    are retreived. A tuple is returned where the first item is the compute app
+    and the second item is the transfer app.
+
+    Returns
+    -------
+
+    (GlobusApp, GlobusApp)
+    """
+    # Get client id and secret from environment if they are set
+    client_id = os.environ.get("GLOBUS_COMPUTE_CLIENT_ID", None)
+    client_secret = os.environ.get("GLOBUS_COMPUTE_CLIENT_SECRET", None)
+
+    # If a client secret was found, make sure a client id was also found
+    if client_secret and not client_id:
+        raise Exception(
+            "$GLOBUS_COMPUTE_CLIENT_SECRET is set but $GLOBUS_COMPUTE_CLIENT_ID is not"
+        )
+
+    # If a secret and id were both found, set the corresponding Globus CLI env vars
+    if client_secret:
+        os.environ["GLOBUS_CLI_CLIENT_ID"] = client_id
+        os.environ["GLOBUS_CLI_CLIENT_SECRET"] = client_secret
+
+    # If a client id was not found in the environment, use the default Chiltepin client id
+    if not client_id:
+        client_id = CHILTEPIN_CLIENT_UUID
+        os.environ["GLOBUS_COMPUTE_CLIENT_ID"] = client_id
+        # NOTE: $GLOBUS_CLI_CLIENT_ID should only be set if $GLOBUS_CLI_CLIENT_SECRET is also set
+
+    # Get the Globus App the compute client will use
+    compute_app = get_globus_app()
+
+    # Create a Globus App for the transfer client
+    if client_secret:
+        # Use a ClientApp for Service Client credentials
+        transfer_app = ClientApp(
+            "chiltepin",
+            client_id=client_id,
+            client_secret=client_secret,
+        )
+    else:
+        # Use a UserApp for user credentials
+        transfer_app = UserApp(
+            "chiltepin",
+            client_id=client_id,
+        )
+
+    # Return the Apps
+    return (compute_app, transfer_app)
 
 
 def login() -> Dict[str, Client | TransferClient]:
     """Log in to the Chiltepin app
 
-    This initiates the Globus login flow to log the user in to the registered
-    Chiltepin thick client app. It uses those credentials to instantiate and
-    return a Globus Compute client and a Globus Transfer client in a dictionary.
+    This initiates the Globus login flow to log the user in to the Globus compute
+    and transfer services. The login will use the registered Chiltepin thick client
+    by default, or the client id and/or secret specified in the environment. This
+    returns a Globus Compute client and a Globus Transfer client in a dictionary.
     Those clients can then be used for accessing those services.
 
     Returns
@@ -91,32 +153,43 @@ def login() -> Dict[str, Client | TransferClient]:
 
     Dict[str, Client | TransferClient]
     """
-    # Ensure appropriate client app is specified
-    if os.environ["GLOBUS_COMPUTE_CLIENT_SECRET"]:
-        if not os.environ["GLOBUS_COMPUTE_CLIENT_ID"]:
-            raise Exception(
-                "$GLOBUS_COMPUTE_CLIENT_SECRET is set but $GLOBUS_COMPUTE_CLIENT_ID is not"
+    # Get the Globus Apps for use in creating the clients
+    compute_app, transfer_app = get_chiltepin_apps()
+
+    # Initialize the compute client
+    compute_client = Client(app=compute_app)
+
+    # Initialize the transfer client
+    transfer_client = TransferClient(app=transfer_app)
+
+    # transfer_client.add_app_data_access_scope("d75f3e86-df3c-4734-8b9d-f182346b4bbd")
+
+    # Initiate login for compute client if necessary
+    if compute_app.login_required():
+        compute_app.login()
+
+    # Initiate login for transfer client if necessary
+    if transfer_app.login_required():
+        transfer_app.login(
+            auth_params=GlobusAuthorizationParameters(
+                session_required_single_domain=["rdhpcs.noaa.gov"],
+                prompt="login",
             )
-    else:
-        if not os.environ["GLOBUS_COMPUTE_CLIENT_ID"]:
-            os.environ["GLOBUS_COMPUTE_CLIENT_ID"] = CHILTEPIN_CLIENT_UUID
-    app = get_globus_app()
-    compute_client = Client(app=app)
-    transfer_client = TransferClient(app=app)
-    if app.login_required():
-        app.login()
+        )
+
     return {"compute": compute_client, "transfer": transfer_client}
 
 
 def logout():
     """Log out of the Chiltepin app
 
-    This logs the user out of the Chiltepin thick client app and revokes all
-    credentials associated with it.
+    This logs the user out of the Globus compute and transfer services and revokes
+    all credentials associated with them.
     """
-    os.environ["GLOBUS_COMPUTE_CLIENT_ID"] = CHILTEPIN_CLIENT_UUID
-    app = get_globus_app()
-    app.logout()
+    # Get the Globus Apps for use in creating the clients
+    compute_app, transfer_app = get_chiltepin_apps()
+    compute_app.logout()
+    transfer_app.logout()
 
 
 def configure(

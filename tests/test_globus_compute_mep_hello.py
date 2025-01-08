@@ -77,5 +77,5 @@ def test_hello_endpoint(config):
     def hello():
         return "Hello"
 
-    future = hello(executor="gc-service")
+    future = hello(executor=["gc-service"])
     assert future.result() == "Hello"

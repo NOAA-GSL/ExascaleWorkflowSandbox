@@ -126,7 +126,7 @@ def test_endpoint_mpi_hello(config):
         pwd,
         stdout=os.path.join(pwd, "globus_compute_mpi_hello_compile_mep.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_hello_compile_mep.err"),
-        executor="gc-compute",
+        executor=["gc-compute"],
     )
     r = future.result()
     assert r == 0
@@ -135,7 +135,7 @@ def test_endpoint_mpi_hello(config):
         pwd,
         stdout=os.path.join(pwd, "globus_compute_mpi_hello_run_mep.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_hello_run_mep.err"),
-        executor="gc-mpi",
+        executor=["gc-mpi"],
         parsl_resource_specification={
             "num_nodes": 3,  # Number of nodes required for the application instance
             "num_ranks": 6,  # Number of ranks in total
@@ -190,7 +190,7 @@ def test_endpoint_mpi_pi(config):
         pwd,
         stdout=os.path.join(pwd, "globus_compute_mpi_pi_compile_mep.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_pi_compile_mep.err"),
-        executor="gc-compute",
+        executor=["gc-compute"],
     )
     r = future.result()
     assert r == 0
@@ -199,7 +199,7 @@ def test_endpoint_mpi_pi(config):
         pwd,
         stdout=os.path.join(pwd, "globus_compute_mpi_pi1_run_mep.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_pi1_run_mep.err"),
-        executor="gc-mpi",
+        executor=["gc-mpi"],
         parsl_resource_specification={
             "num_nodes": 2,  # Number of nodes required for the application instance
             "num_ranks": 2 * cores_per_node,  # Number of ranks in total
@@ -211,7 +211,7 @@ def test_endpoint_mpi_pi(config):
         pwd,
         stdout=os.path.join(pwd, "globus_compute_mpi_pi2_run_mep.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_pi2_run_mep.err"),
-        executor="gc-mpi",
+        executor=["gc-mpi"],
         parsl_resource_specification={
             "num_nodes": 1,  # Number of nodes required for the application instance
             "num_ranks": cores_per_node,  # Number of ranks in total
