@@ -488,6 +488,10 @@ def stop(name: str, config_dir: str | None = None, timeout: int = 60):
         text=True,
         timeout=timeout,
     )
+    if is_multi(name, config_dir):
+        # Wait for endpoint to enter "Stopped" state
+        while is_running(name, config_dir):
+            time.sleep(1)
     assert p.returncode == 0, p.stdout
 
 
