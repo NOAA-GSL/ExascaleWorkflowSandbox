@@ -149,7 +149,8 @@ def transfer(
     """Trnsfer data synchronously with Globus
 
     This performs a Globus transfer of data from one Globus transfer endpoint
-    to another.
+    to another. This function will not return until the transfer completes or
+    fails.
 
     Parameters
     ----------
@@ -249,12 +250,10 @@ def delete(
     client: TransferClient | None = None,
     recursive: bool = False,
 ):
-    """Delete data asynchronously in a Parsl task
+    """Delete data synchronously with Globus.
 
-    This wraps synchronous Globus data deletion into a Parsl python_app task.
-    Calling this function will immediately return a future. The result of the
-    future will be True if the deletion completed successfully, or False if
-    it did not.
+    This deletes data from a Globus endpoint. This function will not return
+    until the deletion has completed or failed.
 
     Parameters
     ----------
