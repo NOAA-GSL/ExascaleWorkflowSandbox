@@ -99,8 +99,8 @@ class WPS:
         jobs=None,
         stdout=None,
         stderr=None,
-        clone_executor="service",
-        make_executor="service",
+        clone_executor=["service"],
+        make_executor=["service"],
     ):
         clone = self.clone(
             stdout=(stdout, "w"),

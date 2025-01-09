@@ -80,7 +80,7 @@ def main(user_config_file: Path) -> None:
         install_limited_area = limited_area.install(
             stdout=experiment_path / "install_limited_area.out",
             stderr=experiment_path / "install_limited_area.err",
-            executor="service",
+            executor=["service"],
         )
 
         # Intall Metis
@@ -108,7 +108,7 @@ def main(user_config_file: Path) -> None:
             region="conus",
             stdout=experiment_path / "create_region.out",
             stderr=experiment_path / "create_region.err",
-            executor="service",
+            executor=["service"],
             install=install_limited_area,
         )
         create_region.result()
@@ -133,7 +133,7 @@ def main(user_config_file: Path) -> None:
                         nprocs,
                         stdout=experiment_path / f"gpmetis_{nprocs}.out",
                         stderr=experiment_path / f"gpmetis_{nprocs}.err",
-                        executor="compute",
+                        executor=["compute"],
                         install=install_metis,
                     )
                 )
@@ -191,7 +191,7 @@ def main(user_config_file: Path) -> None:
                 cycle_iso,
                 stdout=experiment_path / f"ungrib_{yyyymmddhh}.out",
                 stderr=experiment_path / f"ungrib_{yyyymmddhh}.err",
-                executor="compute",
+                executor=["compute"],
                 install=install_wps,
             )
 
@@ -205,7 +205,7 @@ def main(user_config_file: Path) -> None:
                 "create_ics",
                 stdout=experiment_path / f"mpas_init_ics_{yyyymmddhh}.out",
                 stderr=experiment_path / f"mpas_init_ics_{yyyymmddhh}.err",
-                executor="mpi",
+                executor=["mpi"],
                 install=install_mpas,
                 parsl_resource_specification={
                     "num_nodes": 1,
@@ -224,7 +224,7 @@ def main(user_config_file: Path) -> None:
                 "create_lbcs",
                 stdout=experiment_path / f"mpas_init_lbcs_{yyyymmddhh}.out",
                 stderr=experiment_path / f"mpas_init_lbcs_{yyyymmddhh}.err",
-                executor="mpi",
+                executor=["mpi"],
                 install=install_mpas,
                 parsl_resource_specification={
                     "num_nodes": 1,
@@ -243,7 +243,7 @@ def main(user_config_file: Path) -> None:
                 "forecast",
                 stdout=experiment_path / f"mpas_forecast_{yyyymmddhh}.out",
                 stderr=experiment_path / f"mpas_forecast_{yyyymmddhh}.err",
-                executor="mpi",
+                executor=["mpi"],
                 install=install_mpas,
                 parsl_resource_specification={
                     "num_nodes": 1,
