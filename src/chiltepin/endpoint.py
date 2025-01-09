@@ -520,6 +520,7 @@ def delete(name: str, config_dir: str | None = None, timeout: int = 60):
         command.append(f"{os.path.abspath(config_dir)}")
     command.append("delete")
     command.append("--yes")
+    command.append("--force")
     command.append(name)
     # Run the command as a subprocess
     p = subprocess.run(
