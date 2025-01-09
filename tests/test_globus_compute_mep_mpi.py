@@ -18,6 +18,10 @@ from chiltepin.tasks import bash_task
 def config(config_file, platform):
     pwd = pathlib.Path(__file__).parent.resolve()
 
+    # Log in
+    clients = endpoint.login()
+    compute_client = clients["compute"]
+
     # Parse the configuration for the chosen platform
     yaml_config = chiltepin.configure.parse_file(config_file)
     resource_config = yaml_config[platform]["resources"]
@@ -44,6 +48,7 @@ def config(config_file, platform):
     resources = chiltepin.configure.load(
         resource_config,
         resources=["gc-compute", "gc-mpi"],
+        client=compute_client,
     )
 
     # Run the tests with the loaded resources
@@ -121,7 +126,7 @@ def test_endpoint_mpi_hello(config):
         pwd,
         stdout=os.path.join(pwd, "globus_compute_mpi_hello_compile_mep.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_hello_compile_mep.err"),
-        executor="gc-compute",
+        executor=["gc-compute"],
     )
     r = future.result()
     assert r == 0
@@ -130,7 +135,7 @@ def test_endpoint_mpi_hello(config):
         pwd,
         stdout=os.path.join(pwd, "globus_compute_mpi_hello_run_mep.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_hello_run_mep.err"),
-        executor="gc-mpi",
+        executor=["gc-mpi"],
         parsl_resource_specification={
             "num_nodes": 3,  # Number of nodes required for the application instance
             "num_ranks": 6,  # Number of ranks in total
@@ -185,7 +190,7 @@ def test_endpoint_mpi_pi(config):
         pwd,
         stdout=os.path.join(pwd, "globus_compute_mpi_pi_compile_mep.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_pi_compile_mep.err"),
-        executor="gc-compute",
+        executor=["gc-compute"],
     )
     r = future.result()
     assert r == 0
@@ -194,7 +199,7 @@ def test_endpoint_mpi_pi(config):
         pwd,
         stdout=os.path.join(pwd, "globus_compute_mpi_pi1_run_mep.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_pi1_run_mep.err"),
-        executor="gc-mpi",
+        executor=["gc-mpi"],
         parsl_resource_specification={
             "num_nodes": 2,  # Number of nodes required for the application instance
             "num_ranks": 2 * cores_per_node,  # Number of ranks in total
@@ -206,7 +211,7 @@ def test_endpoint_mpi_pi(config):
         pwd,
         stdout=os.path.join(pwd, "globus_compute_mpi_pi2_run_mep.out"),
         stderr=os.path.join(pwd, "globus_compute_mpi_pi2_run_mep.err"),
-        executor="gc-mpi",
+        executor=["gc-mpi"],
         parsl_resource_specification={
             "num_nodes": 1,  # Number of nodes required for the application instance
             "num_ranks": cores_per_node,  # Number of ranks in total

@@ -22,6 +22,20 @@ cmd_parsers = root_parser.add_subparsers(
     help="Chiltepin commands",
 )
 
+# Add parser for the login command
+login_parser = cmd_parsers.add_parser(
+    "login",
+    help="login to the Chiltepin App",
+)
+login_parser.set_defaults(func=endpoint.login)
+
+# Add parser for the login command
+logout_parser = cmd_parsers.add_parser(
+    "logout",
+    help="logout of the Chiltepin App",
+)
+logout_parser.set_defaults(func=endpoint.logout)
+
 # Add parser for the endpoint command
 endpoint_parser = cmd_parsers.add_parser(
     "endpoint",

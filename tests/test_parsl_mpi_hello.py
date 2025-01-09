@@ -142,8 +142,8 @@ def test_run_mpi_pi(config):
         os.remove(pwd / "parsl_mpi_pi2_run.out")
     if os.path.exists(pwd / "parsl_mpi_pi2_run.err"):
         os.remove(pwd / "parsl_mpi_pi2_run.err")
-    cores_per_node = config["resources"].executors[0].provider.cores_per_node
-    assert config["resources"].executors[0].label == "mpi"
+    cores_per_node = config["resources"].executors[1].provider.cores_per_node
+    assert config["resources"].executors[1].label == "mpi"
     pi1 = run_mpi_pi(
         dirpath=pwd,
         stdout=os.path.join(pwd, "parsl_mpi_pi1_run.out"),

@@ -41,9 +41,9 @@ def test_qg_install(config):
         jobs=8,
         stdout=pwd / "qg_install.out",
         stderr=pwd / "qg_install.err",
-        clone_executor="service",
-        configure_executor="service",
-        make_executor="compute",
+        clone_executor=["service"],
+        configure_executor=["service"],
+        make_executor=["compute"],
     ).result()
 
     assert install_result == 0
