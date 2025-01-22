@@ -186,20 +186,23 @@ def make_globus_compute_executor(
     """
     e = GlobusComputeExecutor(
         label=name,
-        executor=Executor(endpoint_id=config["endpoint id"], client=client),
-        user_endpoint_config={
-            "engine": config.get("engine", "GlobusComputeEngine"),
-            "max_mpi_apps": config.get("max mpi apps", 1),
-            "cores_per_node": config.get("cores per node", 1),
-            "nodes_per_block": config.get("nodes per block", 1),
-            "init_blocks": config.get("init blocks", 0),
-            "min_blocks": config.get("min blocks", 0),
-            "max_blocks": config.get("max blocks", 1),
-            "exclusive": config.get("exclusive", True),
-            "partition": config["partition"],
-            "account=config": config["account"],
-            "worker_init": "\n".join(config.get("environment", [])),
-        },
+        executor=Executor(
+            endpoint_id=config["endpoint id"],
+            client=client,
+            user_endpoint_config={
+                "engine": config.get("engine", "GlobusComputeEngine"),
+                "max_mpi_apps": config.get("max mpi apps", 1),
+                "cores_per_node": config.get("cores per node", 1),
+                "nodes_per_block": config.get("nodes per block", 1),
+                "init_blocks": config.get("init blocks", 0),
+                "min_blocks": config.get("min blocks", 0),
+                "max_blocks": config.get("max blocks", 1),
+                "exclusive": config.get("exclusive", True),
+                "partition": config["partition"],
+                "account=config": config["account"],
+                "worker_init": "\n".join(config.get("environment", [])),
+            },
+        ),
     )
     return e
 
