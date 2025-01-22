@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import yaml
 from globus_compute_sdk import Client, Executor
@@ -141,7 +141,7 @@ def make_mpi_executor(name: str, config: Dict[str, Any]) -> MPIExecutor:
 
 
 def make_globus_compute_executor(
-    name: str, config: Dict[str, Any], client: Client | None = None
+    name: str, config: Dict[str, Any], client: Optional[Client] = None
 ) -> GlobusComputeExecutor:
     """Construct a GlobusComputeExecutor from the input configuration
 
@@ -206,8 +206,8 @@ def make_globus_compute_executor(
 
 def load(
     config: Dict[str, Any],
-    resources: List[str] | None = None,
-    client: Client | None = None,
+    resources: Optional[List[str]] = None,
+    client: Optional[Client] = None,
 ) -> Config:
     """Construct a list of Executors from the input configuration dictionary
 
@@ -250,17 +250,16 @@ def load(
     ]
     for name, spec in config.items():
         if resources is None or name in resources:
-            match spec["engine"]:
-                case "HTEX":
-                    # Make a HighThroughputExecutor
-                    executors.append(make_htex_executor(name, spec))
-                case "MPI":
-                    # Make an MPIExecutor
-                    executors.append(make_mpi_executor(name, spec))
-                case "GlobusComputeEngine":
-                    # Make a GlobusComputeExecutor for non-MPI jobs
-                    executors.append(make_globus_compute_executor(name, spec, client))
-                case "GlobusMPIEngine":
-                    # Make a GlobusComputeExecutor for MPI jobs
-                    executors.append(make_globus_compute_executor(name, spec, client))
+            if spec["engine"] == "HTEX":
+                # Make a HighThroughputExecutor
+                executors.append(make_htex_executor(name, spec))
+            elif spec["engine"] == "MPI":
+                # Make an MPIExecutor
+                executors.append(make_mpi_executor(name, spec))
+            elif spec["engine"] == "GlobusComputeEngine":
+                # Make a GlobusComputeExecutor for non-MPI jobs
+                executors.append(make_globus_compute_executor(name, spec, client))
+            elif spec["engine"] == "GlobusMPIEngine":
+                # Make a GlobusComputeExecutor for MPI jobs
+                executors.append(make_globus_compute_executor(name, spec, client))
     return Config(executors)
