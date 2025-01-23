@@ -152,6 +152,7 @@ create_lbcs:
     scheduler: '{{ platform.scheduler }}'
 forecast:
   mpas:
+    domain: regional
     execution:
       batchargs:
         cores: 32
