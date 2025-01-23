@@ -1,4 +1,5 @@
 from concurrent.futures import Future
+from typing import Optional
 
 from globus_sdk import TransferClient
 
@@ -14,9 +15,9 @@ def transfer_task(
     dst_path: str,
     timeout: int = 3600,
     polling_interval: int = 30,
-    client: TransferClient | None = None,
+    client: Optional[TransferClient] = None,
     recursive: bool = False,
-    dependencies: Future | None = None,
+    dependencies: Optional[Future] = None,
 ):
     """Trnsfer data asynchronously in a Parsl task
 
@@ -83,9 +84,9 @@ def delete_task(
     src_path: str,
     timeout: int = 3600,
     polling_interval: int = 30,
-    client: TransferClient | None = None,
+    client: Optional[TransferClient] = None,
     recursive: bool = False,
-    dependencies: Future | None = None,
+    dependencies: Optional[Future] = None,
 ):
     """Delete data asynchronously in a Parsl task
 
@@ -143,7 +144,7 @@ def transfer(
     dst_path: str,
     timeout: int = 3600,
     polling_interval: int = 30,
-    client: TransferClient | None = None,
+    client: Optional[TransferClient] = None,
     recursive: bool = False,
 ):
     """Trnsfer data synchronously with Globus
@@ -247,7 +248,7 @@ def delete(
     src_path: str,
     timeout: int = 3600,
     polling_interval: int = 30,
-    client: TransferClient | None = None,
+    client: Optional[TransferClient] = None,
     recursive: bool = False,
 ):
     """Delete data synchronously with Globus.

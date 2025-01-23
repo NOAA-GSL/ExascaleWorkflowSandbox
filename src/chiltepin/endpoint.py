@@ -4,7 +4,7 @@ import re
 import subprocess
 import sys
 import time
-from typing import Dict
+from typing import Dict, Optional, Union
 
 import yaml
 from globus_compute_sdk import Client
@@ -139,7 +139,7 @@ def get_chiltepin_apps() -> (GlobusApp, GlobusApp):
     return (compute_app, transfer_app)
 
 
-def login() -> Dict[str, Client | TransferClient]:
+def login() -> Dict[str, Union[Client, TransferClient]]:
     """Log in to the Chiltepin app
 
     This initiates the Globus login flow to log the user in to the Globus compute
@@ -177,6 +177,7 @@ def login() -> Dict[str, Client | TransferClient]:
             )
         )
 
+    # Return the clients
     return {"compute": compute_client, "transfer": transfer_client}
 
 
@@ -194,7 +195,7 @@ def logout():
 
 def configure(
     name: str,
-    config_dir: str | None = None,
+    config_dir: Optional[str] = None,
     multi: bool = False,
     timeout: int = 5,
 ):
@@ -284,7 +285,7 @@ def configure(
             f.write(f"PATH: {chiltepin_path}:{login_path}\n")
 
 
-def is_multi(name: str, config_dir: str | None = None) -> bool:
+def is_multi(name: str, config_dir: Optional[str] = None) -> bool:
     """Return True if the endpoint is a multi endpoint, False otherwise
 
     Parameters
@@ -318,7 +319,7 @@ def is_multi(name: str, config_dir: str | None = None) -> bool:
     return yaml_config.get("multi_user", False)
 
 
-def list(config_dir: str | None = None, timeout: int = 60) -> Dict[str, str]:
+def list(config_dir: Optional[str] = None, timeout: int = 60) -> Dict[str, str]:
     """Return a list of configured Globus Compute Endpoints
 
     This is a thin wrapper around the globus-compute-endpoint list command.
@@ -368,7 +369,7 @@ def list(config_dir: str | None = None, timeout: int = 60) -> Dict[str, str]:
     return ep_list
 
 
-def is_running(name: str, config_dir: str | None = None) -> bool:
+def is_running(name: str, config_dir: Optional[str] = None) -> bool:
     """Return True if the endpoint is running, otherwise False
 
     Parameters
@@ -396,7 +397,7 @@ def is_running(name: str, config_dir: str | None = None) -> bool:
     return ep_info.get("state", None) == "Running"
 
 
-def start(name: str, config_dir: str | None = None, timeout: int = 60):
+def start(name: str, config_dir: Optional[str] = None, timeout: int = 60):
     """Start the specified Globus Compute Endpoint
 
     This is a thin wrapper around the globus-compute-endpoint start command
@@ -455,7 +456,7 @@ def start(name: str, config_dir: str | None = None, timeout: int = 60):
         assert p.returncode == 0, p.stdout
 
 
-def stop(name: str, config_dir: str | None = None, timeout: int = 60):
+def stop(name: str, config_dir: Optional[str] = None, timeout: int = 60):
     """Stop the specified Globus Compute Endpoint
 
     This is a thin wrapper around the globus-compute-endpoint stop command
@@ -495,7 +496,7 @@ def stop(name: str, config_dir: str | None = None, timeout: int = 60):
     assert p.returncode == 0, p.stdout
 
 
-def delete(name: str, config_dir: str | None = None, timeout: int = 60):
+def delete(name: str, config_dir: Optional[str] = None, timeout: int = 60):
     """Delete the specified Globus Compute Endpoint
 
     This is a thin wrapper around the globus-compute-endpoint delete command

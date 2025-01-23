@@ -6,10 +6,10 @@ build-backend = "setuptools.build_meta"
 name = "chiltepin"
 version = "0.0.1"
 dependencies = [
-    "globus-compute-sdk>=2.30.1",
-    "globus-compute-endpoint>=2.30.1",
-    "parsl[monitoring] @ git+https://github.com/Parsl/parsl.git@globus_compute_executor.py",
-    "uwtools @ git+https://github.com/ufs-community/uwtools@v2.4.2#subdirectory=src",
+    "globus-compute-sdk @ git+https://github.com/globus/globus-compute@main#subdirectory=compute_sdk",
+    "globus-compute-endpoint @ git+https://github.com/globus/globus-compute@main#subdirectory=compute_endpoint",
+    "parsl[monitoring]>=2025.01.20",
+    "uwtools @ git+https://github.com/ufs-community/uwtools@v2.5.1#subdirectory=src",
 ]
 requires-python = ">=3.9.0"
 authors = [

@@ -25,7 +25,7 @@ def main(user_config_file: Path) -> None:
     machine = user_config["user"]["platform"]
     user_resolution = user_config["user"]["resolution"]
 
-    experiment_config.update_values(user_config)
+    experiment_config.update_from(user_config)
 
     experiment_config["user"]["mpas_app"] = mpas_app.as_posix()
     experiment_config.dereference()
