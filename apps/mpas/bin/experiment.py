@@ -7,11 +7,11 @@ import parsl
 import uwtools.api.config as uwconfig
 
 import chiltepin.configure
-from chiltepin.metis.wrapper import Metis
-from chiltepin.mpas.limited_area.wrapper import LimitedArea
-from chiltepin.mpas.wrapper import MPAS
-from chiltepin.utils.chiltepin_get_data import retrieve_data
-from chiltepin.wps.wrapper import WPS
+from chiltepin.drivers.metis.driver import Metis
+from chiltepin.drivers.mpas.limited_area.driver import LimitedArea
+from chiltepin.drivers.mpas.driver import MPAS
+from chiltepin.drivers.utils.chiltepin_get_data import retrieve_data
+from chiltepin.drivers.wps.driver import WPS
 
 
 def main(user_config_file: Path) -> None:
