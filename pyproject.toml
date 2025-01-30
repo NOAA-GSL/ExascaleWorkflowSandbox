@@ -34,6 +34,11 @@ test = [
     "pytest-black",
     "pytest-isort",
 ]
+docs = [
+    "nbsphinx",
+    "sphinx>=7.1",
+    "sphinx-rtd-theme",
+]
 
 [project.scripts]
 chiltepin = "chiltepin.cli:main"
