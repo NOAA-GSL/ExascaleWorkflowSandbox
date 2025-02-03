@@ -85,6 +85,8 @@ def main(user_config_file: Path) -> None:
 
         # Intall Metis
         install_metis = metis.install(
+            clone_executor=["service"],
+            make_executor=["service"],
             stdout=experiment_path / "install_metis.out",
             stderr=experiment_path / "install_metis.err",
         )
@@ -131,9 +133,9 @@ def main(user_config_file: Path) -> None:
                     metis.gpmetis(
                         mesh_file_path,
                         nprocs,
+                        executor=["compute"],
                         stdout=experiment_path / f"gpmetis_{nprocs}.out",
                         stderr=experiment_path / f"gpmetis_{nprocs}.err",
-                        executor=["compute"],
                         install=install_metis,
                     )
                 )

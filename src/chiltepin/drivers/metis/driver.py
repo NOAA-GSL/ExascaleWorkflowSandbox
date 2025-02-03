@@ -1,7 +1,7 @@
 import textwrap
-
 from concurrent.futures import Future
 from typing import List, Optional
+
 from chiltepin.tasks import bash_task, join_task
 
 
@@ -25,6 +25,7 @@ class Metis:
         The tag of Metis to use. If None (the default) "develop" will be used
         to clone and install Metis.
     """
+
     def __init__(
         self,
         environment: Optional[List[str]] = None,
@@ -36,13 +37,199 @@ class Metis:
         self.install_path = install_path or "./"
         self.tag = tag or "develop"
 
-    @bash_task
     def clone(
         self,
+        *,
+        executor: List[str],
+        stdout: Optional[str] = None,
+        stderr: Optional[str] = None,
+    ) -> Future:
+        """Clone the Metis repository.
+
+        Schedules and executes a workflow task to clone the Metis repository
+        into ``<install_path>/metis/build/<tag>/``. This is a non-blocking call
+        that returns a Future representing the eventual result of the clone
+        operation.
+
+        Parameters
+        ----------
+
+        executor: List[str]
+            List of names of executors where the clone task may execute.
+
+        stdout: str | None
+            Full path to the file where stdout of the clone task is to be
+            written. If not specified, output to stdout will not be captured.
+
+        stderr: str | None
+            Full path to the file where stderr of the clone task is to be
+            written. If not specified, output to stderr will not be captured.
+
+        Returns
+        -------
+
+        Future
+            The future result of the clone task's execution.
+        """
+        return self._clone(
+            executor=executor,
+            stdout=stdout,
+            stderr=stderr,
+        )
+
+    def make(
+        self,
+        *,
+        executor: List[str],
+        stdout: Optional[str] = None,
+        stderr: Optional[str] = None,
+        clone: Optional[Future] = None,
+    ) -> Future:
+        """Build the Metis code that have previously been cloned.
+
+        Schedules and executes a workflow task to build the Metis code. This
+        is a non-blocking call that returns a Future representing the eventual
+        result of the make operation.
+
+        Parameters
+        ----------
+
+        executor: List[str]
+            List of names of executors where the make task may execute.
+
+        stdout: str | None
+            Full path to the file where stdout of the make task is to be
+            written. If not specified, output to stdout will not be captured.
+
+        stderr: str | None
+            Full path to the file where stderr of the make task is to be
+            written. If not specified, output to stderr will not be captured.
+
+        clone: Future | None
+            A future that represents the results of the clone task that must
+            finish successfully before the make task can execute. If left
+            unspecified (the default), no dependency for this task will be
+            enforced.
+
+        Returns
+        -------
+
+        Future
+            The future result of the make task's execution.
+        """
+        return self._make(
+            executor=executor,
+            stdout=stdout,
+            stderr=stderr,
+            clone=clone,
+        )
+
+    def install(
+        self,
+        *,
+        clone_executor: List[str],
+        make_executor: List[str],
+        stdout: Optional[str] = None,
+        stderr: Optional[str] = None,
+    ) -> Future:
+        """Clone and build Metis.
+
+        Schedules and executes a workflow task to clone and build the Metis code.
+        This is a non-blocking call that returns a Future representing the
+        eventual result of the install operation.
+
+        Parameters
+        ----------
+
+        clone_executor: List[str]
+            List of names of executors where the clone subtask may execute.
+
+        make_executor: List[str]
+            List of names of executors where the make subtask may execute.
+
+        stdout: str | None
+            Full path to the file where stdout of the install task is to be
+            written. If not specified, output to stdout will not be captured.
+
+        stderr: str | None
+            Full path to the file where stderr of the install task is to be
+            written. If not specified, output to stderr will not be captured.
+
+        Returns
+        -------
+
+        Future
+            The future result of the install task's execution.
+        """
+        return self._install(
+            clone_executor=clone_executor,
+            make_executor=make_executor,
+            stdout=stdout,
+            stderr=stderr,
+        )
+
+    def gpmetis(
+        self,
+        mesh_file: str,
+        nprocs: int,
+        *,
+        executor: List[str],
+        stdout: Optional[str] = None,
+        stderr: Optional[str] = None,
+        install: Optional[Future] = None,
+    ) -> Future:
+        """Run gpmetis to partition a mesh file for a given number of processors.
+
+        Parameters
+        ----------
+
+        mesh_file: str
+            The full path to the input mesh file to be partitioned.
+
+        nprocs: int
+            The number of processors (partitions) required for the output mesh
+            file.
+
+        executor: List[str]
+            List of names of executors where the gpmetis task may execute.
+
+        stdout: str | None
+            Full path to the file where stdout of the gpmetis task is to be
+            written. If not specified, output to stdout will not be captured.
+
+        stderr: str | None
+            Full path to the file where stderr of the gpmetis task is to be
+            written. If not specified, output to stderr will not be captured.
+
+        install: Future | None
+            A future that represents the results of the make or install task
+            that must finish successfully before the gpmetis task can execute.
+            If left unspecified (the default), no dependency for this task will
+            be enforced.
+
+        Returns
+        -------
+
+        Future
+            The future result of the gpmetis task's execution
+        """
+        return self._gpmetis(
+            mesh_file=mesh_file,
+            nprocs=nprocs,
+            executor=executor,
+            stdout=stdout,
+            stderr=stderr,
+            install=install,
+        )
+
+    @bash_task
+    def _clone(
+        self,
+        *,
         stdout: Optional[str] = None,
         stderr: Optional[str] = None,
     ) -> str:
-        """Clone the Metis repository.
+        """A bash task to clone the Metis repository.
 
         The repository will be cloned into ``<install_path>/metis/build/<tag>/``.
 
@@ -56,6 +243,14 @@ class Metis:
         stderr: str | None
             Full path to the file where stderr of the clone task is to be
             written. If not specified, output to stderr will not be captured.
+
+        Returns
+        -------
+
+        str
+            A string containing the bash script that implements the Metis clone
+            task. This string is consumed by the @bash_task decorator that wraps
+            this method to create a workflow task.
         """
         return self.environment + textwrap.dedent(
             f"""
@@ -77,13 +272,14 @@ class Metis:
         )
 
     @bash_task
-    def make(
+    def _make(
         self,
+        *,
         stdout: Optional[str] = None,
         stderr: Optional[str] = None,
         clone: Optional[Future] = None,
     ) -> str:
-        """Build the Metis code that have previously been cloned.
+        """A bash task to build Metis code that has previously been cloned.
 
         Parameters
         ----------
@@ -101,6 +297,14 @@ class Metis:
             finish successfully before the make task can execute. If left
             unspecified (the default), no dependency for this task will be
             enforced.
+
+        Returns
+        -------
+
+        str
+            A string containing the bash script that implements the Metis make
+            task. This string is consumed by the @bash_task decorator that wraps
+            this method to create a workflow task.
         """
         return self.environment + textwrap.dedent(
             f"""
@@ -119,17 +323,24 @@ class Metis:
         )
 
     @join_task
-    def install(
+    def _install(
         self,
+        *,
+        clone_executor: List[str],
+        make_executor: List[str],
         stdout: Optional[str] = None,
         stderr: Optional[str] = None,
-        clone_executor: List[str] = ["service"],
-        make_executor: List[str] = ["service"],
-    ):
-        """Clone and build Metis.
+    ) -> Future:
+        """A join task to install Metis.
 
         Parameters
         ----------
+
+        clone_executor: List[str]
+            List of names of executors where the clone subtask may execute.
+
+        make_executor: List[str]
+            List of names of executors where the make subtask may execute.
 
         stdout: str | None
             Full path to the file where stdout of the install task is to be
@@ -139,35 +350,38 @@ class Metis:
             Full path to the file where stderr of the install task is to be
             written. If not specified, output to stderr will not be captured.
 
-        clone_executor: List[str]
-            A list of executors where the clone subtask is allowed to execute.
+        Returns
+        -------
 
-        make_executor: List[str]
-            A list of executors where the make subtask is allowed to execute.
+        Future
+            A Future that represents the result of the @join_task that
+            installs Metis.
         """
-        clone = self.clone(
+        clone = self._clone(
+            executor=clone_executor,
             stdout=(stdout, "w"),
             stderr=(stderr, "w"),
-            executor=clone_executor,
         )
-        make = self.make(
+        make = self._make(
+            executor=make_executor,
             stdout=(stdout, "a"),
             stderr=(stderr, "a"),
-            executor=make_executor,
             clone=clone,
         )
         return make
 
     @bash_task
-    def gpmetis(
+    def _gpmetis(
         self,
         mesh_file: str,
         nprocs: int,
+        *,
         stdout: Optional[str] = None,
         stderr: Optional[str] = None,
         install: Optional[Future] = None,
-    ):
-        """Run gpmetis to partition a mesh file for a given number of processors.
+    ) -> str:
+        """A bash task to Run gpmetis to partition a mesh file for a given number
+         of processors.
 
         Parameters
         ----------
@@ -188,10 +402,18 @@ class Metis:
             written. If not specified, output to stderr will not be captured.
 
         install: Future | None
-            A future that represents the results of the make or install  task
+            A future that represents the results of the make or install task
             that must finish successfully before the gpmetis task can execute.
             If left unspecified (the default), no dependency for this task will
             be enforced.
+
+        Returns
+        -------
+
+        str
+            A string containing the bash script that implements the Metis gpmetis
+            task. This string is consumed by the @bash_task decorator that wraps
+            this method to create a workflow task.
         """
         return self.environment + textwrap.dedent(
             f"""
