@@ -47,9 +47,9 @@ class Metis:
         """Clone the Metis repository.
 
         Schedules and executes a workflow task to clone the Metis repository
-        into ``<install_path>/metis/build/<tag>/``. This is a non-blocking call
-        that returns a Future representing the eventual result of the clone
-        operation.
+        into the install path set when the Metis object was initialized. This
+        is a non-blocking call that returns a Future representing the eventual
+        result of the clone operation.
 
         Parameters
         ----------
@@ -394,11 +394,11 @@ class Metis:
             file.
 
         stdout: str | None
-            Full path to the file where stdout of the install task is to be
+            Full path to the file where stdout of the gpmetis task is to be
             written. If not specified, output to stdout will not be captured.
 
         stderr: str | None
-            Full path to the file where stderr of the install task is to be
+            Full path to the file where stderr of the gpmetis task is to be
             written. If not specified, output to stderr will not be captured.
 
         install: Future | None
