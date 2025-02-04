@@ -78,9 +78,9 @@ def main(user_config_file: Path) -> None:
 
         # Intall Limited Area
         install_limited_area = limited_area.install(
+            executor=["service"],
             stdout=experiment_path / "install_limited_area.out",
             stderr=experiment_path / "install_limited_area.err",
-            executor=["service"],
         )
 
         # Intall Metis
