@@ -87,7 +87,7 @@ class WPS:
         stderr: Optional[str] = None,
         clone: Optional[Future] = None,
     ) -> Future:
-        """Build the WPS code that have previously been cloned.
+        """Build the WPS code that has previously been cloned.
 
         Schedules and executes a workflow task to build the WPS code. This
         is a non-blocking call that returns a Future representing the eventual
