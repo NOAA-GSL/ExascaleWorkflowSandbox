@@ -380,7 +380,7 @@ class Metis:
         stderr: Optional[str] = None,
         install: Optional[Future] = None,
     ) -> str:
-        """A bash task to Run gpmetis to partition a mesh file for a given number
+        """A bash task to run gpmetis to partition a mesh file for a given number
          of processors.
 
         Parameters
