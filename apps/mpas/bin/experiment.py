@@ -93,6 +93,8 @@ def main(user_config_file: Path) -> None:
 
         # Intall WPS
         install_wps = wps.install(
+            clone_executor=["service"],
+            make_executor=["service"],
             stdout=experiment_path / "install_wps.out",
             stderr=experiment_path / "install_wps.err",
             WRF_dir=None,
