@@ -576,7 +576,7 @@ class MPAS:
         )
 
     @bash_task
-    def mpas_forecast(
+    def _mpas_forecast(
         self,
         config_path: str,
         cycle_str: str,

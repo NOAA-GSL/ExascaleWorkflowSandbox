@@ -102,6 +102,8 @@ def main(user_config_file: Path) -> None:
 
         # Install MPAS
         install_mpas = mpas.install(
+            clone_executor=["service"],
+            make_executor=["service"],
             stdout=experiment_path / "install_mpas.out",
             stderr=experiment_path / "install_mpas.err",
         )
@@ -211,7 +213,7 @@ def main(user_config_file: Path) -> None:
                 stderr=experiment_path / f"mpas_init_ics_{yyyymmddhh}.err",
                 executor=["mpi"],
                 install=install_mpas,
-                parsl_resource_specification={
+                resource_specification={
                     "num_nodes": 1,
                     "num_ranks": 4,
                     "ranks_per_node": 4,
@@ -230,7 +232,7 @@ def main(user_config_file: Path) -> None:
                 stderr=experiment_path / f"mpas_init_lbcs_{yyyymmddhh}.err",
                 executor=["mpi"],
                 install=install_mpas,
-                parsl_resource_specification={
+                resource_specification={
                     "num_nodes": 1,
                     "num_ranks": 4,
                     "ranks_per_node": 4,
@@ -249,7 +251,7 @@ def main(user_config_file: Path) -> None:
                 stderr=experiment_path / f"mpas_forecast_{yyyymmddhh}.err",
                 executor=["mpi"],
                 install=install_mpas,
-                parsl_resource_specification={
+                resource_specification={
                     "num_nodes": 1,
                     "num_ranks": 32,
                     "ranks_per_node": 32,
