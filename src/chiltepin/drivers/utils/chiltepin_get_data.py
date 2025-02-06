@@ -1,11 +1,12 @@
 import pathlib
 import textwrap
 
-from parsl.app.app import bash_app
+from chiltepin.tasks import bash_task
 
 
-@bash_app(executors=["service"])
 def retrieve_data(
+    *,
+    executor,
     stdout=None,
     stderr=None,
     ics_or_lbcs="ICS",
@@ -14,7 +15,29 @@ def retrieve_data(
     lbc_intvl_hrs=6,
     yyyymmddhh=None,
     output_path=".",
-):
+) -> Future:
+    return _retrieve_data(
+        stdout=stdout
+        stderr=stderr
+        ics_or_lbcs=ics_or_lbcs
+        time_offset_hrs=time_offset_hrs,
+        fcst_len=fcst_len,
+        lbc_intvl_hrs=lbc_intvl_hrs,
+        yyyymmddhh=yyyymmddhh,
+        output_path=output_path,
+    )
+
+@bash_task
+def _retrieve_data(
+    stdout=None,
+    stderr=None,
+    ics_or_lbcs="ICS",
+    time_offset_hrs=0,
+    fcst_len=0,
+    lbc_intvl_hrs=6,
+    yyyymmddhh=None,
+    output_path=".",
+) -> str:
 
     # Calculate args for file retrieval script
     path = pathlib.Path(__file__).parent.resolve()
