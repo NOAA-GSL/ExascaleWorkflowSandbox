@@ -44,6 +44,15 @@ docs = [
 chiltepin = "chiltepin.cli:main"
 retrieve_data = "chiltepin.retrieve_data:main"
 
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+chiltepin = ["*.yml"]
+
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",

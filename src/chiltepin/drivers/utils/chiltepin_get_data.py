@@ -29,7 +29,6 @@ def retrieve_data(
 
     return _retrieve_data(
         executor=executor,
-        config_path=config_path,
         yyyymmddhh=yyyymmddhh,
         file_set=file_set,
         ics_or_lbcs=ics_or_lbcs,
@@ -38,6 +37,7 @@ def retrieve_data(
         data_type=data_type,
         file_format=file_format,
         output_path=output_path,
+        config_path=config_path,
         stdout=stdout,
         stderr=stderr,
     )
@@ -45,7 +45,6 @@ def retrieve_data(
 @bash_task
 def _retrieve_data(
     *,
-    config_path,
     yyyymmddhh,
     file_set,
     ics_or_lbcs,
@@ -54,6 +53,7 @@ def _retrieve_data(
     data_type,
     file_format,
     output_path=".",
+    config_path,
     stdout=None,
     stderr=None,
 ) -> str:
