@@ -10,7 +10,7 @@ import chiltepin.configure
 from chiltepin.drivers.metis.driver import Metis
 from chiltepin.drivers.mpas.limited_area.driver import LimitedArea
 from chiltepin.drivers.mpas.driver import MPAS
-from chiltepin.drivers.utils.chiltepin_get_data import retrieve_data
+from chiltepin.data import retrieve_data
 from chiltepin.drivers.wps.driver import WPS
 
 
