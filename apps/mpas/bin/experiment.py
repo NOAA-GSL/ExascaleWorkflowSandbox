@@ -160,14 +160,23 @@ def main(user_config_file: Path) -> None:
             # Get the ics data
             get_ics_data_config = experiment_config["get_ics_data"]
             get_ics_dir = Path(get_ics_data_config["rundir"])
+            time_offset_hrs=0
+            if time_offset_hrs == 0:
+                file_set = "anl"
+            else:
+                file_set = "fcst"
+            fcst_hours = f"{time_offset_hrs}"
             get_ics_data = retrieve_data(
+                executor=["service"],
                 stdout=experiment_path / f"get_ics_{yyyymmddhh}.out",
                 stderr=experiment_path / f"get_ics_{yyyymmddhh}.err",
-                ics_or_lbcs="ICS",
-                time_offset_hrs=0,
-                fcst_len=24,
-                lbc_intvl_hrs=6,
                 yyyymmddhh=yyyymmddhh,
+                file_set=file_set,
+                ics_or_lbcs="ICS",
+                fcst_hours=f"{fcst_hours}",
+                data_stores="aws",
+                data_type="GFS",
+                file_format="grib2",
                 output_path=get_ics_dir,
             )
 
@@ -177,14 +186,24 @@ def main(user_config_file: Path) -> None:
             # Get the lbcs data
             get_lbcs_data_config = experiment_config["get_lbcs_data"]
             get_lbcs_dir = Path(get_lbcs_data_config["rundir"])
+            time_offset_hrs = 0
+            lbc_intvl_hrs = 6
+            fcst_len = 24
+            file_set = "fcst"
+            first_time = time_offset_hrs + lbc_intvl_hrs
+            last_time = time_offset_hrs + fcst_len
+            fcst_hours = f"{first_time} {last_time} {lbc_intvl_hrs}"
             get_lbcs_data = retrieve_data(
+                executor=["service"],
                 stdout=experiment_path / f"get_lbcs_{yyyymmddhh}.out",
                 stderr=experiment_path / f"get_lbcs_{yyyymmddhh}.err",
-                ics_or_lbcs="LBCS",
-                time_offset_hrs=0,
-                fcst_len=24,
-                lbc_intvl_hrs=6,
                 yyyymmddhh=yyyymmddhh,
+                file_set=file_set,
+                ics_or_lbcs="LBCS",
+                fcst_hours=f"{fcst_hours}",
+                data_stores="aws",
+                data_type="GFS",
+                file_format="grib2",
                 output_path=get_lbcs_dir,
             )
 

@@ -46,7 +46,7 @@ import time
 import urllib.request
 from copy import deepcopy
 from textwrap import dedent
-
+from argparse import RawDescriptionHelpFormatter
 import yaml
 
 
@@ -818,14 +818,16 @@ def to_lower(arg):
     return arg.lower()
 
 
-def main(argv):
+#def main(argv):
+def main():
     # pylint: disable=too-many-branches, too-many-statements
     """
     Uses known location information to try the known locations and file
     paths in priority order.
     """
 
-    cla = parse_args(argv)
+    #cla = parse_args(argv)
+    cla = parse_args()
 
     setup_logging(cla.debug)
     print("Running script retrieve_data.py with args:", f"\n{('-' * 80)}\n{('-' * 80)}")
@@ -959,7 +961,8 @@ def get_ens_groups(members):
     return ens_groups
 
 
-def parse_args(argv):
+#def parse_args(argv):
+def parse_args():
     """
     Function maintains the arguments accepted by this script. Please see
     Python's argparse documenation for more information about settings of each
@@ -969,11 +972,12 @@ def parse_args(argv):
     description = (
         "Allowable Python templates for paths, urls, and file names are "
         " defined in the fill_template function and include:\n"
-        f'{"-"*120}\n'
+        f'{"-"*114}\n'
         f'{fill_template("null", dt.datetime.now(), templates_only=True)}'
     )
     parser = argparse.ArgumentParser(
         description=description,
+        formatter_class=RawDescriptionHelpFormatter,
     )
 
     # Required
@@ -1097,7 +1101,8 @@ def parse_args(argv):
 
     # Make modifications/checks for given values
 
-    args = parser.parse_args(argv)
+    #args = parser.parse_args(argv)
+    args = parser.parse_args()
 
     # convert range arguments if necessary
     args.fcst_hrs = arg_list_to_range(args.fcst_hrs)
@@ -1124,4 +1129,5 @@ def parse_args(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    #main(sys.argv[1:])
+    main()

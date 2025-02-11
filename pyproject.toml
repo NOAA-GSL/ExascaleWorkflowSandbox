@@ -42,6 +42,7 @@ docs = [
 
 [project.scripts]
 chiltepin = "chiltepin.cli:main"
+retrieve_data = "chiltepin.retrieve_data:main"
 
 [tool.pytest.ini_options]
 addopts = [
