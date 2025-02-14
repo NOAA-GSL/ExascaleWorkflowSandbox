@@ -19,7 +19,7 @@ def transfer_async(
     client: Optional[TransferClient] = None,
     recursive: bool = False,
     dependencies: Optional[Future] = None,
-):
+) -> Future:
     """Trnsfer data asynchronously in a Parsl task
 
     This wraps synchronous Globus data transfer into a Parsl python_app task.
@@ -64,6 +64,12 @@ def transfer_async(
         Future to wait for completion before running the transfer task. If
         None, the transfer will be run at the next available scheduling
         opportunity
+
+    Returns
+    -------
+
+    Future
+        The future boolean result of the transfer's success or failure
     """
     # Run the transfer
     completed = transfer(
@@ -88,7 +94,7 @@ def delete_async(
     client: Optional[TransferClient] = None,
     recursive: bool = False,
     dependencies: Optional[Future] = None,
-):
+) -> Future:
     """Delete data asynchronously in a Parsl task
 
     This wraps synchronous Globus data deletion into a Parsl python_app task.
@@ -126,6 +132,12 @@ def delete_async(
         Future to wait for completion before running the deletion task. If
         None, the deletion will be run at the next available scheduling
         opportunity
+
+    Returns
+    -------
+
+    Future
+        The future boolean result of the deletion's success or failure
     """
     completed = delete(
         src_ep,
@@ -147,7 +159,7 @@ def transfer(
     polling_interval: int = 30,
     client: Optional[TransferClient] = None,
     recursive: bool = False,
-):
+) -> bool:
     """Trnsfer data synchronously with Globus
 
     This performs a Globus transfer of data from one Globus transfer endpoint
@@ -186,6 +198,12 @@ def transfer(
 
     recursive: bool
         Whether or not a recursive transfer should be performed
+
+    Returns
+    -------
+
+    bool
+        True if the transfer succeeded, False otherwise
     """
     import globus_sdk
 
@@ -251,7 +269,7 @@ def delete(
     polling_interval: int = 30,
     client: Optional[TransferClient] = None,
     recursive: bool = False,
-):
+) -> bool:
     """Delete data synchronously with Globus.
 
     This deletes data from a Globus endpoint. This function will not return
@@ -282,6 +300,12 @@ def delete(
 
     recursive: bool
         Whether or not a recursive deletion should be performed
+
+    Returns
+    -------
+
+    bool
+        True if the deletion succeeded, False otherwise
     """
     import globus_sdk
 
@@ -341,7 +365,71 @@ def retrieve_data(
     stdout=None,
     stderr=None,
 ) -> Future:
+    """Retrieve the specified data from the specified locations.
 
+    Schedules and executes a workflow task to retrieve data. The type of
+    data to retrieve, and the locations from which to retrieve it from
+    are given by the tasks arguments. This is a non-blocking call that
+    returns a Future representing the eventual result of the data retrieval
+    operation.
+
+    Parameters
+    ----------
+
+    executor: List[str]
+        List of names of executors where the retrieval task may execute.
+
+    yyyymmddhh: str
+        Cycle date of the data to be retrieved in YYYYMMDDHH format.
+
+    file_set: str
+        Flag for whether analysis, forecast, fix, or observation files should
+        be gathered. Must be one of: "anl", "fcst", "obs", "fix"
+
+    fcst_hours: str
+        A list describing forecast hours.  If one argument, one fhr will be
+        processed.  If 2 or 3 arguments, a sequence of forecast hours
+        [start, stop, [increment]] will be processed.  If more than 3
+         arguments, the list is processed as-is.
+
+    data_stores: str
+        List of priority data stores. Tries the first list item first.
+        Choices: hpss, nomads, aws, disk, remote.
+
+    data_type: str
+        External model label. This input is case-sensitive. Allowed values
+        correspond to keys in the data locations configuration file. Default
+        options include: "GFS", "GDAS", "GEFS", "GSMGFS", "RAP", "HRRR",
+        "NAM", "UFS-CASE-STUDY", "CCPA_obs", "MRMS_obs", "NDAS_obs",
+        "NOHRSC_obs".
+
+    file_format: str
+        External model file format. Must be one of "grib2", "nemsio",
+        "netcdf", "prepbufr", "tcvitals".
+
+    output_path: str
+        Path to location on disk where the retrieved files will be staged.
+        Path is expected to exist.
+
+    config_path: str
+        Full path to a configuration file containing paths and naming
+        conventions for known data streams. The default included in this
+        repository is in src/chiltepin/data_locations.yml",
+
+    stdout: str | None
+        Full path to the file where stdout of the data retrieval task is to
+        be written. If not specified, output to stdout will not be captured.
+
+    stderr: str | None
+        Full path to the file where stderr of the data retrieval task is to
+        be written. If not specified, output to stderr will not be captured.
+
+    Returns
+    -------
+
+    Future
+        The future result of the retrieval task's execution.
+    """
     # Get path to data retrieval config
     if config_path is None:
         # Use default config
@@ -377,7 +465,65 @@ def _retrieve_data(
     stdout=None,
     stderr=None,
 ) -> str:
+    """
+    A bash task to Retrieve the specified data from the specified locations.
 
+    Parameters
+    ----------
+
+    yyyymmddhh: str
+        Cycle date of the data to be retrieved in YYYYMMDDHH format.
+
+    file_set: str
+        Flag for whether analysis, forecast, fix, or observation files should
+        be gathered. Must be one of: "anl", "fcst", "obs", "fix"
+
+    fcst_hours: str
+        A list describing forecast hours.  If one argument, one fhr will be
+        processed.  If 2 or 3 arguments, a sequence of forecast hours
+        [start, stop, [increment]] will be processed.  If more than 3
+         arguments, the list is processed as-is.
+
+    data_stores: str
+        List of priority data stores. Tries the first list item first.
+        Choices: hpss, nomads, aws, disk, remote.
+
+    data_type: str
+        External model label. This input is case-sensitive. Allowed values
+        correspond to keys in the data locations configuration file. Default
+        options include: "GFS", "GDAS", "GEFS", "GSMGFS", "RAP", "HRRR",
+        "NAM", "UFS-CASE-STUDY", "CCPA_obs", "MRMS_obs", "NDAS_obs",
+        "NOHRSC_obs".
+
+    file_format: str
+        External model file format. Must be one of "grib2", "nemsio",
+        "netcdf", "prepbufr", "tcvitals".
+
+    output_path: str
+        Path to location on disk where the retrieved files will be staged.
+        Path is expected to exist.
+
+    config_path: str
+        Full path to a configuration file containing paths and naming
+        conventions for known data streams. The default included in this
+        repository is in src/chiltepin/data_locations.yml",
+
+    stdout: str | None
+        Full path to the file where stdout of the data retrieval task is to
+        be written. If not specified, output to stdout will not be captured.
+
+    stderr: str | None
+        Full path to the file where stderr of the data retrieval task is to
+        be written. If not specified, output to stderr will not be captured.
+
+    Returns
+    -------
+
+    str
+        A string containing the bash script that implements the data
+        retrieval task. This string is consumed by the @bash_task decorator
+        that wraps this function to create a workflow task.
+    """
     return textwrap.dedent(
         f"""
     set -eux
