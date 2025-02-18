@@ -365,7 +365,8 @@ def retrieve_data(
     stdout=None,
     stderr=None,
 ) -> Future:
-    """Retrieve the specified data from the specified locations.
+    """
+    Retrieve the specified data from the specified locations.
 
     Schedules and executes a workflow task to retrieve data. The type of
     data to retrieve, and the locations from which to retrieve it from
@@ -390,7 +391,7 @@ def retrieve_data(
         A list describing forecast hours.  If one argument, one fhr will be
         processed.  If 2 or 3 arguments, a sequence of forecast hours
         [start, stop, [increment]] will be processed.  If more than 3
-         arguments, the list is processed as-is.
+        arguments, the list is processed as-is.
 
     data_stores: str
         List of priority data stores. Tries the first list item first.

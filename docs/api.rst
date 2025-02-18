@@ -30,6 +30,7 @@ Data
 
     chiltepin.data.transfer
     chiltepin.data.delete
+    chiltepin.data.retrieve_data
 
 Endpoint
 ========
@@ -63,5 +64,3 @@ Drivers
     chiltepin.drivers.wps.driver.WPS
     chiltepin.drivers.jedi.leadtime
     chiltepin.drivers.jedi.qg.driver.QG
-    chiltepin.drivers.utils.chiltepin_get_data.retrieve_data
-    chiltepin.drivers.utils.retrieve_data
