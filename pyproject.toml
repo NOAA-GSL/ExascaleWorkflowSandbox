@@ -6,8 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "chiltepin"
 version = "0.0.1"
 dependencies = [
-    "globus-compute-sdk @ git+https://github.com/globus/globus-compute@main#subdirectory=compute_sdk",
-    "globus-compute-endpoint @ git+https://github.com/globus/globus-compute@main#subdirectory=compute_endpoint",
+    "globus-compute-sdk>=3.1.1",
+    "globus-compute-endpoint>=3.1.1",
     "parsl[monitoring]>=2025.01.20",
     "uwtools @ git+https://github.com/ufs-community/uwtools@v2.5.1#subdirectory=src",
 ]
