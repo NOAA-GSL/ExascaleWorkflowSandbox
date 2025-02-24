@@ -44,9 +44,10 @@ import subprocess
 import sys
 import time
 import urllib.request
+from argparse import RawDescriptionHelpFormatter
 from copy import deepcopy
 from textwrap import dedent
-from argparse import RawDescriptionHelpFormatter
+
 import yaml
 
 
@@ -818,7 +819,6 @@ def to_lower(arg):
     return arg.lower()
 
 
-#def main(argv):
 def main():
     # pylint: disable=too-many-branches, too-many-statements
     """
@@ -826,7 +826,6 @@ def main():
     paths in priority order.
     """
 
-    #cla = parse_args(argv)
     cla = parse_args()
 
     setup_logging(cla.debug)
@@ -961,7 +960,6 @@ def get_ens_groups(members):
     return ens_groups
 
 
-#def parse_args(argv):
 def parse_args():
     """
     Function maintains the arguments accepted by this script. Please see
@@ -1101,7 +1099,6 @@ def parse_args():
 
     # Make modifications/checks for given values
 
-    #args = parser.parse_args(argv)
     args = parser.parse_args()
 
     # convert range arguments if necessary
@@ -1129,5 +1126,4 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    #main(sys.argv[1:])
     main()

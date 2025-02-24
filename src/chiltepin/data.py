@@ -1,12 +1,14 @@
+import importlib.resources
+import textwrap
 from concurrent.futures import Future
 from typing import Optional
-import textwrap
+
 from globus_sdk import TransferClient
 
 import chiltepin
 import chiltepin.endpoint as endpoint
 from chiltepin.tasks import bash_task, python_task
-import importlib.resources
+
 
 @python_task
 def transfer_async(
@@ -450,6 +452,7 @@ def retrieve_data(
         stdout=stdout,
         stderr=stderr,
     )
+
 
 @bash_task
 def _retrieve_data(

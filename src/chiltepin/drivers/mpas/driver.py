@@ -1,6 +1,6 @@
 import textwrap
-from datetime import datetime
 from concurrent.futures import Future
+from datetime import datetime
 from typing import List, Optional
 
 from uwtools.api import config as uwconfig

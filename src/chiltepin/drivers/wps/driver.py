@@ -1,7 +1,7 @@
 import textwrap
-
 from concurrent.futures import Future
 from typing import List, Optional
+
 from chiltepin.tasks import bash_task, join_task
 
 
@@ -26,6 +26,7 @@ class WPS:
         The tag of WPS to use. If None (the default) "develop" will be used
         to clone and install WPS.
     """
+
     def __init__(
         self,
         environment: Optional[List[str]] = None,
