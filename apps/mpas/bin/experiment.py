@@ -7,10 +7,10 @@ import parsl
 import uwtools.api.config as uwconfig
 
 import chiltepin.configure
-from chiltepin.drivers.metis.driver import Metis
-from chiltepin.drivers.mpas.limited_area.driver import LimitedArea
-from chiltepin.drivers.mpas.driver import MPAS
 from chiltepin.data import retrieve_data
+from chiltepin.drivers.metis.driver import Metis
+from chiltepin.drivers.mpas.driver import MPAS
+from chiltepin.drivers.mpas.limited_area.driver import LimitedArea
 from chiltepin.drivers.wps.driver import WPS
 
 
@@ -160,7 +160,7 @@ def main(user_config_file: Path) -> None:
             # Get the ics data
             get_ics_data_config = experiment_config["get_ics_data"]
             get_ics_dir = Path(get_ics_data_config["rundir"])
-            time_offset_hrs=0
+            time_offset_hrs = 0
             if time_offset_hrs == 0:
                 file_set = "anl"
             else:
