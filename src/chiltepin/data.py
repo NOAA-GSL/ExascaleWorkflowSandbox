@@ -436,7 +436,8 @@ def retrieve_data(
     # Get path to data retrieval config
     if config_path is None:
         # Use default config
-        config_path = str(importlib.resources.path(chiltepin, "data_locations.yml"))
+        with importlib.resources.path(chiltepin, "data_locations.yml") as fspath:
+            config_path = str(fspath)
 
     return _retrieve_data(
         executor=executor,
