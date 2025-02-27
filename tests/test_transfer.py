@@ -21,7 +21,7 @@ def config(config_file, platform):
 
 
 def test_data_transfer(config):
-    transfer_future = data.transfer_task(
+    transfer_future = data.transfer_async(
         "chiltepin-test-niagara",
         "chiltepin-test-hera",
         "1MB",
@@ -36,7 +36,7 @@ def test_data_transfer(config):
 
 
 def test_data_delete(config):
-    delete_future = data.delete_task(
+    delete_future = data.delete_async(
         "chiltepin-test-hera",
         "1MB.from_niagara",
         timeout=120,

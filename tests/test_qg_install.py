@@ -6,7 +6,7 @@ import parsl
 import pytest
 
 import chiltepin.configure
-from chiltepin.jedi.qg.wrapper import QG
+from chiltepin.drivers.jedi.qg.driver import QG
 
 
 # Set up fixture to initialize and cleanup Parsl

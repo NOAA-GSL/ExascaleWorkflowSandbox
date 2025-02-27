@@ -1,5 +1,21 @@
 # Configuration file for the Sphinx documentation builder.
 
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath('../'))
+
+import chiltepin
+
+def linkcode_resolve(domain, info):
+    if domain != 'py':
+        return None
+    if not info['module']:
+        return None
+    filename = info['module'].replace('.', '/')
+    return "https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/blob/main/src/{}.py".format(filename)
+
+
 # -- Project information
 
 project = 'ExascaleWorkflowSandbox'
@@ -12,11 +28,12 @@ version = '0.1.0'
 # -- General configuration
 
 extensions = [
-    'sphinx.ext.duration',
-    'sphinx.ext.doctest',
+    'nbsphinx',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.linkcode',
+    'sphinx.ext.napoleon',
 ]
 
 intersphinx_mapping = {
@@ -27,9 +44,21 @@ intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
 
+# The name of the Pygments (syntax highlighting) style to use.
+pygments_style = 'sphinx'
+
 # -- Options for HTML output
 
 html_theme = 'sphinx_rtd_theme'
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
+
+# -- Autosummary generation options
+
+autosummary_generate = True
+
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': True
+}
