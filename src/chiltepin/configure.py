@@ -199,7 +199,7 @@ def make_globus_compute_executor(
                 "max_blocks": config.get("max blocks", 1),
                 "exclusive": config.get("exclusive", True),
                 "partition": config["partition"],
-                "account=config": config["account"],
+                "account": config["account"],
                 "worker_init": "\n".join(config.get("environment", [])),
             },
         ),

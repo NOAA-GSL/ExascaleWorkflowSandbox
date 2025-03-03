@@ -18,7 +18,11 @@ from chiltepin.tasks import bash_task
 def config(config_file, platform):
     pwd = pathlib.Path(__file__).parent.resolve()
 
-    # Log in
+    # Make sure we are logged in
+    if login_required():
+        raise RuntimeError("Chiltepin login is required")
+
+    # Get compute client
     clients = endpoint.login()
     compute_client = clients["compute"]
 
@@ -36,7 +40,7 @@ def config(config_file, platform):
     )
 
     # Configure the test endpoint
-    endpoint.configure("test", config_dir=f"{pwd}/.globus_compute", multi=True)
+    endpoint.configure("test", config_dir=f"{pwd}/.globus_compute")
 
     # Start the test endpoint
     endpoint.start("test", config_dir=f"{pwd}/.globus_compute")
@@ -67,9 +71,9 @@ def _set_endpoint_ids(config):
     pwd = pathlib.Path(__file__).parent.resolve()
 
     # Get a listing of the endpoints
-    ep_list = endpoint.list(config_dir=f"{pwd}/.globus_compute")
-    gc_compute_endpoint_id = ep_list["test"]["id"]
-    gc_mpi_endpoint_id = ep_list["test"]["id"]
+    ep_info = endpoint.show(config_dir=f"{pwd}/.globus_compute")
+    gc_compute_endpoint_id = ep_info["test"]["id"]
+    gc_mpi_endpoint_id = ep_info["test"]["id"]
     assert len(gc_mpi_endpoint_id) == 36
     assert len(gc_compute_endpoint_id) == 36
 
