@@ -19,7 +19,7 @@ def config(config_file, platform):
     pwd = pathlib.Path(__file__).parent.resolve()
 
     # Make sure we are logged in
-    if login_required():
+    if endpoint.login_required():
         raise RuntimeError("Chiltepin login is required")
 
     # Get compute client
