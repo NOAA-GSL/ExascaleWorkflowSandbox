@@ -8,7 +8,9 @@ from typing import Dict, Optional, Union
 
 import yaml
 from globus_compute_sdk import Client
+from globus_compute_sdk.sdk.auth.auth_client import ComputeAuthClient
 from globus_compute_sdk.sdk.auth.globus_app import get_globus_app
+from globus_compute_sdk.sdk.web_client import WebClient
 from globus_sdk import ClientApp, GlobusApp, TransferClient, UserApp
 from globus_sdk.gare import GlobusAuthorizationParameters
 
@@ -119,6 +121,12 @@ def get_chiltepin_apps() -> (GlobusApp, GlobusApp):
 
     # Get the Globus App the compute client will use
     compute_app = get_globus_app()
+    compute_app.add_scope_requirements(
+        {
+            WebClient.scopes.resource_server: WebClient.default_scope_requirements,
+            ComputeAuthClient.scopes.resource_server: ComputeAuthClient.default_scope_requirements,  # noqa E501
+        }
+    )
 
     # Create a Globus App for the transfer client
     if client_secret:
@@ -181,6 +189,21 @@ def login() -> Dict[str, Union[Client, TransferClient]]:
     return {"compute": compute_client, "transfer": transfer_client}
 
 
+def login_required() -> bool:
+    """Check whether a chiltepin login is required to use the requested Globus
+    scopes needed by the Chiltepin transfer and computer Apps.
+
+    Returns
+    -------
+
+    bool
+    """
+    # Get the Globus Apps for use in creating the clients
+    compute_app, transfer_app = get_chiltepin_apps()
+
+    return compute_app.login_required() or transfer_app.login_required()
+
+
 def logout():
     """Log out of the Chiltepin app
 
@@ -196,14 +219,15 @@ def logout():
 def configure(
     name: str,
     config_dir: Optional[str] = None,
-    multi: bool = False,
-    timeout: int = 5,
-):
+    timeout: Optional[int] = None,
+) -> bool:
     """Configure a Globus Compute Endpoint
 
-    This is a thin wrapper around the globus-compute-endpoint configure command. If the
-    endpoint is configured in multi mode, additional configuration steps are taken to
-    customize it for use in Chiltepin workflows.
+    This is a thin wrapper around the globus-compute-endpoint configure command.
+    However, only multi-user endpoints are supported. Therefore, the configured
+    endpoint will always be a multi-user endpoint. Additional configuration
+    steps, usually done manually by the user after configuration, are taken to
+    hide complexity from the user.
 
     Parameters
     ----------
@@ -216,11 +240,9 @@ def configure(
         is to be stored. If None (the default), then $HOME/.globus_compute
         is used
 
-    multi: bool
-        Configure a multi templatable endpoint instead of the default user endpoint
-
-    timeout: int
-        Number of seconds to wait for the command to complete before timing out
+    timeout: int | None
+        Number of seconds to wait for the command to complete before timing out.
+        Default is None, meaning the command will never time out.
     """
     # Build the globus-compute-endpoint command to run
     command = ["globus-compute-endpoint"]
@@ -228,10 +250,10 @@ def configure(
         command.append("-c")
         command.append(f"{os.path.abspath(config_dir)}")
     command.append("configure")
-    if multi:
-        command.append("--multi-user")
+    command.append("--multi-user")
     command.append(name)
-    # Run the command as a sub process
+
+    # Run the configure command as a sub process
     p = subprocess.run(
         command,
         stdout=subprocess.PIPE,
@@ -241,85 +263,65 @@ def configure(
     )
     assert p.returncode == 0, p.stdout
 
-    # Additional configuration is needed for multi endpoints
-    if multi:
-        # Get the path to the globus compute endpoint configuration
-        if config_dir:
-            config_path = pathlib.Path(f"{os.path.abspath(config_dir)}/{name}")
-        else:
-            config_path = pathlib.Path(f"{pathlib.Path.home()}/.globus_compute/{name}")
+    # Additional post configuration steps are needed for multi endpoints
 
-        # Remove example user mapping file
-        pathlib.Path.unlink(config_path / "example_identity_mapping_config.json")
-
-        # Update the config.yaml file
-        with open(config_path / "config.yaml", "r") as f:
-            config_str = f.read()
-            config_str = re.sub(
-                "identity_mapping_config_path:.*\n",
-                "",
-                config_str,
-            )
-            config_str = re.sub(
-                "display_name: null",
-                f"display_name: {name}",
-                config_str,
-            )
-        with open(config_path / "config.yaml", "w") as f:
-            f.write(config_str)
-
-        # setup the user config jinja template
-        with open(config_path / "user_config_template.yaml.j2", "w") as f:
-            f.write(multi_endpoint_template)
-
-        # setup the user environment PATH
-        p = subprocess.run(
-            ["env", "-i", "HOME=$HOME", "bash", "-l", "-c", "echo $PATH"],
-            capture_output=True,
-            text=True,
-        )
-        assert p.returncode == 0, p.stderr
-        login_path = p.stdout.strip()
-        chiltepin_path = pathlib.Path(sys.argv[0]).parent.resolve()
-        with open(config_path / "user_environment.yaml", "a") as f:
-            f.write(f"PATH: {chiltepin_path}:{login_path}\n")
-
-
-def is_multi(name: str, config_dir: Optional[str] = None) -> bool:
-    """Return True if the endpoint is a multi endpoint, False otherwise
-
-    Parameters
-    ----------
-
-    name: str
-        Name of the endpoint to check
-
-    config_dir: str | None
-        Path to endpoint configuration directory where endpoint information
-        is stored. If None (the default), then $HOME/.globus_compute is used
-
-    Returns
-    -------
-
-    bool
-    """
     # Get the path to the globus compute endpoint configuration
     if config_dir:
         config_path = pathlib.Path(f"{os.path.abspath(config_dir)}/{name}")
     else:
         config_path = pathlib.Path(f"{pathlib.Path.home()}/.globus_compute/{name}")
-    # Parse the configuration
-    with open(config_path / "config.yaml", "r") as stream:
+
+    # Remove the example user mapping file because we do not use it
+    pathlib.Path.unlink(config_path / "example_identity_mapping_config.json")
+
+    # Read the default endpoint configuration that was just created
+    with open(config_path / "config.yaml", "r") as f:
         try:
-            yaml_config = yaml.safe_load(stream)
+            yaml_config = yaml.safe_load(f)
         except yaml.YAMLError as e:
-            print("Invalid yaml configuration")
-            raise (e)
-    # Look for multi_user
-    return yaml_config.get("multi_user", False)
+            print(f"Error reading endpoint config file: {e}")
+            return False
+
+    # Remove the identity mapping setting because we do not use it
+    del yaml_config["identity_mapping_config_path"]
+
+    # Set the display name
+    yaml_config["display_name"] = name
+
+    # Update the configuration with the new settings
+    with open(config_path / "config.yaml", "w") as f:
+        try:
+            yaml.dump(yaml_config, f)
+        except yaml.YAMLError as e:
+            print(f"Error writing endpoint config file: {e}")
+            return False
+
+    # Setup the user config jinja template
+    with open(config_path / "user_config_template.yaml.j2", "w") as f:
+        f.write(multi_endpoint_template)
+
+    # Capture the required user environment PATH
+    p = subprocess.run(
+        ["env", "-i", "HOME=$HOME", "bash", "-l", "-c", "echo $PATH"],
+        capture_output=True,
+        text=True,
+    )
+    assert p.returncode == 0, p.stderr
+    login_path = p.stdout.strip()
+    chiltepin_path = pathlib.Path(sys.argv[0]).parent.resolve()
+
+    # Set the custom user environment path configuration for the endpoint
+    with open(config_path / "user_environment.yaml", "a") as f:
+        f.write(f"PATH: {chiltepin_path}:{login_path}\n")
+
+    # Return success
+    return True
 
 
-def list(config_dir: Optional[str] = None, timeout: int = 60) -> Dict[str, str]:
+def show(
+    config_dir: Optional[str] = None,
+    timeout: Optional[int] = None,
+) -> Dict[str, str]:
     """Return a list of configured Globus Compute Endpoints
 
     This is a thin wrapper around the globus-compute-endpoint list command.
@@ -333,8 +335,9 @@ def list(config_dir: Optional[str] = None, timeout: int = 60) -> Dict[str, str]:
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
-    timeout: int
+    timeout: int | None
         Number of seconds to wait for the command to complete before timing out
+        Default is None, meaning the command will never time out.
 
     Returns
     -------
@@ -347,6 +350,7 @@ def list(config_dir: Optional[str] = None, timeout: int = 60) -> Dict[str, str]:
         command.append("-c")
         command.append(f"{os.path.abspath(config_dir)}")
     command.append("list")
+
     # Run the command as a subprocess
     p = subprocess.run(
         command,
@@ -356,20 +360,28 @@ def list(config_dir: Optional[str] = None, timeout: int = 60) -> Dict[str, str]:
         timeout=timeout,
     )
     assert p.returncode == 0, p.stdout
-    # Build a dict from the output and return it
-    ep_list = {}
+
+    # Build a dictionary from the output and return it
+    endpoint_info = {}
+    endpoint_regex = re.compile(
+        r"\|\s+([0-9a-f\-]{36}|None)\s+\|\s+([^\|\s]+)\s+\|\s+([^\|\s]+)\s+\|"
+    )
     for line in p.stdout.split("\n"):
-        endpoint_regex = re.compile(
-            r"\|\s+([0-9a-f\-]{36}|None)\s+\|\s+([^\|\s]+)\s+\|\s+([^\|\s]+)\s+\|"
-        )
         match = endpoint_regex.search(line)
         if match is not None:
             assert match.group(1) == "None" or len(match.group(1)) == 36
-            ep_list[match.group(3)] = {"id": match.group(1), "state": match.group(2)}
-    return ep_list
+            endpoint_info[match.group(3)] = {
+                "id": match.group(1),
+                "state": match.group(2),
+            }
+    return endpoint_info
 
 
-def is_running(name: str, config_dir: Optional[str] = None) -> bool:
+def is_running(
+    name: str,
+    config_dir: Optional[str] = None,
+    timeout: Optional[int] = None,
+) -> bool:
     """Return True if the endpoint is running, otherwise False
 
     Parameters
@@ -382,22 +394,30 @@ def is_running(name: str, config_dir: Optional[str] = None) -> bool:
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
+    timeout: int | None
+        Number of seconds to wait for the command to complete before timing out.
+        Default is None, meaning the command will never time out.
+
     Returns
     -------
 
     bool
     """
-    # Get a list of endpoints
-    ep_list = list(config_dir)
-
     # Get the endpoint info
-    ep_info = ep_list.get(name, {})
+    endpoints = show(config_dir, timeout)
 
-    # Return whether endpoint state is "Running"
-    return ep_info.get("state", None) == "Running"
+    # Extract the endpoint record
+    endpoint = endpoints.get(name, {})
+
+    # Return whether the endpoint state is "Running"
+    return endpoint.get("state", None) == "Running"
 
 
-def start(name: str, config_dir: Optional[str] = None, timeout: int = 60):
+def start(
+    name: str,
+    config_dir: Optional[str] = None,
+    timeout: Optional[int] = None,
+):
     """Start the specified Globus Compute Endpoint
 
     This is a thin wrapper around the globus-compute-endpoint start command
@@ -412,9 +432,14 @@ def start(name: str, config_dir: Optional[str] = None, timeout: int = 60):
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
-    timeout: int
+    timeout: int | None
         Number of seconds to wait for the command to complete before timing out
+        Default is None, meaning the command will never time out.
     """
+    # Make sure we are logged in
+    if login_required():
+        raise RuntimeError("Chiltepin login is required")
+
     # Build the globus-compute-endpoint command to run
     command = ["globus-compute-endpoint"]
     if config_dir:
@@ -423,40 +448,35 @@ def start(name: str, config_dir: Optional[str] = None, timeout: int = 60):
     command.append("start")
     command.append(name)
 
-    if is_multi(name, config_dir):
-        # Run the command as a detatched daemon process
-        p = subprocess.Popen(
-            command,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
-            start_new_session=True,
-        )
-        assert p.pid > 0
-        # Get the path to the globus compute endpoint configuration
-        if config_dir:
-            config_path = pathlib.Path(f"{os.path.abspath(config_dir)}/{name}")
-        else:
-            config_path = pathlib.Path(f"{pathlib.Path.home()}/.globus_compute/{name}")
-        # Write the pid to the endpoint pid file
-        with open(config_path / "daemon.pid", "w") as f:
-            f.write(f"{p.pid}\n")
-        # Wait for endpoint to enter "Running" state
-        while not is_running(name, config_dir):
-            time.sleep(1)
+    # Run the command as a detatched daemon process
+    p = subprocess.Popen(
+        command,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.STDOUT,
+        start_new_session=True,
+    )
+    assert p.pid > 0
 
+    # Get the path to the globus compute endpoint configuration
+    if config_dir:
+        config_path = pathlib.Path(f"{os.path.abspath(config_dir)}/{name}")
     else:
-        # Run the command as a normal subprocess
-        p = subprocess.run(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            timeout=timeout,
-        )
-        assert p.returncode == 0, p.stdout
+        config_path = pathlib.Path(f"{pathlib.Path.home()}/.globus_compute/{name}")
+
+    # Write the pid to the endpoint pid file
+    with open(config_path / "daemon.pid", "w") as f:
+        f.write(f"{p.pid}\n")
+
+    # Wait for endpoint to enter "Running" state
+    while not is_running(name, config_dir):
+        time.sleep(1)
 
 
-def stop(name: str, config_dir: Optional[str] = None, timeout: int = 60):
+def stop(
+    name: str,
+    config_dir: Optional[str] = None,
+    timeout: Optional[int] = None,
+):
     """Stop the specified Globus Compute Endpoint
 
     This is a thin wrapper around the globus-compute-endpoint stop command
@@ -471,9 +491,14 @@ def stop(name: str, config_dir: Optional[str] = None, timeout: int = 60):
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
-    timeout: int
+    timeout: int | None
         Number of seconds to wait for the command to complete before timing out
+        Default is None, meaning the command will never time out.
     """
+    # Make sure we are logged in
+    if login_required():
+        raise RuntimeError("Chiltepin login is required")
+
     # Build the globus-compute-endpoint command to run
     command = ["globus-compute-endpoint"]
     if config_dir:
@@ -481,6 +506,7 @@ def stop(name: str, config_dir: Optional[str] = None, timeout: int = 60):
         command.append(f"{os.path.abspath(config_dir)}")
     command.append("stop")
     command.append(name)
+
     # Run the command as a subprocess
     p = subprocess.run(
         command,
@@ -489,14 +515,18 @@ def stop(name: str, config_dir: Optional[str] = None, timeout: int = 60):
         text=True,
         timeout=timeout,
     )
-    if is_multi(name, config_dir):
-        # Wait for endpoint to enter "Stopped" state
-        while is_running(name, config_dir):
-            time.sleep(1)
+
+    # Wait for endpoint to enter "Stopped" state
+    while is_running(name, config_dir, timeout):
+        time.sleep(1)
     assert p.returncode == 0, p.stdout
 
 
-def delete(name: str, config_dir: Optional[str] = None, timeout: int = 60):
+def delete(
+    name: str,
+    config_dir: Optional[str] = None,
+    timeout: Optional[int] = None,
+):
     """Delete the specified Globus Compute Endpoint
 
     This is a thin wrapper around the globus-compute-endpoint delete command
@@ -513,7 +543,12 @@ def delete(name: str, config_dir: Optional[str] = None, timeout: int = 60):
 
     timeout: int
         Number of seconds to wait for the command to complete before timing out
+        Default is None, meaning the command will never time out.
     """
+    # Make sure we are logged in
+    if login_required():
+        raise RuntimeError("Chiltepin login is required")
+
     # Build the globus-compute-endpoint command to run
     command = ["globus-compute-endpoint"]
     if config_dir:
@@ -523,6 +558,7 @@ def delete(name: str, config_dir: Optional[str] = None, timeout: int = 60):
     command.append("--yes")
     command.append("--force")
     command.append(name)
+
     # Run the command as a subprocess
     p = subprocess.run(
         command,

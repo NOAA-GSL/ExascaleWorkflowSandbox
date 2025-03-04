@@ -15,7 +15,11 @@ from chiltepin.tasks import python_task
 def config(config_file, platform):
     pwd = pathlib.Path(__file__).parent.resolve()
 
-    # Log in
+    # Make sure we are logged in
+    if endpoint.login_required():
+        raise RuntimeError("Chiltepin login is required")
+
+    # Get compute client
     clients = endpoint.login()
     compute_client = clients["compute"]
 
@@ -30,7 +34,7 @@ def config(config_file, platform):
     )
 
     # Configure the test endpoint
-    endpoint.configure("test", config_dir=f"{pwd}/.globus_compute", multi=True)
+    endpoint.configure("test", config_dir=f"{pwd}/.globus_compute")
 
     # Start the test endpoint
     endpoint.start("test", config_dir=f"{pwd}/.globus_compute")
@@ -61,8 +65,8 @@ def _set_endpoint_ids(config):
     pwd = pathlib.Path(__file__).parent.resolve()
 
     # Set endpoint id in resource config using Jinja2 tempates
-    ep_list = endpoint.list(config_dir=f"{pwd}/.globus_compute")
-    endpoint_id = ep_list["test"]["id"]
+    ep_info = endpoint.show(config_dir=f"{pwd}/.globus_compute")
+    endpoint_id = ep_info["test"]["id"]
     assert len(endpoint_id) == 36
 
     config_string = yaml.dump(config)
