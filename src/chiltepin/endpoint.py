@@ -8,7 +8,9 @@ from typing import Dict, Optional, Union
 
 import yaml
 from globus_compute_sdk import Client
+from globus_compute_sdk.sdk.auth.auth_client import ComputeAuthClient
 from globus_compute_sdk.sdk.auth.globus_app import get_globus_app
+from globus_compute_sdk.sdk.web_client import WebClient
 from globus_sdk import ClientApp, GlobusApp, TransferClient, UserApp
 from globus_sdk.gare import GlobusAuthorizationParameters
 
@@ -119,6 +121,12 @@ def get_chiltepin_apps() -> (GlobusApp, GlobusApp):
 
     # Get the Globus App the compute client will use
     compute_app = get_globus_app()
+    compute_app.add_scope_requirements(
+        {
+            WebClient.scopes.resource_server: WebClient.default_scope_requirements,
+            ComputeAuthClient.scopes.resource_server: ComputeAuthClient.default_scope_requirements,  # noqa E501
+        }
+    )
 
     # Create a Globus App for the transfer client
     if client_secret:
@@ -309,6 +317,7 @@ def configure(
     # Return success
     return True
 
+
 def show(
     config_dir: Optional[str] = None,
     timeout: Optional[int] = None,
@@ -361,7 +370,10 @@ def show(
         match = endpoint_regex.search(line)
         if match is not None:
             assert match.group(1) == "None" or len(match.group(1)) == 36
-            endpoint_info[match.group(3)] = {"id": match.group(1), "state": match.group(2)}
+            endpoint_info[match.group(3)] = {
+                "id": match.group(1),
+                "state": match.group(2),
+            }
     return endpoint_info
 
 
@@ -396,9 +408,6 @@ def is_running(
 
     # Extract the endpoint record
     endpoint = endpoints.get(name, {})
-
-    # Extract the endpoint id
-    ep_id = endpoint.get("id")
 
     # Return whether the endpoint state is "Running"
     return endpoint.get("state", None) == "Running"

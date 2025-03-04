@@ -1,6 +1,6 @@
-from globus_compute_sdk import Client
-import chiltepin.endpoint as endpoint
 import globus_sdk.services.compute
+
+import chiltepin.endpoint as endpoint
 
 # Get compute client
 clients = endpoint.login()

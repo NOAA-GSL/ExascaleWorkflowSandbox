@@ -80,5 +80,6 @@ def test_hello_endpoint(config):
     @python_task
     def hello():
         return "Hello"
+
     future = hello(executor=["gc-service"])
     assert future.result() == "Hello"
