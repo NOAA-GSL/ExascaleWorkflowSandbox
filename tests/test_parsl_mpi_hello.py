@@ -64,9 +64,9 @@ def run_mpi_pi(
     $PARSL_MPI_PREFIX --overcommit ./mpi_pi.exe
     """
 
-@python_app(executors=["mpi"])
-def get_cores_per_node(parsl_resource_specification={}):
-    return os.environ['SLURM_CPUS_ON_NODE']
+#@python_app(executors=["mpi"])
+#def get_cores_per_node(parsl_resource_specification={}):
+#    return os.environ['SLURM_CPUS_ON_NODE']
 
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
