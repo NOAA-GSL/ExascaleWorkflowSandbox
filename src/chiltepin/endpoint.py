@@ -72,7 +72,7 @@ engine:
 # Endpoints will be restarted when a user submits new tasks to the
 # web-services, so eagerly shut down if endpoint is idle.  At 30s/hb (default
 # value), 10 heartbeats is 300s.
-idle_heartbeats_soft: 10
+idle_heartbeats_soft: 120
 
 # If endpoint is *apparently* idle (e.g., outstanding tasks, but no movement)
 # for this many heartbeats, then shutdown anyway.  At 30s/hb (default value),
