@@ -14,7 +14,9 @@ from globus_compute_sdk.sdk.web_client import WebClient
 from globus_sdk import ClientApp, GlobusApp, TransferClient, UserApp
 from globus_sdk.gare import GlobusAuthorizationParameters
 
-multi_endpoint_template = """# This is the default user-template provided with newly-configured Multi-User
+from chiltepin.configure import Default
+
+multi_endpoint_template = f"""# This is the default user-template provided with newly-configured Multi-User
 # endpoints.  User endpoints generate a user-endpoint-specific configuration by
 # processing this YAML file as a Jinja template against user-provided
 # variables -- please modify this template to suit your site's requirements.
@@ -39,30 +41,33 @@ multi_endpoint_template = """# This is the default user-template provided with n
 
 debug: True
 
-endpoint_setup: {{ endpoint_setup|default() }}
+endpoint_setup: {{{{ endpoint_setup|default() }}}}
 
 engine:
-  type: {{ engine|default("GlobusComputeEngine") }}
-  {% if engine == '"GlobusMPIEngine"' %}
-  max_workers_per_block: {{ max_mpi_apps|default(1) }}
+  {{% if mpi %}}
+  type: GlobusMPIEngine
+  max_workers_per_block: {{{{ max_mpi_apps|default({Default.MAX_MPI_APPS}) }}}}
   mpi_launcher: srun
-  {% endif %}
+  {{% else %}}
+  type: GlobusComputeEngine
+  {{% endif %}}
   run_in_sandbox: True
 
   provider:
     type: SlurmProvider
     launcher:
       type: SimpleLauncher
-    exclusive: {{ exclusive|default("True") }}
-    cores_per_node: {{ cores_per_node|default(1) }}
-    nodes_per_block: {{ nodes_per_block|default(1) }}
-    min_blocks: {{ min_blocks|default(1) }}
-    max_blocks: {{ max_blocks|default(1) }}
-    init_blocks: {{ init_blocks|default(0) }}
-    partition: {{ partition|default() }}
-    account: {{ account|default() }}
-    walltime: {{ walltime|default("00:10:00") }}
-    worker_init: {{ worker_init|default() }}
+
+    cores_per_node: {{{{ cores_per_node|default({Default.CORES_PER_NODE}) }}}}
+    nodes_per_block: {{{{ nodes_per_block|default({Default.NODES_PER_BLOCK}) }}}}
+    init_blocks: {{{{ init_blocks|default({Default.INIT_BLOCKS}) }}}}
+    min_blocks: {{{{ min_blocks|default({Default.MIN_BLOCKS}) }}}}
+    max_blocks: {{{{ max_blocks|default({Default.MAX_BLOCKS}) }}}}
+    exclusive: {{{{ exclusive|default("{Default.EXCLUSIVE}") }}}}
+    partition: {{{{ partition|default() }}}}
+    account: {{{{ account|default() }}}}
+    walltime: {{{{ walltime|default("{Default.WALLTIME}") }}}}
+    worker_init: {{{{ worker_init|default() }}}}
 
 # Endpoints will be restarted when a user submits new tasks to the
 # web-services, so eagerly shut down if endpoint is idle.  At 30s/hb (default

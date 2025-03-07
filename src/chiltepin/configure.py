@@ -4,8 +4,29 @@ import yaml
 from globus_compute_sdk import Client, Executor
 from parsl.config import Config
 from parsl.executors import GlobusComputeExecutor, HighThroughputExecutor, MPIExecutor
-from parsl.launchers import SimpleLauncher
+from parsl.launchers import SimpleLauncher, SrunLauncher
 from parsl.providers import LocalProvider, SlurmProvider
+
+from dataclasses import dataclass, field
+
+@dataclass(frozen=True)
+class Default:
+
+    MPI: bool = False
+    MAX_MPI_APPS: int = 1
+    MAX_WORKERS_PER_NODE: int = 1
+    CORES_PER_WORKER: int = 1
+    CORES_PER_NODE: int = 1
+    NODES_PER_BLOCK: int = 1
+    INIT_BLOCKS: int = 0
+    MIN_BLOCKS: int = 0
+    MAX_BLOCKS: int = 1
+    EXCLUSIVE: bool = True
+    PARTITION: str = ""
+    ACCOUNT: str = ""
+    WALLTIME: str = "00:10:00"
+    #ENVIRONMENT: List[str] = []
+    ENVIRONMENT: List[str] = field(default_factory=list)
 
 
 def parse_file(filename: str) -> Dict[str, Any]:
@@ -68,20 +89,21 @@ def make_htex_executor(name: str, config: Dict[str, Any]) -> HighThroughputExecu
     """
     e = HighThroughputExecutor(
         label=name,
-        cores_per_worker=config.get("cores per worker", 1),
-        max_workers_per_node=config.get("max workers per node", 1),
+        cores_per_worker=config.get("cores per worker", Default().CORES_PER_WORKER),
+        max_workers_per_node=config.get("max workers per node", Default().MAX_WORKERS_PER_NODE),
         provider=SlurmProvider(
-            exclusive=config.get("exclusive", True),
-            cores_per_node=config.get("cores per node", None),
-            nodes_per_block=config.get("nodes per block", 1),
-            init_blocks=config.get("init blocks", 0),
-            min_blocks=config.get("min blocks", 0),
-            max_blocks=config.get("max blocks", 1),
-            partition=config.get("partition", None),
-            account=config.get("account", None),
-            walltime=config.get("walltime", "01:00:00"),
-            worker_init="\n".join(config.get("environment", [])),
-            launcher=SimpleLauncher(),
+            cores_per_node=config.get("cores per node", Default().CORES_PER_NODE),
+            nodes_per_block=config.get("nodes per block", Default().NODES_PER_BLOCK),
+            init_blocks=config.get("init blocks", Default().INIT_BLOCKS),
+            min_blocks=config.get("min blocks", Default().MIN_BLOCKS),
+            max_blocks=config.get("max blocks", Default().MAX_BLOCKS),
+            exclusive=config.get("exclusive", Default().EXCLUSIVE),
+            partition=config.get("partition", Default().PARTITION),
+            account=config.get("account", Default().ACCOUNT),
+            walltime=config.get("walltime", Default().WALLTIME),
+            worker_init="\n".join(config.get("environment", Default().ENVIRONMENT)),
+            #launcher=SimpleLauncher(),
+            launcher=SrunLauncher(),
         ),
     )
     return e
@@ -122,18 +144,18 @@ def make_mpi_executor(name: str, config: Dict[str, Any]) -> MPIExecutor:
     e = MPIExecutor(
         label=name,
         mpi_launcher="srun",
-        max_workers_per_block=config.get("max mpi apps", 1),
+        max_workers_per_block=config.get("max mpi apps", Default().MAX_MPI_APPS),
         provider=SlurmProvider(
-            exclusive=config.get("exclusive", True),
-            cores_per_node=config.get("cores per node", None),
-            nodes_per_block=config.get("nodes per block", 1),
-            init_blocks=config.get("init blocks", 0),
-            min_blocks=config.get("min blocks", 0),
-            max_blocks=config.get("max blocks", 1),
-            partition=config.get("partition", None),
-            account=config.get("account", None),
-            walltime=config.get("walltime", "01:00:00"),
-            worker_init="\n".join(config.get("environment", [])),
+            #cores_per_node=config.get("cores per node", Default().CORES_PER_NODE),
+            nodes_per_block=config.get("nodes per block", Default().NODES_PER_BLOCK),
+            init_blocks=config.get("init blocks", Default().INIT_BLOCKS),
+            min_blocks=config.get("min blocks", Default().MIN_BLOCKS),
+            max_blocks=config.get("max blocks", Default().MAX_BLOCKS),
+            exclusive=config.get("exclusive", Default().EXCLUSIVE),
+            partition=config.get("partition", Default().PARTITION),
+            account=config.get("account", Default().ACCOUNT),
+            walltime=config.get("walltime", Default().WALLTIME),
+            worker_init="\n".join(config.get("environment", Default().ENVIRONMENT)),
             launcher=SimpleLauncher(),
         ),
     )
@@ -187,20 +209,20 @@ def make_globus_compute_executor(
     e = GlobusComputeExecutor(
         label=name,
         executor=Executor(
-            endpoint_id=config["endpoint id"],
+            endpoint_id=config["endpoint"],
             client=client,
             user_endpoint_config={
-                "engine": config.get("engine", "GlobusComputeEngine"),
-                "max_mpi_apps": config.get("max mpi apps", 1),
-                "cores_per_node": config.get("cores per node", 1),
-                "nodes_per_block": config.get("nodes per block", 1),
-                "init_blocks": config.get("init blocks", 0),
-                "min_blocks": config.get("min blocks", 0),
-                "max_blocks": config.get("max blocks", 1),
-                "exclusive": config.get("exclusive", True),
-                "partition": config["partition"],
-                "account": config["account"],
-                "worker_init": "\n".join(config.get("environment", [])),
+                "mpi": config.get("mpi", Default().MPI),
+                "max_mpi_apps": config.get("max mpi apps", Default().MAX_MPI_APPS),
+                "cores_per_node": config.get("cores per node", Default().CORES_PER_NODE),
+                "nodes_per_block": config.get("nodes per block", Default().NODES_PER_BLOCK),
+                "init_blocks": config.get("init blocks", Default().INIT_BLOCKS),
+                "min_blocks": config.get("min blocks", Default().MIN_BLOCKS),
+                "max_blocks": config.get("max blocks", Default().MAX_BLOCKS),
+                "exclusive": config.get("exclusive", Default().EXCLUSIVE),
+                "partition": config.get("partition", Default().PARTITION),
+                "account": config.get("account", Default().ACCOUNT),
+                "worker_init": "\n".join(config.get("environment", Default().ENVIRONMENT)),
             },
         ),
     )
@@ -208,8 +230,8 @@ def make_globus_compute_executor(
 
 
 def load(
-    config: Dict[str, Any],
-    resources: Optional[List[str]] = None,
+    yaml_config: Dict[str, Any],
+    include: Optional[List[str]] = None,
     client: Optional[Client] = None,
 ) -> Config:
     """Construct a list of Executors from the input configuration dictionary
@@ -221,11 +243,11 @@ def load(
     Parameters
     ----------
 
-    config: Dict[str, Any]
+    yaml_config: Dict[str, Any]
         YAML configuration block that contains the configuration for a list of
         resources
 
-    resources: List[str] | None
+    include: List[str] | None
         A list of the labels of the resources to load. The default is None.
         If None, all resources are loaded.  Otherwise the resources whose
         labels are in the list will be loaded.
@@ -240,6 +262,7 @@ def load(
 
     Config
     """
+    # Define a default HTEX Executor with a local provider
     executors = [
         HighThroughputExecutor(
             label="local",
@@ -251,18 +274,19 @@ def load(
             ),
         )
     ]
-    for name, spec in config.items():
-        if resources is None or name in resources:
-            if spec["engine"] == "HTEX":
-                # Make a HighThroughputExecutor
-                executors.append(make_htex_executor(name, spec))
-            elif spec["engine"] == "MPI":
-                # Make an MPIExecutor
-                executors.append(make_mpi_executor(name, spec))
-            elif spec["engine"] == "GlobusComputeEngine":
-                # Make a GlobusComputeExecutor for non-MPI jobs
-                executors.append(make_globus_compute_executor(name, spec, client))
-            elif spec["engine"] == "GlobusMPIEngine":
-                # Make a GlobusComputeExecutor for MPI jobs
-                executors.append(make_globus_compute_executor(name, spec, client))
+
+    # Add an Executor for each resource
+    if include is None:
+        resources = yaml_config
+    else:
+        resources = { key: yaml_config[key] for key in include if key in yaml_config }
+    for resource_name, resource_config in resources.items():
+        if resource_config.get("endpoint"):
+            executors.append(make_globus_compute_executor(resource_name, resource_config, client))
+        else:
+            if resource_config.get("mpi", False):
+                executors.append(make_mpi_executor(resource_name, resource_config))
+            else:
+                executors.append(make_htex_executor(resource_name, resource_config))
+
     return Config(executors)

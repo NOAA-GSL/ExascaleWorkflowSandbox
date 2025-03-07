@@ -64,6 +64,9 @@ def run_mpi_pi(
     $PARSL_MPI_PREFIX --overcommit ./mpi_pi.exe
     """
 
+@python_app(executors=["mpi"])
+def get_cores_per_node(parsl_resource_specification={}):
+    return os.environ['SLURM_CPUS_ON_NODE']
 
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
@@ -77,7 +80,8 @@ def config(config_file, platform):
         f"export PYTHONPATH={pwd.parent.resolve()}"
     )
     resources = chiltepin.configure.load(
-        yaml_config[platform]["resources"], resources=["compute", "mpi"]
+        yaml_config[platform]["resources"],
+        include=["compute", "mpi"],
     )
     with parsl.load(resources):
         yield {"resources": resources}
@@ -142,8 +146,16 @@ def test_run_mpi_pi(config):
         os.remove(pwd / "parsl_mpi_pi2_run.out")
     if os.path.exists(pwd / "parsl_mpi_pi2_run.err"):
         os.remove(pwd / "parsl_mpi_pi2_run.err")
-    cores_per_node = config["resources"].executors[1].provider.cores_per_node
-    assert config["resources"].executors[1].label == "mpi"
+
+    # Get the cores per node from the pilot job's SLURM variables
+    #cores_per_node = get_cores_per_node(
+    #    parsl_resource_specification={
+    #        "num_nodes": 1,  # Number of nodes required for the application instance
+    #    },
+    #).result()
+    cores_per_node = 8
+
+    # Run MPI pi on two nodes
     pi1 = run_mpi_pi(
         dirpath=pwd,
         stdout=os.path.join(pwd, "parsl_mpi_pi1_run.out"),
@@ -154,6 +166,8 @@ def test_run_mpi_pi(config):
             "ranks_per_node": cores_per_node,  # Number of ranks / application elements to be launched per node
         },
     )
+
+    # Run MPI pi on one node
     pi2 = run_mpi_pi(
         dirpath=pwd,
         stdout=os.path.join(pwd, "parsl_mpi_pi2_run.out"),

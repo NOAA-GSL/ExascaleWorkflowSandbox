@@ -33,7 +33,7 @@ docker-env: &docker-env
 hercules:
   resources:
     mpi:
-      engine: MPI
+      mpi: True
       cores per node: 80
       nodes per block: 3
       exclusive: True
@@ -42,7 +42,7 @@ hercules:
       account: "gsd-hpcs"
       <<: *hercules-env
     service:
-      engine: HTEX
+      mpi: False
       cores per node: 1
       nodes per block: 1
       exclusive: False
@@ -50,7 +50,7 @@ hercules:
       account: "gsd-hpcs"
       <<: *hercules-env
     compute:
-      engine: HTEX
+      mpi: False
       cores per node: 80
       nodes per block: 1
       exclusive: True
@@ -58,8 +58,8 @@ hercules:
       account: "gsd-hpcs"
       <<: *hercules-env
     gc-mpi:
-      engine: GlobusMPIEngine
-      endpoint id: "{{ mpi_endpoint_id }}"
+      mpi: True
+      endpoint: "{{ mpi_endpoint_id }}"
       cores per node: 80
       nodes per block: 3
       exclusive: True
@@ -68,8 +68,8 @@ hercules:
       account: "gsd-hpcs"
       <<: *hercules-env
     gc-service:
-      engine: GlobusComputeEngine
-      endpoint id: "{{ service_endpoint_id }}"
+      mpi: False
+      endpoint: "{{ service_endpoint_id }}"
       cores per node: 1
       nodes per block: 1
       exclusive: False
@@ -77,8 +77,8 @@ hercules:
       account: "gsd-hpcs"
       <<: *hercules-env
     gc-compute:
-      engine: GlobusComputeEngine
-      endpoint id: "{{ compute_endpoint_id }}"
+      mpi: False
+      endpoint: "{{ compute_endpoint_id }}"
       cores per node: 80
       nodes per block: 1
       exclusive: True
@@ -89,7 +89,7 @@ hercules:
 hera:
   resources:
     mpi:
-      engine: MPI
+      mpi: True
       cores per node: 40
       nodes per block: 3
       exclusive: True
@@ -98,7 +98,7 @@ hera:
       account: "gsd-hpcs"
       <<: *hera-env
     service:
-      engine: HTEX
+      mpi: False
       cores per node: 1
       nodes per block: 1
       exclusive: False
@@ -106,7 +106,7 @@ hera:
       account: "gsd-hpcs"
       <<: *hera-env
     compute:
-      engine: HTEX
+      mpi: False
       cores per node: 40
       nodes per block: 1
       exclusive: True
@@ -114,8 +114,8 @@ hera:
       account: "gsd-hpcs"
       <<: *hera-env
     gc-mpi:
-      engine: GlobusMPIEngine
-      endpoint id: "{{ mpi_endpoint_id }}"
+      mpi: True
+      endpoint: "{{ mpi_endpoint_id }}"
       cores per node: 40
       nodes per block: 3
       exclusive: True
@@ -124,8 +124,8 @@ hera:
       account: "gsd-hpcs"
       <<: *hera-env
     gc-service:
-      engine: GlobusComputeEngine
-      endpoint id: "{{ service_endpoint_id }}"
+      mpi: False
+      endpoint: "{{ service_endpoint_id }}"
       cores per node: 1
       nodes per block: 1
       exclusive: False
@@ -133,8 +133,8 @@ hera:
       account: "gsd-hpcs"
       <<: *hera-env
     gc-compute:
-      engine: GlobusComputeEngine
-      endpoint id: "{{ compute_endpoint_id }}"
+      mpi: False
+      endpoint: "{{ compute_endpoint_id }}"
       cores per node: 40
       nodes per block: 1
       exclusive: True
@@ -145,7 +145,7 @@ hera:
 docker:
   resources:
     mpi:
-      engine: MPI
+      mpi: True
       cores per node: 8
       nodes per block: 3
       exclusive: True
@@ -154,7 +154,7 @@ docker:
       account: ""
       <<: *docker-env
     service:
-      engine: HTEX
+      mpi: False
       cores per node: 1
       nodes per block: 1
       exclusive: False
@@ -162,16 +162,17 @@ docker:
       account: ""
       <<: *docker-env
     compute:
-      engine: HTEX
+      mpi: False
       cores per node: 8
       nodes per block: 1
       exclusive: True
       partition: "slurmpar"
       account: ""
+      walltime: "1:00:00"
       <<: *docker-env
     gc-mpi:
-      engine: GlobusMPIEngine
-      endpoint id: "{{ mpi_endpoint_id }}"
+      mpi: True
+      endpoint: "{{ mpi_endpoint_id }}"
       cores per node: 8
       nodes per block: 3
       exclusive: True
@@ -180,8 +181,8 @@ docker:
       account: ""
       <<: *docker-env
     gc-service:
-      engine: GlobusComputeEngine
-      endpoint id: "{{ service_endpoint_id }}"
+      mpi: False
+      endpoint: "{{ service_endpoint_id }}"
       cores per node: 1
       nodes per block: 1
       exclusive: False
@@ -189,8 +190,8 @@ docker:
       account: ""
       <<: *docker-env
     gc-compute:
-      engine: GlobusComputeEngine
-      endpoint id: "{{ compute_endpoint_id }}"
+      mpi: False
+      endpoint: "{{ compute_endpoint_id }}"
       cores per node: 8
       nodes per block: 1
       exclusive: True
