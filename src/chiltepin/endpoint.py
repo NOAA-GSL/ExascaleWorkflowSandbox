@@ -46,7 +46,7 @@ endpoint_setup: {{{{ endpoint_setup|default() }}}}
 engine:
   {{% if mpi %}}
   type: GlobusMPIEngine
-  max_workers_per_block: {{{{ max_mpi_apps|default({Default.MAX_MPI_APPS}) }}}}
+  max_workers_per_block: {{{{ max_mpi_apps|default({Default().MAX_MPI_APPS}) }}}}
   mpi_launcher: srun
   {{% else %}}
   type: GlobusComputeEngine
@@ -56,18 +56,24 @@ engine:
   provider:
     type: SlurmProvider
     launcher:
+      {{% if mpi %}}
       type: SimpleLauncher
+      {{% else %}}
+      type: SrunLauncher
+      {{% endif %}}
 
-    cores_per_node: {{{{ cores_per_node|default({Default.CORES_PER_NODE}) }}}}
-    nodes_per_block: {{{{ nodes_per_block|default({Default.NODES_PER_BLOCK}) }}}}
-    init_blocks: {{{{ init_blocks|default({Default.INIT_BLOCKS}) }}}}
-    min_blocks: {{{{ min_blocks|default({Default.MIN_BLOCKS}) }}}}
-    max_blocks: {{{{ max_blocks|default({Default.MAX_BLOCKS}) }}}}
-    exclusive: {{{{ exclusive|default("{Default.EXCLUSIVE}") }}}}
-    partition: {{{{ partition|default() }}}}
-    account: {{{{ account|default() }}}}
-    walltime: {{{{ walltime|default("{Default.WALLTIME}") }}}}
-    worker_init: {{{{ worker_init|default() }}}}
+    {{% if not mpi %}}
+    cores_per_node: {{{{ cores_per_node|default({Default().CORES_PER_NODE}) }}}}
+    {{% endif %}}
+    nodes_per_block: {{{{ nodes_per_block|default({Default().NODES_PER_BLOCK}) }}}}
+    init_blocks: {{{{ init_blocks|default({Default().INIT_BLOCKS}) }}}}
+    min_blocks: {{{{ min_blocks|default({Default().MIN_BLOCKS}) }}}}
+    max_blocks: {{{{ max_blocks|default({Default().MAX_BLOCKS}) }}}}
+    exclusive: {{{{ exclusive|default("{Default().EXCLUSIVE}") }}}}
+    partition: {{{{ partition|default("{Default().PARTITION}") }}}}
+    account: {{{{ account|default("{Default().ACCOUNT}") }}}}
+    walltime: {{{{ walltime|default("{Default().WALLTIME}") }}}}
+    worker_init: {{{{ worker_init|default("{Default().ENVIRONMENT}") }}}}
 
 # Endpoints will be restarted when a user submits new tasks to the
 # web-services, so eagerly shut down if endpoint is idle.  At 30s/hb (default
