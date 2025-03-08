@@ -11,7 +11,7 @@ hercules-env: &hercules-env
 
 hera-env: &hera-env
   environment:
-    - "source /apps/lmod/lmod/init/bash"
+    - "source /etc/profile.d/modules.sh"
     - "module purge"
     - "module use /contrib/spack-stack/spack-stack-1.8.0/envs/ue-intel-2021.5.0/install/modulefiles/Core"
     - "module load stack-intel/2021.5.0"
