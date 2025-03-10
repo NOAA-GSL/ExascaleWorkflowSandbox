@@ -35,18 +35,20 @@ hercules:
   resources:
     mpi:
       mpi: True
-      cores per node: 80
-      nodes per block: 3
+      max_mpi_apps: 2
+      provider: "slurm"
+      cores_per_node: 80
+      nodes_per_block: 3
       exclusive: True
-      max mpi apps: 2
       partition: "hercules"
       account: "gsd-hpcs"
       walltime: "1:00:00"
       <<: *hercules-env
     service:
       mpi: False
-      cores per node: 1
-      nodes per block: 1
+      provider: "slurm"
+      cores_per_node: 1
+      nodes_per_block: 1
       exclusive: False
       partition: "service"
       account: "gsd-hpcs"
@@ -54,8 +56,9 @@ hercules:
       <<: *hercules-env
     compute:
       mpi: False
-      cores per node: 80
-      nodes per block: 1
+      provider: "slurm"
+      cores_per_node: 80
+      nodes_per_block: 1
       exclusive: True
       partition: "hercules"
       account: "gsd-hpcs"
@@ -63,11 +66,12 @@ hercules:
       <<: *hercules-env
     gc-mpi:
       mpi: True
+      max_mpi_apps: 2
+      provider: "slurm"
       endpoint: "{{ mpi_endpoint_id }}"
-      cores per node: 80
-      nodes per block: 3
+      cores_per_node: 80
+      nodes_per_block: 3
       exclusive: True
-      max mpi apps: 2
       partition: "hercules"
       account: "gsd-hpcs"
       walltime: "1:00:00"
@@ -75,8 +79,9 @@ hercules:
     gc-service:
       mpi: False
       endpoint: "{{ service_endpoint_id }}"
-      cores per node: 1
-      nodes per block: 1
+      provider: "slurm"
+      cores_per_node: 1
+      nodes_per_block: 1
       exclusive: False
       partition: "service"
       account: "gsd-hpcs"
@@ -85,8 +90,9 @@ hercules:
     gc-compute:
       mpi: False
       endpoint: "{{ compute_endpoint_id }}"
-      cores per node: 80
-      nodes per block: 1
+      provider: "slurm"
+      cores_per_node: 80
+      nodes_per_block: 1
       exclusive: True
       partition: "hercules"
       account: "gsd-hpcs"
@@ -97,18 +103,18 @@ hera:
   resources:
     mpi:
       mpi: True
-      cores per node: 40
-      nodes per block: 3
+      cores_per_node: 40
+      nodes_per_block: 3
       exclusive: True
-      max mpi apps: 2
+      max_mpi_apps: 2
       partition: "hera"
       account: "gsd-hpcs"
       walltime: "1:00:00"
       <<: *hera-env
     service:
       mpi: False
-      cores per node: 1
-      nodes per block: 1
+      cores_per_node: 1
+      nodes_per_block: 1
       exclusive: False
       partition: "service"
       account: "gsd-hpcs"
@@ -116,8 +122,8 @@ hera:
       <<: *hera-env
     compute:
       mpi: False
-      cores per node: 40
-      nodes per block: 1
+      cores_per_node: 40
+      nodes_per_block: 1
       exclusive: True
       partition: "hera"
       account: "gsd-hpcs"
@@ -126,10 +132,10 @@ hera:
     gc-mpi:
       mpi: True
       endpoint: "{{ mpi_endpoint_id }}"
-      cores per node: 40
-      nodes per block: 3
+      cores_per_node: 40
+      nodes_per_block: 3
       exclusive: True
-      max mpi apps: 2
+      max_mpi_apps: 2
       partition: "hera"
       account: "gsd-hpcs"
       walltime: "1:00:00"
@@ -137,8 +143,8 @@ hera:
     gc-service:
       mpi: False
       endpoint: "{{ service_endpoint_id }}"
-      cores per node: 1
-      nodes per block: 1
+      cores_per_node: 1
+      nodes_per_block: 1
       exclusive: False
       partition: "service"
       account: "gsd-hpcs"
@@ -147,8 +153,8 @@ hera:
     gc-compute:
       mpi: False
       endpoint: "{{ compute_endpoint_id }}"
-      cores per node: 40
-      nodes per block: 1
+      cores_per_node: 40
+      nodes_per_block: 1
       exclusive: True
       partition: "hera"
       account: "gsd-hpcs"
@@ -159,18 +165,18 @@ docker:
   resources:
     mpi:
       mpi: True
-      cores per node: 8
-      nodes per block: 3
+      cores_per_node: 8
+      nodes_per_block: 3
       exclusive: True
-      max mpi apps: 2
+      max_mpi_apps: 2
       partition: "slurmpar"
       account: ""
       walltime: "1:00:00"
       <<: *docker-env
     service:
       mpi: False
-      cores per node: 1
-      nodes per block: 1
+      cores_per_node: 1
+      nodes_per_block: 1
       exclusive: False
       partition: "slurmpar"
       account: ""
@@ -178,8 +184,8 @@ docker:
       <<: *docker-env
     compute:
       mpi: False
-      cores per node: 8
-      nodes per block: 1
+      cores_per_node: 8
+      nodes_per_block: 1
       exclusive: True
       partition: "slurmpar"
       account: ""
@@ -188,10 +194,10 @@ docker:
     gc-mpi:
       mpi: True
       endpoint: "{{ mpi_endpoint_id }}"
-      cores per node: 8
-      nodes per block: 3
+      cores_per_node: 8
+      nodes_per_block: 3
       exclusive: True
-      max mpi apps: 2
+      max_mpi_apps: 2
       partition: "slurmpar"
       account: ""
       walltime: "1:00:00"
@@ -199,8 +205,8 @@ docker:
     gc-service:
       mpi: False
       endpoint: "{{ service_endpoint_id }}"
-      cores per node: 1
-      nodes per block: 1
+      cores_per_node: 1
+      nodes_per_block: 1
       exclusive: False
       partition: "slurmpar"
       account: ""
@@ -209,8 +215,8 @@ docker:
     gc-compute:
       mpi: False
       endpoint: "{{ compute_endpoint_id }}"
-      cores per node: 8
-      nodes per block: 1
+      cores_per_node: 8
+      nodes_per_block: 1
       exclusive: True
       partition: "slurmpar"
       account: ""
