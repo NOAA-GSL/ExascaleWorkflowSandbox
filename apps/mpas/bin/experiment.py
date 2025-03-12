@@ -7,11 +7,11 @@ import parsl
 import uwtools.api.config as uwconfig
 
 import chiltepin.configure
-from chiltepin.metis.wrapper import Metis
-from chiltepin.mpas.limited_area.wrapper import LimitedArea
-from chiltepin.mpas.wrapper import MPAS
-from chiltepin.utils.chiltepin_get_data import retrieve_data
-from chiltepin.wps.wrapper import WPS
+from chiltepin.data import retrieve_data
+from chiltepin.drivers.metis.driver import Metis
+from chiltepin.drivers.mpas.driver import MPAS
+from chiltepin.drivers.mpas.limited_area.driver import LimitedArea
+from chiltepin.drivers.wps.driver import WPS
 
 
 def main(user_config_file: Path) -> None:
@@ -78,19 +78,23 @@ def main(user_config_file: Path) -> None:
 
         # Intall Limited Area
         install_limited_area = limited_area.install(
+            executor=["service"],
             stdout=experiment_path / "install_limited_area.out",
             stderr=experiment_path / "install_limited_area.err",
-            executor=["service"],
         )
 
         # Intall Metis
         install_metis = metis.install(
+            clone_executor=["service"],
+            make_executor=["service"],
             stdout=experiment_path / "install_metis.out",
             stderr=experiment_path / "install_metis.err",
         )
 
         # Intall WPS
         install_wps = wps.install(
+            clone_executor=["service"],
+            make_executor=["service"],
             stdout=experiment_path / "install_wps.out",
             stderr=experiment_path / "install_wps.err",
             WRF_dir=None,
@@ -98,6 +102,8 @@ def main(user_config_file: Path) -> None:
 
         # Install MPAS
         install_mpas = mpas.install(
+            clone_executor=["service"],
+            make_executor=["service"],
             stdout=experiment_path / "install_mpas.out",
             stderr=experiment_path / "install_mpas.err",
         )
@@ -131,9 +137,9 @@ def main(user_config_file: Path) -> None:
                     metis.gpmetis(
                         mesh_file_path,
                         nprocs,
+                        executor=["compute"],
                         stdout=experiment_path / f"gpmetis_{nprocs}.out",
                         stderr=experiment_path / f"gpmetis_{nprocs}.err",
-                        executor=["compute"],
                         install=install_metis,
                     )
                 )
@@ -154,14 +160,23 @@ def main(user_config_file: Path) -> None:
             # Get the ics data
             get_ics_data_config = experiment_config["get_ics_data"]
             get_ics_dir = Path(get_ics_data_config["rundir"])
+            time_offset_hrs = 0
+            if time_offset_hrs == 0:
+                file_set = "anl"
+            else:
+                file_set = "fcst"
+            fcst_hours = f"{time_offset_hrs}"
             get_ics_data = retrieve_data(
+                executor=["service"],
                 stdout=experiment_path / f"get_ics_{yyyymmddhh}.out",
                 stderr=experiment_path / f"get_ics_{yyyymmddhh}.err",
-                ics_or_lbcs="ICS",
-                time_offset_hrs=0,
-                fcst_len=24,
-                lbc_intvl_hrs=6,
                 yyyymmddhh=yyyymmddhh,
+                file_set=file_set,
+                ics_or_lbcs="ICS",
+                fcst_hours=f"{fcst_hours}",
+                data_stores="aws",
+                data_type="GFS",
+                file_format="grib2",
                 output_path=get_ics_dir,
             )
 
@@ -171,14 +186,24 @@ def main(user_config_file: Path) -> None:
             # Get the lbcs data
             get_lbcs_data_config = experiment_config["get_lbcs_data"]
             get_lbcs_dir = Path(get_lbcs_data_config["rundir"])
+            time_offset_hrs = 0
+            lbc_intvl_hrs = 6
+            fcst_len = 24
+            file_set = "fcst"
+            first_time = time_offset_hrs + lbc_intvl_hrs
+            last_time = time_offset_hrs + fcst_len
+            fcst_hours = f"{first_time} {last_time} {lbc_intvl_hrs}"
             get_lbcs_data = retrieve_data(
+                executor=["service"],
                 stdout=experiment_path / f"get_lbcs_{yyyymmddhh}.out",
                 stderr=experiment_path / f"get_lbcs_{yyyymmddhh}.err",
-                ics_or_lbcs="LBCS",
-                time_offset_hrs=0,
-                fcst_len=24,
-                lbc_intvl_hrs=6,
                 yyyymmddhh=yyyymmddhh,
+                file_set=file_set,
+                ics_or_lbcs="LBCS",
+                fcst_hours=f"{fcst_hours}",
+                data_stores="aws",
+                data_type="GFS",
+                file_format="grib2",
                 output_path=get_lbcs_dir,
             )
 
@@ -207,7 +232,7 @@ def main(user_config_file: Path) -> None:
                 stderr=experiment_path / f"mpas_init_ics_{yyyymmddhh}.err",
                 executor=["mpi"],
                 install=install_mpas,
-                parsl_resource_specification={
+                resource_specification={
                     "num_nodes": 1,
                     "num_ranks": 4,
                     "ranks_per_node": 4,
@@ -226,7 +251,7 @@ def main(user_config_file: Path) -> None:
                 stderr=experiment_path / f"mpas_init_lbcs_{yyyymmddhh}.err",
                 executor=["mpi"],
                 install=install_mpas,
-                parsl_resource_specification={
+                resource_specification={
                     "num_nodes": 1,
                     "num_ranks": 4,
                     "ranks_per_node": 4,
@@ -245,7 +270,7 @@ def main(user_config_file: Path) -> None:
                 stderr=experiment_path / f"mpas_forecast_{yyyymmddhh}.err",
                 executor=["mpi"],
                 install=install_mpas,
-                parsl_resource_specification={
+                resource_specification={
                     "num_nodes": 1,
                     "num_ranks": 32,
                     "ranks_per_node": 32,

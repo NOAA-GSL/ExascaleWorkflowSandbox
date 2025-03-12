@@ -1,4 +1,4 @@
-from chiltepin.jedi.leadtime import leadtime_to_seconds, seconds_to_leadtime
+from chiltepin.drivers.jedi.leadtime import leadtime_to_seconds, seconds_to_leadtime
 
 
 def test_leadtime_to_seconds():
