@@ -4,7 +4,7 @@ import yaml
 from globus_compute_sdk import Client, Executor
 from parsl.config import Config
 from parsl.executors import GlobusComputeExecutor, HighThroughputExecutor, MPIExecutor
-from parsl.launchers import SimpleLauncher, SrunLauncher
+from parsl.launchers import SimpleLauncher, SingleNodeLauncher, SrunLauncher
 from parsl.providers import LocalProvider, SlurmProvider
 from parsl.executors.base import ParslExecutor
 from parsl.providers.base import ExecutionProvider
@@ -29,24 +29,6 @@ class Default:
     ACCOUNT: str = ""
     WALLTIME: str = "00:10:00"
     ENVIRONMENT: List[str] = field(default_factory=list)
-
-DEFAULT_CONFIG = {
-    "endpoint": None,
-    "mpi": False,
-    "max_mpi_apps": 1,
-    "max_workers_per_node": 1,
-    "cores_per_worker": 1,
-    "cores_per_node": 1,
-    "nodes_per_block": 1,
-    "init_blocks": 0,
-    "min_blocks": 0,
-    "max_blocks": 1,
-    "exclusive": True,
-    "partition": "",
-    "account": "",
-    "walltime": "00:10:00",
-    "environment": [],
-}
 
 
 def parse_file(filename: str) -> Dict[str, Any]:
@@ -74,9 +56,76 @@ def parse_file(filename: str) -> Dict[str, Any]:
     return yaml_config
 
 
-def make_htex_executor(name: str, config: Dict[str, Any]) -> HighThroughputExecutor:
-    """Construct a HighThroughputExecutor from the input configuration
+def create_provider(config:Dict[str, Any]) -> ExecutionProvider:
+    """Create the appropriate ExecutionProvider from the given configuration
 
+    Parameters
+    ----------
+
+    config: Dict[str, Any]
+        YAML configuration block that contains the following configuration options:
+
+        Option key                Defaulit value
+        "cores per node":         1
+        "cores per worker":       1
+        "max workers per node":   value of "cores per node"
+        "nodes per block":        1
+        "init blocks":            0
+        "min blocks":             0
+        "max blocks":             1
+        "exclusive":              True
+        "partition":              None
+        "account":                None
+        "walltime":               1:00:00
+        "environment":            []
+
+    Returns
+    -------
+
+    ExecutionProvider
+    """
+
+    match config.get("provider", "localhost"):
+        case "slurm":
+            return SlurmProvider(
+                cores_per_node=None if config.get("mpi", False) else config.get("cores_per_node"),
+                nodes_per_block=config.get("nodes_per_block", 1),
+                init_blocks=config.get("init_blocks", 0),
+                min_blocks=config.get("min_blocks", 0),
+                max_blocks=config.get("max_blocks", 1),
+                exclusive=config.get("exclusive", True),
+                partition=config.get("partition"),
+                qos=config.get("queue"),
+                account=config.get("account"),
+                walltime=config.get("walltime", "00:10:00"),
+                worker_init="\n".join(config.get("environment", [])),
+                launcher=SimpleLauncher() if config.get("mpi", False) else SrunLauncher(),
+            )
+        case "pbspro":
+            return PBSProProvider(
+                cpus_per_node=None if config.get("mpi", False) else config.get("cores_per_node"),
+                nodes_per_block=config.get("nodes_per_block", 1),
+                init_blocks=config.get("init_blocks", 0),
+                min_blocks=config.get("min_blocks", 0),
+                max_blocks=config.get("max_blocks", 1),
+                queue=config.get("queue"),
+                account=config.get("account"),
+                walltime=config.get("walltime", "00:10:00"),
+                worker_init="\n".join(config.get("environment", [])),
+                launcher=SimpleLauncher() if config.get("mpi", False) else MpiExecLauncher()
+            )
+        case "localhost":
+            return LocalProvider(
+                init_blocks=config.get("init_blocks", 0),
+                min_blocks=config.get("min_blocks", 0),
+                max_blocks=config.get("max_blocks", 1),
+                worker_init="\n".join(config.get("environment", [])),
+                launcher=SimpleLauncher() if config.get("mpi", False) else SingleNodeLauncher()
+            )
+
+
+def create_htex_executor(name: str, config: Dict[str, Any]) -> HighThroughputExecutor:
+    """Construct a HighThroughputExecutor from the input configuration
 
     Parameters
     ----------
@@ -107,30 +156,22 @@ def make_htex_executor(name: str, config: Dict[str, Any]) -> HighThroughputExecu
 
     HighThroughputExecutor
     """
+
     e = HighThroughputExecutor(
         label=name,
-        cores_per_worker=config["cores_per_worker"],
-        max_workers_per_node=config["max_workers_per_node"],
-        provider=SlurmProvider(
-            cores_per_node=config["cores_per_node"],
-            nodes_per_block=config["nodes_per_block"],
-            init_blocks=config["init_blocks"],
-            min_blocks=config["min_blocks"],
-            max_blocks=config["max_blocks"],
-            exclusive=config["exclusive"],
-            partition=config["partition"],
-            account=config["account"],
-            walltime=config["walltime"],
-            worker_init="\n".join(config["environment"]),
-            launcher=SrunLauncher(),
-        ),
+        cores_per_worker=config.get("cores_per_worker", 1),
+        max_workers_per_node=config.get("max_workers_per_node"),
+        provider=create_provider(config),
     )
     return e
 
 
-def make_mpi_executor(name: str, config: Dict[str, Any]) -> MPIExecutor:
-    """Construct a MPIExecutor from the input configuration
+def create_mpi_executor(
+    name: str,
+    config: Dict[str, Any],
+) -> MPIExecutor:
 
+    """Construct a MPIExecutor from the input configuration
 
     Parameters
     ----------
@@ -160,33 +201,22 @@ def make_mpi_executor(name: str, config: Dict[str, Any]) -> MPIExecutor:
 
     MPIExecutor
     """
+    default_launcher = "srun" if config.get("provider", "localhost") == "slurm" else "mpiexec"
     e = MPIExecutor(
         label=name,
-        mpi_launcher="srun",
-        max_workers_per_block=config["max_mpi_apps"],
-        provider=SlurmProvider(
-            nodes_per_block=config["nodes_per_block"],
-            init_blocks=config["init_blocks"],
-            min_blocks=config["min_blocks"],
-            max_blocks=config["max_blocks"],
-            exclusive=config["exclusive"],
-            partition=config["partition"],
-            account=config["account"],
-            walltime=config["walltime"],
-            worker_init="\n".join(config["environment"]),
-            launcher=SimpleLauncher(),
-        ),
+        mpi_launcher=config.get("mpi_launcher", default_launcher),
+        max_workers_per_block=config.get("max_mpi_apps", 1),
+        provider=create_provider(config),
     )
     return e
 
 
-def make_globus_compute_executor(
+def create_globus_compute_executor(
     name: str,
     config: Dict[str, Any],
     client: Optional[Client] = None
 ) -> GlobusComputeExecutor:
     """Construct a GlobusComputeExecutor from the input configuration
-
 
     Parameters
     ----------
@@ -226,41 +256,74 @@ def make_globus_compute_executor(
 
     GlobusComputeExecutor
     """
+    default_launcher = "srun" if config.get("provider", "localhost") == "slurm" else "mpiexec"
     e = GlobusComputeExecutor(
         label=name,
         executor=Executor(
             endpoint_id=config["endpoint"],
             client=client,
             user_endpoint_config={
-                "mpi": config["mpi"],
-                "max_mpi_apps": config["max_mpi_apps"],
-                "cores_per_node": config["cores_per_node"],
-                "nodes_per_block": config["nodes_per_block"],
-                "init_blocks": config["init_blocks"],
-                "min_blocks": config["min_blocks"],
-                "max_blocks": config["max_blocks"],
-                "exclusive": config["exclusive"],
-                "partition": config["partition"],
-                "account": config["account"],
-                "worker_init": "\n".join(config["environment"]),
+                "mpi": config.get("mpi", False),
+                "max_mpi_apps": config.get("max_mpi_apps", 1),
+                "mpi_launcher": config.get("mpi_launcher", default_launcher),
+                "provider": config.get("provider", "localhost"),
+                "cores_per_node": config.get("cores_per_node", 1),
+                "nodes_per_block": config.get("nodes_per_block", 1),
+                "init_blocks": config.get("init_blocks", 0),
+                "min_blocks": config.get("min_blocks", 0),
+                "max_blocks": config.get("max_blocks", 1),
+                "exclusive": config.get("exclusive", True),
+                "partition": config.get("partition", ""),
+                "qos": config.get("qos", ""),
+                "queue": config.get("queue", ""),
+                "account": config.get("account", ""),
+                "walltime": config.get("walltime", ""),
+                "worker_init": "\n".join(config.get("environment", [])),
             },
         ),
     )
     return e
 
 
-def make_executor(name, config, client=False) -> ParslExecutor:
-    if config["endpoint"]:
-        return(make_globus_compute_executor(name, config, client))
+def create_executor(
+    name: str,
+    config: Dict[str, Any],
+    client: Optional[Client] = None,
+) -> ParslExecutor:
+    """Create the Executor specified by the given resource configuration
+
+    Parameters
+    ----------
+
+    name: str
+        The name of the resource
+
+    config: Dict[str, Any]
+        YAML configuration block that contains the resource's configuration
+
+    client: Client | None
+        A Globus Compute client to use when instantiating Globus Compute resources.
+        The default is None.  If None, one will be instantiated automatically for
+        any Globus Compute resources in the configuration. Only applies to Globus
+        Compute resources
+
+    Returns
+    -------
+
+    ParslExecutor
+    """
+
+    if config.get("endpoint"):
+        return(create_globus_compute_executor(name, config, client))
     else:
-        if config["mpi"]:
-            return(make_mpi_executor(name, config))
+        if config.get("mpi", False):
+            return(create_mpi_executor(name, config))
         else:
-            return(make_htex_executor(name, config))
+            return(create_htex_executor(name, config))
 
 
 def load(
-    yaml_config: Dict[str, Any],
+    config: Dict[str, Any],
     include: Optional[List[str]] = None,
     client: Optional[Client] = None,
 ) -> Config:
@@ -273,7 +336,7 @@ def load(
     Parameters
     ----------
 
-    yaml_config: Dict[str, Any]
+    config: Dict[str, Any]
         YAML configuration block that contains the configuration for a list of
         resources
 
@@ -292,6 +355,7 @@ def load(
 
     Config
     """
+
     # Define a default HTEX Executor with a local provider
     executors = [
         HighThroughputExecutor(
@@ -307,14 +371,14 @@ def load(
 
     # Add an Executor for each resource
     if include is None:
-        resources = yaml_config
+        resources = config
     else:
-        resources = { key: yaml_config[key] for key in include if key in yaml_config }
+        resources = { key: config[key] for key in include if key in config }
     for resource_name, resource_config in resources.items():
         executors.append(
-            make_executor(
+            create_executor(
                 resource_name,
-                {**DEFAULT_CONFIG, **resource_config},
+                resource_config,
                 client,
             ),
         )

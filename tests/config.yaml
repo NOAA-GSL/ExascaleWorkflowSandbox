@@ -165,16 +165,18 @@ docker:
   resources:
     mpi:
       mpi: True
+      max_mpi_apps: 2
+      provider: "slurm"
       cores_per_node: 8
       nodes_per_block: 3
       exclusive: True
-      max_mpi_apps: 2
       partition: "slurmpar"
       account: ""
       walltime: "1:00:00"
       <<: *docker-env
     service:
       mpi: False
+      provider: "slurm"
       cores_per_node: 1
       nodes_per_block: 1
       exclusive: False
@@ -184,6 +186,7 @@ docker:
       <<: *docker-env
     compute:
       mpi: False
+      provider: "slurm"
       cores_per_node: 8
       nodes_per_block: 1
       exclusive: True
@@ -192,19 +195,22 @@ docker:
       walltime: "1:00:00"
       <<: *docker-env
     gc-mpi:
-      mpi: True
       endpoint: "{{ mpi_endpoint_id }}"
+      mpi: True
+      max_mpi_apps: 2
+      mpi_launcher: "srun"
+      provider: "slurm"
       cores_per_node: 8
       nodes_per_block: 3
       exclusive: True
-      max_mpi_apps: 2
       partition: "slurmpar"
       account: ""
       walltime: "1:00:00"
       <<: *docker-env
     gc-service:
-      mpi: False
       endpoint: "{{ service_endpoint_id }}"
+      mpi: False
+      provider: "slurm"
       cores_per_node: 1
       nodes_per_block: 1
       exclusive: False
@@ -213,8 +219,9 @@ docker:
       walltime: "1:00:00"
       <<: *docker-env
     gc-compute:
-      mpi: False
       endpoint: "{{ compute_endpoint_id }}"
+      mpi: False
+      provider: "slurm"
       cores_per_node: 8
       nodes_per_block: 1
       exclusive: True

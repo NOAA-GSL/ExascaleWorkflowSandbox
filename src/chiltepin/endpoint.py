@@ -16,7 +16,7 @@ from globus_sdk.gare import GlobusAuthorizationParameters
 
 from chiltepin.configure import Default
 
-multi_endpoint_template = f"""# This is the default user-template provided with newly-configured Multi-User
+multi_endpoint_template = """# This is the default user-template provided with newly-configured Multi-User
 # endpoints.  User endpoints generate a user-endpoint-specific configuration by
 # processing this YAML file as a Jinja template against user-provided
 # variables -- please modify this template to suit your site's requirements.
@@ -41,39 +41,68 @@ multi_endpoint_template = f"""# This is the default user-template provided with 
 
 debug: True
 
-endpoint_setup: {{{{ endpoint_setup|default() }}}}
+endpoint_setup: {{ endpoint_setup|default() }}
 
 engine:
-  {{% if mpi %}}
+  {% if mpi %}
   type: GlobusMPIEngine
-  max_workers_per_block: {{{{ max_mpi_apps|default({Default().MAX_MPI_APPS}) }}}}
-  mpi_launcher: srun
-  {{% else %}}
+  max_workers_per_block: {{ max_mpi_apps|default(1) }}
+  {% if provider == '"slurm"' %}
+  {% set default_mpi_launcher = "srun" %}
+  {% else %}
+  {% set default_mpi_launcher = "mpiexec" %}
+  {% endif %}
+  mpi_launcher: {{ mpi_launcher|default(default_mpi_launcher) }}
+  {% else %}
   type: GlobusComputeEngine
-  {{% endif %}}
+  {% endif %}
   run_in_sandbox: True
 
   provider:
+    {% if provider == '"slurm"' %}
     type: SlurmProvider
+    {% elif provider == '"pbspro"' %}
+    type: PBSProProvider
+    {% else %}
+    type: LocalProvider
+    {% endif %}
     launcher:
-      {{% if mpi %}}
+      {% if mpi %}
       type: SimpleLauncher
-      {{% else %}}
+      {% else %}
+      {% if provider == '"slurm"' %}
       type: SrunLauncher
-      {{% endif %}}
+      {% elif provider == '"pbspro"' %}
+      type: MpiExecLauncher
+      {% else %}
+      type: SingleNodeLauncher
+      {% endif %}
+      {% endif %}
 
-    {{% if not mpi %}}
-    cores_per_node: {{{{ cores_per_node|default({Default().CORES_PER_NODE}) }}}}
-    {{% endif %}}
-    nodes_per_block: {{{{ nodes_per_block|default({Default().NODES_PER_BLOCK}) }}}}
-    init_blocks: {{{{ init_blocks|default({Default().INIT_BLOCKS}) }}}}
-    min_blocks: {{{{ min_blocks|default({Default().MIN_BLOCKS}) }}}}
-    max_blocks: {{{{ max_blocks|default({Default().MAX_BLOCKS}) }}}}
-    exclusive: {{{{ exclusive|default("{Default().EXCLUSIVE}") }}}}
-    partition: {{{{ partition|default("{Default().PARTITION}") }}}}
-    account: {{{{ account|default("{Default().ACCOUNT}") }}}}
-    walltime: {{{{ walltime|default("{Default().WALLTIME}") }}}}
-    worker_init: {{{{ worker_init|default("{Default().ENVIRONMENT}") }}}}
+    init_blocks: {{ init_blocks|default(0) }}
+    min_blocks: {{ min_blocks|default(0) }}
+    max_blocks: {{ max_blocks|default(1) }}
+    worker_init: {{ worker_init|default() }}
+
+    {% if provider != '"localhost"' %}
+    {% if not mpi %}
+    {% if provider == '"slurm"' %}
+    cores_per_node: {{ cores_per_node|default(1) }}
+    {% elif provider == '"pbspro"' %}
+    cpus_per_node: {{ cores_per_node|default(1) }}
+    {% endif %}
+    {% endif %}
+    nodes_per_block: {{ nodes_per_block|default(1) }}
+    {% if provider == '"slurm"' %}
+    exclusive: {{ exclusive|default("True") }}
+    partition: {{ partition|default() }}
+    qos: {{ queue|default() }}
+    {% elif provider == '"pbspro"' %}
+    queue: {{ queue|default() }}
+    {% endif %}
+    account: {{ account|default() }}
+    walltime: {{ walltime|default("00:10:00") }}
+    {% endif %}
 
 # Endpoints will be restarted when a user submits new tasks to the
 # web-services, so eagerly shut down if endpoint is idle.  At 30s/hb (default
