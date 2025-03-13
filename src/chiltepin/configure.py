@@ -46,6 +46,7 @@ def parse_file(filename: str) -> Dict[str, Any]:
 
     Dict[str, Any]
     """
+
     # Open and parse the yaml config
     with open(filename, "r") as stream:
         try:
@@ -63,21 +64,34 @@ def create_provider(config:Dict[str, Any]) -> ExecutionProvider:
     ----------
 
     config: Dict[str, Any]
-        YAML configuration block that contains the following configuration options:
+        YAML configuration block that contains the following configuration options.
+        Not all options are valid for all providers.
 
-        Option key                Defaulit value
-        "cores per node":         1
-        "cores per worker":       1
-        "max workers per node":   value of "cores per node"
-        "nodes per block":        1
+        Options for all providers:
+
+        Option key                Default value
+        "mpi"                     False
+        "provider":               "localhost"
         "init blocks":            0
         "min blocks":             0
         "max blocks":             1
+        "environment":            []
+
+        Options for Slurm provider:
+        "cores per node":         1
+        "nodes per block":        1
         "exclusive":              True
         "partition":              None
+        "queue":                  None
         "account":                None
-        "walltime":               1:00:00
-        "environment":            []
+        "walltime":               "00:10:00"
+
+        Options for PBSPro provider:
+        "cores per node":         1
+        "nodes per block":        1
+        "queue":                  None
+        "account":                None
+        "walltime":               "00:10:00"
 
     Returns
     -------
@@ -137,18 +151,18 @@ def create_htex_executor(name: str, config: Dict[str, Any]) -> HighThroughputExe
     config: Dict[str, Any]
         YAML configuration block that contains the following configuration options:
 
-        Option key                Defaulit value
+        Option key                Default value
+        "provider":               "localhost"
         "cores per node":         1
-        "cores per worker":       1
-        "max workers per node":   value of "cores per node"
         "nodes per block":        1
         "init blocks":            0
         "min blocks":             0
         "max blocks":             1
         "exclusive":              True
         "partition":              None
+        "queue":                  None
         "account":                None
-        "walltime":               1:00:00
+        "walltime":               "00:10:00"
         "environment":            []
 
     Returns
@@ -183,8 +197,10 @@ def create_mpi_executor(
     config: Dict[str, Any]
         YAML configuration block that contains the following configuration options:
 
-        Option key                Defaulit value
+        Option key                Default value
         "max mpi apps":           1
+        "mpi_launcher":           "srun" for Slurm, otherwise "mpiexec"
+        "provider":               "localhost"
         "cores per node":         1
         "nodes per block":        1
         "init blocks":            0
@@ -192,8 +208,9 @@ def create_mpi_executor(
         "max blocks":             1
         "exclusive":              True
         "partition":              None
+        "queue":                  None
         "account":                None
-        "walltime":               1:00:00
+        "walltime":               "00:10:00"
         "environment":            []
 
     Returns
@@ -201,6 +218,7 @@ def create_mpi_executor(
 
     MPIExecutor
     """
+
     default_launcher = "srun" if config.get("provider", "localhost") == "slurm" else "mpiexec"
     e = MPIExecutor(
         label=name,
@@ -230,21 +248,20 @@ def create_globus_compute_executor(
 
         Option key                Default value
         "endpoint id":            No default, this option is required
-
-        For multi-user endpoints, the following additional options are recognized:
-
-        Option key                Defaulit value
         "mpi"                     False
         "max mpi apps":           1
+        "mpi_launcher":           "srun" for Slurm, otherwise "mpiexec"
+        "provider":               "localhost"
         "cores per node":         1
         "nodes per block":        1
         "init blocks":            0
         "min blocks":             0
         "max blocks":             1
         "exclusive":              True
-        "partition":              None
-        "account":                None
-        "walltime":               1:00:00
+        "partition":              ""
+        "queue":                  ""
+        "account":                ""
+        "walltime":               "00:10:00"
         "environment":            []
 
     client: Client | None
@@ -256,6 +273,7 @@ def create_globus_compute_executor(
 
     GlobusComputeExecutor
     """
+
     default_launcher = "srun" if config.get("provider", "localhost") == "slurm" else "mpiexec"
     e = GlobusComputeExecutor(
         label=name,
@@ -274,10 +292,9 @@ def create_globus_compute_executor(
                 "max_blocks": config.get("max_blocks", 1),
                 "exclusive": config.get("exclusive", True),
                 "partition": config.get("partition", ""),
-                "qos": config.get("qos", ""),
                 "queue": config.get("queue", ""),
                 "account": config.get("account", ""),
-                "walltime": config.get("walltime", ""),
+                "walltime": config.get("walltime", "00:10:00"),
                 "worker_init": "\n".join(config.get("environment", [])),
             },
         ),
@@ -290,7 +307,7 @@ def create_executor(
     config: Dict[str, Any],
     client: Optional[Client] = None,
 ) -> ParslExecutor:
-    """Create the Executor specified by the given resource configuration
+    """Create an Executor specified by the given resource configuration
 
     Parameters
     ----------
@@ -327,11 +344,10 @@ def load(
     include: Optional[List[str]] = None,
     client: Optional[Client] = None,
 ) -> Config:
-    """Construct a list of Executors from the input configuration dictionary
+    """Return a Parsl Config initialized by a list of Executors created  from
+    the input configuration dictionary.
 
-    The list returned by this function can be used to construct a Parsl Config
-    object which is then used in parsl.load(config)
-
+    The Config object returned by this function is used in parsl.load(config)
 
     Parameters
     ----------
@@ -341,9 +357,10 @@ def load(
         resources
 
     include: List[str] | None
-        A list of the labels of the resources to load. The default is None.
-        If None, all resources are loaded.  Otherwise the resources whose
-        labels are in the list will be loaded.
+        A list of the labels of the resource configurations to load. The
+        default is None. If None, all resource configurations are loaded.
+        Otherwise the configurations for resources whose labels are in the
+        list will be loaded.
 
     client: Client | None
         A Globus Compute client to use when instantiating Globus Compute resources.
