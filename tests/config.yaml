@@ -36,6 +36,7 @@ hercules:
     mpi:
       mpi: True
       max_mpi_apps: 2
+      mpi_launcher: "srun"
       provider: "slurm"
       cores_per_node: 80
       nodes_per_block: 3
@@ -65,10 +66,11 @@ hercules:
       walltime: "1:00:00"
       <<: *hercules-env
     gc-mpi:
+      endpoint: "{{ mpi_endpoint_id }}"
       mpi: True
       max_mpi_apps: 2
+      mpi_launcher: "srun"
       provider: "slurm"
-      endpoint: "{{ mpi_endpoint_id }}"
       cores_per_node: 80
       nodes_per_block: 3
       exclusive: True
@@ -77,8 +79,8 @@ hercules:
       walltime: "1:00:00"
       <<: *hercules-env
     gc-service:
-      mpi: False
       endpoint: "{{ service_endpoint_id }}"
+      mpi: False
       provider: "slurm"
       cores_per_node: 1
       nodes_per_block: 1
@@ -88,8 +90,8 @@ hercules:
       walltime: "1:00:00"
       <<: *hercules-env
     gc-compute:
-      mpi: False
       endpoint: "{{ compute_endpoint_id }}"
+      mpi: False
       provider: "slurm"
       cores_per_node: 80
       nodes_per_block: 1
@@ -103,16 +105,19 @@ hera:
   resources:
     mpi:
       mpi: True
+      max_mpi_apps: 2
+      mpi_launcher: "srun"
+      provider: "slurm"
       cores_per_node: 40
       nodes_per_block: 3
       exclusive: True
-      max_mpi_apps: 2
       partition: "hera"
       account: "gsd-hpcs"
       walltime: "1:00:00"
       <<: *hera-env
     service:
       mpi: False
+      provider: "slurm"
       cores_per_node: 1
       nodes_per_block: 1
       exclusive: False
@@ -122,6 +127,7 @@ hera:
       <<: *hera-env
     compute:
       mpi: False
+      provider: "slurm"
       cores_per_node: 40
       nodes_per_block: 1
       exclusive: True
@@ -130,19 +136,22 @@ hera:
       walltime: "1:00:00"
       <<: *hera-env
     gc-mpi:
-      mpi: True
       endpoint: "{{ mpi_endpoint_id }}"
+      mpi: True
+      max_mpi_apps: 2
+      mpi_launcher: "srun"
+      provider: "slurm"      
       cores_per_node: 40
       nodes_per_block: 3
       exclusive: True
-      max_mpi_apps: 2
       partition: "hera"
       account: "gsd-hpcs"
       walltime: "1:00:00"
       <<: *hera-env
     gc-service:
-      mpi: False
       endpoint: "{{ service_endpoint_id }}"
+      mpi: False
+      provider: "slurm"
       cores_per_node: 1
       nodes_per_block: 1
       exclusive: False
@@ -151,8 +160,9 @@ hera:
       walltime: "1:00:00"
       <<: *hera-env
     gc-compute:
-      mpi: False
       endpoint: "{{ compute_endpoint_id }}"
+      mpi: False
+      provider: "slurm"
       cores_per_node: 40
       nodes_per_block: 1
       exclusive: True
@@ -166,6 +176,7 @@ docker:
     mpi:
       mpi: True
       max_mpi_apps: 2
+      mpi_launcher: "srun"
       provider: "slurm"
       cores_per_node: 8
       nodes_per_block: 3
