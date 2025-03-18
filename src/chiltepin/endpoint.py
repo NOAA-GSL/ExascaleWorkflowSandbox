@@ -14,8 +14,6 @@ from globus_compute_sdk.sdk.web_client import WebClient
 from globus_sdk import ClientApp, GlobusApp, TransferClient, UserApp
 from globus_sdk.gare import GlobusAuthorizationParameters
 
-from chiltepin.configure import Default
-
 multi_endpoint_template = """# This is the default user-template provided with newly-configured Multi-User
 # endpoints.  User endpoints generate a user-endpoint-specific configuration by
 # processing this YAML file as a Jinja template against user-provided

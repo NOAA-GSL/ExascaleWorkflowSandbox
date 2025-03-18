@@ -64,9 +64,6 @@ def run_mpi_pi(
     $PARSL_MPI_PREFIX --overcommit ./mpi_pi.exe
     """
 
-#@python_app(executors=["mpi"])
-#def get_cores_per_node(parsl_resource_specification={}):
-#    return os.environ['SLURM_CPUS_ON_NODE']
 
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
@@ -147,12 +144,7 @@ def test_run_mpi_pi(config):
     if os.path.exists(pwd / "parsl_mpi_pi2_run.err"):
         os.remove(pwd / "parsl_mpi_pi2_run.err")
 
-    # Get the cores per node from the pilot job's SLURM variables
-    #cores_per_node = get_cores_per_node(
-    #    parsl_resource_specification={
-    #        "num_nodes": 1,  # Number of nodes required for the application instance
-    #    },
-    #).result()
+    # Set the cores per node for the pilot job
     cores_per_node = 8
 
     # Run MPI pi on two nodes

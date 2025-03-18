@@ -4,31 +4,15 @@ import yaml
 from globus_compute_sdk import Client, Executor
 from parsl.config import Config
 from parsl.executors import GlobusComputeExecutor, HighThroughputExecutor, MPIExecutor
-from parsl.launchers import SimpleLauncher, SingleNodeLauncher, SrunLauncher
-from parsl.providers import LocalProvider, SlurmProvider
 from parsl.executors.base import ParslExecutor
+from parsl.launchers import (
+    MpiExecLauncher,
+    SimpleLauncher,
+    SingleNodeLauncher,
+    SrunLauncher,
+)
+from parsl.providers import LocalProvider, PBSProProvider, SlurmProvider
 from parsl.providers.base import ExecutionProvider
-
-from dataclasses import dataclass, field
-
-@dataclass(frozen=True)
-class Default:
-
-    ENDPOINT: Optional[str] = None
-    MPI: bool = False
-    MAX_MPI_APPS: int = 1
-    MAX_WORKERS_PER_NODE: int = 1
-    CORES_PER_WORKER: int = 1
-    CORES_PER_NODE: int = 1
-    NODES_PER_BLOCK: int = 1
-    INIT_BLOCKS: int = 0
-    MIN_BLOCKS: int = 0
-    MAX_BLOCKS: int = 1
-    EXCLUSIVE: bool = True
-    PARTITION: str = ""
-    ACCOUNT: str = ""
-    WALLTIME: str = "00:10:00"
-    ENVIRONMENT: List[str] = field(default_factory=list)
 
 
 def parse_file(filename: str) -> Dict[str, Any]:
@@ -57,7 +41,7 @@ def parse_file(filename: str) -> Dict[str, Any]:
     return yaml_config
 
 
-def create_provider(config:Dict[str, Any]) -> ExecutionProvider:
+def create_provider(config: Dict[str, Any]) -> ExecutionProvider:
     """Create the appropriate ExecutionProvider from the given configuration
 
     Parameters
@@ -102,7 +86,9 @@ def create_provider(config:Dict[str, Any]) -> ExecutionProvider:
     match config.get("provider", "localhost"):
         case "slurm":
             return SlurmProvider(
-                cores_per_node=None if config.get("mpi", False) else config.get("cores_per_node"),
+                cores_per_node=(
+                    None if config.get("mpi", False) else config.get("cores_per_node")
+                ),
                 nodes_per_block=config.get("nodes_per_block", 1),
                 init_blocks=config.get("init_blocks", 0),
                 min_blocks=config.get("min_blocks", 0),
@@ -113,11 +99,15 @@ def create_provider(config:Dict[str, Any]) -> ExecutionProvider:
                 account=config.get("account"),
                 walltime=config.get("walltime", "00:10:00"),
                 worker_init="\n".join(config.get("environment", [])),
-                launcher=SimpleLauncher() if config.get("mpi", False) else SrunLauncher(),
+                launcher=(
+                    SimpleLauncher() if config.get("mpi", False) else SrunLauncher()
+                ),
             )
         case "pbspro":
             return PBSProProvider(
-                cpus_per_node=None if config.get("mpi", False) else config.get("cores_per_node"),
+                cpus_per_node=(
+                    None if config.get("mpi", False) else config.get("cores_per_node")
+                ),
                 nodes_per_block=config.get("nodes_per_block", 1),
                 init_blocks=config.get("init_blocks", 0),
                 min_blocks=config.get("min_blocks", 0),
@@ -126,7 +116,9 @@ def create_provider(config:Dict[str, Any]) -> ExecutionProvider:
                 account=config.get("account"),
                 walltime=config.get("walltime", "00:10:00"),
                 worker_init="\n".join(config.get("environment", [])),
-                launcher=SimpleLauncher() if config.get("mpi", False) else MpiExecLauncher()
+                launcher=(
+                    SimpleLauncher() if config.get("mpi", False) else MpiExecLauncher()
+                ),
             )
         case "localhost":
             return LocalProvider(
@@ -134,7 +126,11 @@ def create_provider(config:Dict[str, Any]) -> ExecutionProvider:
                 min_blocks=config.get("min_blocks", 0),
                 max_blocks=config.get("max_blocks", 1),
                 worker_init="\n".join(config.get("environment", [])),
-                launcher=SimpleLauncher() if config.get("mpi", False) else SingleNodeLauncher()
+                launcher=(
+                    SimpleLauncher()
+                    if config.get("mpi", False)
+                    else SingleNodeLauncher()
+                ),
             )
 
 
@@ -184,7 +180,6 @@ def create_mpi_executor(
     name: str,
     config: Dict[str, Any],
 ) -> MPIExecutor:
-
     """Construct a MPIExecutor from the input configuration
 
     Parameters
@@ -218,8 +213,9 @@ def create_mpi_executor(
 
     MPIExecutor
     """
-
-    default_launcher = "srun" if config.get("provider", "localhost") == "slurm" else "mpiexec"
+    default_launcher = (
+        "srun" if config.get("provider", "localhost") == "slurm" else "mpiexec"
+    )
     e = MPIExecutor(
         label=name,
         mpi_launcher=config.get("mpi_launcher", default_launcher),
@@ -232,7 +228,7 @@ def create_mpi_executor(
 def create_globus_compute_executor(
     name: str,
     config: Dict[str, Any],
-    client: Optional[Client] = None
+    client: Optional[Client] = None,
 ) -> GlobusComputeExecutor:
     """Construct a GlobusComputeExecutor from the input configuration
 
@@ -274,7 +270,9 @@ def create_globus_compute_executor(
     GlobusComputeExecutor
     """
 
-    default_launcher = "srun" if config.get("provider", "localhost") == "slurm" else "mpiexec"
+    default_launcher = (
+        "srun" if config.get("provider", "localhost") == "slurm" else "mpiexec"
+    )
     e = GlobusComputeExecutor(
         label=name,
         executor=Executor(
@@ -331,12 +329,12 @@ def create_executor(
     """
 
     if config.get("endpoint"):
-        return(create_globus_compute_executor(name, config, client))
+        return create_globus_compute_executor(name, config, client)
     else:
         if config.get("mpi", False):
-            return(create_mpi_executor(name, config))
+            return create_mpi_executor(name, config)
         else:
-            return(create_htex_executor(name, config))
+            return create_htex_executor(name, config)
 
 
 def load(
@@ -390,7 +388,7 @@ def load(
     if include is None:
         resources = config
     else:
-        resources = { key: config[key] for key in include if key in config }
+        resources = {key: config[key] for key in include if key in config}
     for resource_name, resource_config in resources.items():
         executors.append(
             create_executor(
