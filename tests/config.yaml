@@ -2,20 +2,21 @@ hercules-env: &hercules-env
   environment:
     - "source /apps/systools/hercules/etc/HPC2-lmod.sh"
     - "module purge"
-    - "module use /work/noaa/epic/role-epic/spack-stack/hercules/spack-stack-1.6.0/envs/unified-env/install/modulefiles/Core"
+    - "module use /apps/contrib/spack-stack/spack-stack-1.8.0/envs/ue-intel-2021.9.0/install/modulefiles/Core"
     - "module load stack-intel/2021.9.0"
     - "module load stack-intel-oneapi-mpi/2021.9.0"
-    - "module load stack-python/3.10.13"
+    - "module load stack-python/3.11.7"
     - "module load jedi-fv3-env"
     - "export CHILTEPIN_MPIF90=$MPIF90"
 
 hera-env: &hera-env
   environment:
+    - "source /etc/profile.d/modules.sh"
     - "module purge"
-    - "module use /scratch1/NCEPDEV/nems/role.epic/spack-stack/spack-stack-1.6.0/envs/unified-env-rocky8/install/modulefiles/Core"
+    - "module use /contrib/spack-stack/spack-stack-1.8.0/envs/ue-intel-2021.5.0/install/modulefiles/Core"
     - "module load stack-intel/2021.5.0"
     - "module load stack-intel-oneapi-mpi/2021.5.1"
-    - "module load stack-python/3.10.13"
+    - "module load stack-python/3.11.7"
     - "module load jedi-fv3-env"
     - "export CHILTEPIN_MPIF90=$MPIF90"
 
@@ -33,167 +34,209 @@ docker-env: &docker-env
 hercules:
   resources:
     mpi:
-      engine: MPI
-      cores per node: 80
-      nodes per block: 3
+      mpi: True
+      max_mpi_apps: 2
+      mpi_launcher: "srun"
+      provider: "slurm"
+      cores_per_node: 80
+      nodes_per_block: 3
       exclusive: True
-      max mpi apps: 2
       partition: "hercules"
       account: "gsd-hpcs"
+      walltime: "1:00:00"
       <<: *hercules-env
     service:
-      engine: HTEX
-      cores per node: 1
-      nodes per block: 1
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 1
+      nodes_per_block: 1
       exclusive: False
       partition: "service"
       account: "gsd-hpcs"
+      walltime: "1:00:00"
       <<: *hercules-env
     compute:
-      engine: HTEX
-      cores per node: 80
-      nodes per block: 1
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 80
+      nodes_per_block: 1
       exclusive: True
       partition: "hercules"
       account: "gsd-hpcs"
+      walltime: "1:00:00"
       <<: *hercules-env
     gc-mpi:
-      engine: GlobusMPIEngine
-      endpoint id: "{{ mpi_endpoint_id }}"
-      cores per node: 80
-      nodes per block: 3
+      endpoint: "{{ mpi_endpoint_id }}"
+      mpi: True
+      max_mpi_apps: 2
+      mpi_launcher: "srun"
+      provider: "slurm"
+      cores_per_node: 80
+      nodes_per_block: 3
       exclusive: True
-      max mpi apps: 2
       partition: "hercules"
       account: "gsd-hpcs"
+      walltime: "1:00:00"
       <<: *hercules-env
     gc-service:
-      engine: GlobusComputeEngine
-      endpoint id: "{{ service_endpoint_id }}"
-      cores per node: 1
-      nodes per block: 1
+      endpoint: "{{ service_endpoint_id }}"
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 1
+      nodes_per_block: 1
       exclusive: False
       partition: "service"
       account: "gsd-hpcs"
+      walltime: "1:00:00"
       <<: *hercules-env
     gc-compute:
-      engine: GlobusComputeEngine
-      endpoint id: "{{ compute_endpoint_id }}"
-      cores per node: 80
-      nodes per block: 1
+      endpoint: "{{ compute_endpoint_id }}"
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 80
+      nodes_per_block: 1
       exclusive: True
       partition: "hercules"
       account: "gsd-hpcs"
+      walltime: "1:00:00"
       <<: *hercules-env
 
 hera:
   resources:
     mpi:
-      engine: MPI
-      cores per node: 40
-      nodes per block: 3
+      mpi: True
+      max_mpi_apps: 2
+      mpi_launcher: "srun"
+      provider: "slurm"
+      cores_per_node: 40
+      nodes_per_block: 3
       exclusive: True
-      max mpi apps: 2
       partition: "hera"
       account: "gsd-hpcs"
+      walltime: "1:00:00"
       <<: *hera-env
     service:
-      engine: HTEX
-      cores per node: 1
-      nodes per block: 1
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 1
+      nodes_per_block: 1
       exclusive: False
       partition: "service"
       account: "gsd-hpcs"
+      walltime: "1:00:00"
       <<: *hera-env
     compute:
-      engine: HTEX
-      cores per node: 40
-      nodes per block: 1
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 40
+      nodes_per_block: 1
       exclusive: True
       partition: "hera"
       account: "gsd-hpcs"
+      walltime: "1:00:00"
       <<: *hera-env
     gc-mpi:
-      engine: GlobusMPIEngine
-      endpoint id: "{{ mpi_endpoint_id }}"
-      cores per node: 40
-      nodes per block: 3
+      endpoint: "{{ mpi_endpoint_id }}"
+      mpi: True
+      max_mpi_apps: 2
+      mpi_launcher: "srun"
+      provider: "slurm"      
+      cores_per_node: 40
+      nodes_per_block: 3
       exclusive: True
-      max mpi apps: 2
       partition: "hera"
       account: "gsd-hpcs"
+      walltime: "1:00:00"
       <<: *hera-env
     gc-service:
-      engine: GlobusComputeEngine
-      endpoint id: "{{ service_endpoint_id }}"
-      cores per node: 1
-      nodes per block: 1
+      endpoint: "{{ service_endpoint_id }}"
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 1
+      nodes_per_block: 1
       exclusive: False
       partition: "service"
       account: "gsd-hpcs"
+      walltime: "1:00:00"
       <<: *hera-env
     gc-compute:
-      engine: GlobusComputeEngine
-      endpoint id: "{{ compute_endpoint_id }}"
-      cores per node: 40
-      nodes per block: 1
+      endpoint: "{{ compute_endpoint_id }}"
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 40
+      nodes_per_block: 1
       exclusive: True
       partition: "hera"
       account: "gsd-hpcs"
+      walltime: "1:00:00"
       <<: *hera-env
 
 docker:
   resources:
     mpi:
-      engine: MPI
-      cores per node: 8
-      nodes per block: 3
+      mpi: True
+      max_mpi_apps: 2
+      mpi_launcher: "srun"
+      provider: "slurm"
+      cores_per_node: 8
+      nodes_per_block: 3
       exclusive: True
-      max mpi apps: 2
       partition: "slurmpar"
       account: ""
+      walltime: "1:00:00"
       <<: *docker-env
     service:
-      engine: HTEX
-      cores per node: 1
-      nodes per block: 1
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 1
+      nodes_per_block: 1
       exclusive: False
       partition: "slurmpar"
       account: ""
+      walltime: "1:00:00"
       <<: *docker-env
     compute:
-      engine: HTEX
-      cores per node: 8
-      nodes per block: 1
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 8
+      nodes_per_block: 1
       exclusive: True
       partition: "slurmpar"
       account: ""
+      walltime: "1:00:00"
       <<: *docker-env
     gc-mpi:
-      engine: GlobusMPIEngine
-      endpoint id: "{{ mpi_endpoint_id }}"
-      cores per node: 8
-      nodes per block: 3
+      endpoint: "{{ mpi_endpoint_id }}"
+      mpi: True
+      max_mpi_apps: 2
+      mpi_launcher: "srun"
+      provider: "slurm"
+      cores_per_node: 8
+      nodes_per_block: 3
       exclusive: True
-      max mpi apps: 2
       partition: "slurmpar"
       account: ""
+      walltime: "1:00:00"
       <<: *docker-env
     gc-service:
-      engine: GlobusComputeEngine
-      endpoint id: "{{ service_endpoint_id }}"
-      cores per node: 1
-      nodes per block: 1
+      endpoint: "{{ service_endpoint_id }}"
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 1
+      nodes_per_block: 1
       exclusive: False
       partition: "slurmpar"
       account: ""
+      walltime: "1:00:00"
       <<: *docker-env
     gc-compute:
-      engine: GlobusComputeEngine
-      endpoint id: "{{ compute_endpoint_id }}"
-      cores per node: 8
-      nodes per block: 1
+      endpoint: "{{ compute_endpoint_id }}"
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 8
+      nodes_per_block: 1
       exclusive: True
       partition: "slurmpar"
       account: ""
+      walltime: "1:00:00"
       <<: *docker-env

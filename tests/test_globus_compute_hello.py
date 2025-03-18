@@ -45,7 +45,7 @@ def config(config_file, platform):
     # Load the finalized resource configuration
     resources = chiltepin.configure.load(
         resource_config,
-        resources=["gc-service"],
+        include=["gc-service"],
         client=compute_client,
     )
 

@@ -42,32 +42,70 @@ debug: True
 endpoint_setup: {{ endpoint_setup|default() }}
 
 engine:
-  type: {{ engine|default("GlobusComputeEngine") }}
-  {% if engine == '"GlobusMPIEngine"' %}
+  {% if mpi %}
+  type: GlobusMPIEngine
   max_workers_per_block: {{ max_mpi_apps|default(1) }}
-  mpi_launcher: srun
+  {% if provider == '"slurm"' %}
+  {% set default_mpi_launcher = "srun" %}
+  {% else %}
+  {% set default_mpi_launcher = "mpiexec" %}
+  {% endif %}
+  mpi_launcher: {{ mpi_launcher|default(default_mpi_launcher) }}
+  {% else %}
+  type: GlobusComputeEngine
   {% endif %}
   run_in_sandbox: True
 
   provider:
+    {% if provider == '"slurm"' %}
     type: SlurmProvider
+    {% elif provider == '"pbspro"' %}
+    type: PBSProProvider
+    {% else %}
+    type: LocalProvider
+    {% endif %}
     launcher:
+      {% if mpi %}
       type: SimpleLauncher
-    exclusive: {{ exclusive|default("True") }}
-    cores_per_node: {{ cores_per_node|default(1) }}
-    nodes_per_block: {{ nodes_per_block|default(1) }}
-    min_blocks: {{ min_blocks|default(1) }}
-    max_blocks: {{ max_blocks|default(1) }}
+      {% else %}
+      {% if provider == '"slurm"' %}
+      type: SrunLauncher
+      {% elif provider == '"pbspro"' %}
+      type: MpiExecLauncher
+      {% else %}
+      type: SingleNodeLauncher
+      {% endif %}
+      {% endif %}
+
     init_blocks: {{ init_blocks|default(0) }}
+    min_blocks: {{ min_blocks|default(0) }}
+    max_blocks: {{ max_blocks|default(1) }}
+    worker_init: {{ worker_init|default() }}
+
+    {% if provider != '"localhost"' %}
+    {% if not mpi %}
+    {% if provider == '"slurm"' %}
+    cores_per_node: {{ cores_per_node|default(1) }}
+    {% elif provider == '"pbspro"' %}
+    cpus_per_node: {{ cores_per_node|default(1) }}
+    {% endif %}
+    {% endif %}
+    nodes_per_block: {{ nodes_per_block|default(1) }}
+    {% if provider == '"slurm"' %}
+    exclusive: {{ exclusive|default("True") }}
     partition: {{ partition|default() }}
+    qos: {{ queue|default() }}
+    {% elif provider == '"pbspro"' %}
+    queue: {{ queue|default() }}
+    {% endif %}
     account: {{ account|default() }}
     walltime: {{ walltime|default("00:10:00") }}
-    worker_init: {{ worker_init|default() }}
+    {% endif %}
 
 # Endpoints will be restarted when a user submits new tasks to the
 # web-services, so eagerly shut down if endpoint is idle.  At 30s/hb (default
 # value), 10 heartbeats is 300s.
-idle_heartbeats_soft: 10
+idle_heartbeats_soft: 120
 
 # If endpoint is *apparently* idle (e.g., outstanding tasks, but no movement)
 # for this many heartbeats, then shutdown anyway.  At 30s/hb (default value),

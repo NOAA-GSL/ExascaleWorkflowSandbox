@@ -48,7 +48,7 @@ def main(user_config_file: Path) -> None:
     yaml_config = chiltepin.configure.parse_file(resource_config_file)
     resources = chiltepin.configure.load(
         yaml_config[machine]["resources"],
-        resources=["service", "compute", "mpi"],
+        include=["service", "compute", "mpi"],
     )
     with parsl.load(resources):
 
