@@ -2,6 +2,7 @@
 # pylint: disable-all
 """
 This script was borrowed verbatim from the UFS SRW App:
+
   https://github.com/ufs-community/ufs-srweather-app
 
 Although this utility was originally designed with SRW in mind, it has
@@ -43,6 +44,7 @@ import subprocess
 import sys
 import time
 import urllib.request
+from argparse import RawDescriptionHelpFormatter
 from copy import deepcopy
 from textwrap import dedent
 
@@ -50,9 +52,11 @@ import yaml
 
 
 def clean_up_output_dir(expected_subdir, local_archive, output_path, source_paths):
-    """Remove expected sub-directories and existing_archive files on
+    """
+    Remove expected sub-directories and existing_archive files on
     disk once all files have been extracted and put into the specified
-    output location."""
+    output location.
+    """
 
     unavailable = {}
     expand_source_paths = []
@@ -120,6 +124,7 @@ def check_file(url):
     Check that a file exists at the expected URL. Return boolean value
     based on the response.
     """
+
     status_code = urllib.request.urlopen(url).getcode()
     return status_code == 200
 
@@ -129,11 +134,16 @@ def download_file(url):
     Download a file from a url source, and place it in a target location
     on disk.
 
-    Arguments:
-      url          url to file to be downloaded
+    Parameters
+    ----------
 
-    Return:
-      boolean value reflecting state of download.
+    url
+        URL of file to be downloaded
+
+    Returns
+    -------
+    bool
+        Boolean value reflecting state of download.
     """
 
     # wget flags:
@@ -164,12 +174,15 @@ def arg_list_to_range(args):
 
     The length of the list will determine what sequence items are returned:
 
-      Length = 1:   A single item is to be processed
-      Length = 2:   A sequence of start, stop with increment 1
-      Length = 3:   A sequence of start, stop, increment
-      Length > 3:   List as is
+        Length = 1:   A single item is to be processed
 
-    argparse should provide a list of at least one item (nargs='+').
+        Length = 2:   A sequence of start, stop with increment 1
+
+        Length = 3:   A sequence of start, stop, increment
+
+        Length > 3:   List as is
+
+    Argparse should provide a list of at least one item (nargs='+').
 
     Must ensure that the list contains integers.
     """
@@ -184,25 +197,32 @@ def arg_list_to_range(args):
 
 
 def fill_template(template_str, cycle_date, templates_only=False, **kwargs):
-    """Fill in the provided template string with date time information,
+    """
+    Fill in the provided template string with date time information,
     and return the resulting string.
 
     Arguments:
-      template_str    a string containing Python templates
-      cycle_date      a datetime object that will be used to fill in
-                      date and time information
-      templates_only  boolean value. When True, this function will only
-                      return the templates available.
+        template_str
+            A string containing Python templates
+        cycle_date
+            A datetime object that will be used to fill in
+            date and time information
+        templates_only
+            Boolean value. When True, this function will only
+            return the templates available.
 
     Keyword Args:
-      ens_group       a number associated with a bin where ensemble
-                      members are stored in archive files
-      fcst_hr         an integer forecast hour. string formatting should
-                      be included in the template_str
-      mem             a single ensemble member. should be a positive integer value
+        ens_group
+            A number associated with a bin where ensemble
+            members are stored in archive files
+        fcst_hr
+            An integer forecast hour. string formatting should
+            be included in the template_str
+        mem
+            A single ensemble member. should be a positive integer value
 
     Return:
-      filled template string
+        Filled template string
     """
 
     # Parse keyword args
@@ -293,19 +313,23 @@ def find_archive_files(paths, file_names, cycle_date, ens_group):
 
 
 def get_file_templates(cla, known_data_info, data_store, use_cla_tmpl=False):
-    """Returns the file templates requested by user input, either from
+    """
+    Returns the file templates requested by user input, either from
     the command line, or from the known data information dict.
 
     Arguments:
 
-       cla              command line arguments Namespace object
-       known_data_info  dict from data_locations yaml file
-       data_store       string corresponding to a key in the
-                        known_data_info dict
-       use_cla_tmpl     boolean on whether to check cla for templates
+       cla
+           Command line arguments Namespace object
+       known_data_info
+           Dict from data_locations yaml file
+       data_store
+           String corresponding to a key in the known_data_info dict
+       use_cla_tmpl
+           Boolean on whether to check cla for templates
 
     Returns:
-       file_templates   a list of file templates
+        A list of file templates
     """
 
     file_templates = known_data_info.get(data_store, {}).get("file_names")
@@ -346,20 +370,27 @@ def get_requested_files(cla, file_templates, input_locs, method="disk", **kwargs
 
     Arguments:
 
-    cla            Namespace object containing command line arguments
-    file_templates a list of file templates
-    input_locs      A string containing a single data location, either a url
-                   or disk path, or a list of paths/urls.
-    method         Choice of disk or download to indicate protocol for
-                   retrieval
+        cla
+            Namespace object containing command line arguments
+        file_templates
+            A list of file templates
+        input_locs
+            A string containing a single data location, either a url
+            or disk path, or a list of paths/urls.
+        method
+            Choice of disk or download to indicate protocol for
+            retrieval
 
     Keyword args:
-    members        a list integers corresponding to the ensemble members
-    check_all      boolean flag that indicates all urls should be
-                   checked for all files
+
+        members
+            A list integers corresponding to the ensemble members
+        check_all
+            Boolean flag that indicates all urls should be checked for all files
 
     Returns:
-    unavailable  a list of locations/files that were unretrievable
+
+        A list of locations/files that were unretrievable
     """
 
     members = kwargs.get("members", "")
@@ -445,14 +476,16 @@ def get_requested_files(cla, file_templates, input_locs, method="disk", **kwargs
 
 
 def hsi_single_file(file_path, mode="ls"):
-    """Call hsi as a subprocess for Python and return information about
+    """
+    Call hsi as a subprocess for Python and return information about
     whether the file_path was found.
 
     Arguments:
-        file_path    path on HPSS
-        mode         the hsi command to run. ls is default. may also
-                     pass "get" to retrieve the file path
-
+        file_path
+            path on HPSS
+        mode
+            the hsi command to run. ls is default. may also
+            pass "get" to retrieve the file path
     """
     cmd = f"hsi {mode} {file_path}"
 
@@ -474,7 +507,8 @@ def hpss_requested_files(cla, file_names, store_specs, members=-1, ens_group=-1)
 
     # pylint: disable=too-many-locals
 
-    """This function interacts with the "hpss" protocol in a provided
+    """
+    This function interacts with the "hpss" protocol in a provided
     data store specs file to download a set of files requested by the
     user. Depending on the type of archive file (zip or tar), it will
     either pull the entire file and unzip it, or attempt to pull
@@ -629,7 +663,9 @@ def hpss_requested_files(cla, file_names, store_specs, members=-1, ens_group=-1)
 
 
 def load_str(arg):
-    """Load a dict string safely using YAML. Return the resulting dict."""
+    """
+    Load a dict string safely using YAML. Return the resulting dict.
+    """
     return yaml.load(arg, Loader=yaml.SafeLoader)
 
 
@@ -659,11 +695,11 @@ def pair_locs_with_files(input_locs, file_templates, check_all):
     avaiable file templates.
 
     The different possibilities:
-    1. Get one or more files from a single path/url
-    2. Get multiple files from multiple corresponding
-       paths/urls
-    3. Check all paths for all file templates until files are
-       found
+        1. Get one or more files from a single path/url
+        2. Get multiple files from multiple corresponding
+           paths/urls
+        3. Check all paths for all file templates until files are
+           found
 
     The default will be to handle #1 and #2. #3 will be
     indicated by a flag in the yaml: "check_all: True"
@@ -694,7 +730,9 @@ def pair_locs_with_files(input_locs, file_templates, check_all):
 
 
 def path_exists(arg):
-    """Check whether the supplied path exists and is writeable"""
+    """
+    Check whether the supplied path exists and is writeable
+    """
 
     if not os.path.exists(arg):
         msg = f"{arg} does not exist!"
@@ -708,8 +746,10 @@ def path_exists(arg):
 
 
 def setup_logging(debug=False):
-    """Calls initialization functions for logging package, and sets the
-    user-defined level for logging in the script."""
+    """
+    Calls initialization functions for logging package, and sets the
+    user-defined level for logging in the script.
+    """
 
     level = logging.INFO
     if debug:
@@ -721,9 +761,11 @@ def setup_logging(debug=False):
 
 
 def write_summary_file(cla, data_store, file_templates):
-    """Given the command line arguments and the data store from which
+    """
+    Given the command line arguments and the data store from which
     the data was retrieved, write a bash summary file that is needed by
-    the workflow elements downstream."""
+    the workflow elements downstream.
+    """
 
     members = cla.members if isinstance(cla.members, list) else [-1]
     for mem in members:
@@ -755,8 +797,10 @@ def write_summary_file(cla, data_store, file_templates):
 
 
 def to_datetime(arg):
-    """Return a datetime object give a string like YYYYMMDDHH or
-    YYYYMMDDHHmm."""
+    """
+    Return a datetime object give a string like YYYYMMDDHH or
+    YYYYMMDDHHmm.
+    """
     if len(arg) == 10:
         fmt_str = "%Y%m%d%H"
     elif len(arg) == 12:
@@ -769,18 +813,20 @@ def to_datetime(arg):
 
 
 def to_lower(arg):
-    """Return a string provided by arg into all lower case."""
+    """
+    Return a string provided by arg into all lower case.
+    """
     return arg.lower()
 
 
-def main(argv):
+def main():
     # pylint: disable=too-many-branches, too-many-statements
     """
     Uses known location information to try the known locations and file
     paths in priority order.
     """
 
-    cla = parse_args(argv)
+    cla = parse_args()
 
     setup_logging(cla.debug)
     print("Running script retrieve_data.py with args:", f"\n{('-' * 80)}\n{('-' * 80)}")
@@ -895,9 +941,11 @@ def main(argv):
 
 
 def get_ens_groups(members):
-    """Given a list of ensemble members, return a dict with keys for
+    """
+    Given a list of ensemble members, return a dict with keys for
     the ensemble group, and values are lists of ensemble members
-    requested in that group."""
+    requested in that group.
+    """
 
     if members is None:
         return {-1: [-1]}
@@ -912,7 +960,7 @@ def get_ens_groups(members):
     return ens_groups
 
 
-def parse_args(argv):
+def parse_args():
     """
     Function maintains the arguments accepted by this script. Please see
     Python's argparse documenation for more information about settings of each
@@ -922,11 +970,12 @@ def parse_args(argv):
     description = (
         "Allowable Python templates for paths, urls, and file names are "
         " defined in the fill_template function and include:\n"
-        f'{"-"*120}\n'
+        f'{"-"*114}\n'
         f'{fill_template("null", dt.datetime.now(), templates_only=True)}'
     )
     parser = argparse.ArgumentParser(
         description=description,
+        formatter_class=RawDescriptionHelpFormatter,
     )
 
     # Required
@@ -1050,7 +1099,7 @@ def parse_args(argv):
 
     # Make modifications/checks for given values
 
-    args = parser.parse_args(argv)
+    args = parser.parse_args()
 
     # convert range arguments if necessary
     args.fcst_hrs = arg_list_to_range(args.fcst_hrs)
@@ -1077,4 +1126,4 @@ def parse_args(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
