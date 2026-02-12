@@ -20,6 +20,16 @@ hera-env: &hera-env
     - "module load jedi-fv3-env"
     - "export CHILTEPIN_MPIF90=$MPIF90"
 
+ursa-env: &ursa-env
+  environment:
+    - 'module help > /dev/null 2>&1 || source $(bash -l -c "echo $MODULESHOME")/init/profile'
+    - "module purge"
+    - "module use /contrib/spack-stack/spack-stack-1.9.3/envs/ue-oneapi-2024.2.1/install/modulefiles/Core"
+    - "module load stack-oneapi/2024.2.1"
+    - "module load stack-python/3.11.7"
+    - "module load stack-intel-oneapi-mpi/2021.13"
+    - "export CHILTEPIN_MPIF90=$MPIF90"
+
 docker-env: &docker-env
   environment:
     - "source /usr/lmod/lmod/init/bash"
@@ -170,6 +180,82 @@ hera:
       account: "gsd-hpcs"
       walltime: "1:00:00"
       <<: *hera-env
+
+ursa:
+  resources:
+    mpi:
+      mpi: True
+      max_mpi_apps: 2
+      mpi_launcher: "srun"
+      provider: "slurm"
+      cores_per_node: 192
+      nodes_per_block: 3
+      exclusive: True
+      partition: "u1-compute"
+      queue: "debug"
+      account: "gsd-hpcs"
+      walltime: "00:10:00"
+      <<: *ursa-env
+    service:
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 1
+      nodes_per_block: 1
+      exclusive: False
+      partition: "u1-service"
+      queue: "debug"
+      account: "gsd-hpcs"
+      walltime: "00:10:00"
+      <<: *ursa-env
+    compute:
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 40
+      nodes_per_block: 1
+      exclusive: True
+      partition: "u1-compute"
+      queue: "debug"
+      account: "gsd-hpcs"
+      walltime: "00:10:00"
+      <<: *ursa-env
+    gc-mpi:
+      endpoint: "{{ mpi_endpoint_id }}"
+      mpi: True
+      max_mpi_apps: 2
+      mpi_launcher: "srun"
+      provider: "slurm"
+      cores_per_node: 40
+      nodes_per_block: 3
+      exclusive: True
+      partition: "u1-compute"
+      queue: "debug"
+      account: "gsd-hpcs"
+      walltime: "00:10:00"
+      <<: *ursa-env
+    gc-service:
+      endpoint: "{{ service_endpoint_id }}"
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 1
+      nodes_per_block: 1
+      exclusive: False
+      partition: "u1-service"
+      queue: "debug"
+      account: "gsd-hpcs"
+      walltime: "00:10:00"
+      <<: *ursa-env
+    gc-compute:
+      endpoint: "{{ compute_endpoint_id }}"
+      mpi: False
+      provider: "slurm"
+      cores_per_node: 40
+      nodes_per_block: 1
+      exclusive: True
+      partition: "u1-compute"
+      queue: "debug"
+      account: "gsd-hpcs"
+      walltime: "00:10:00"
+      <<: *ursa-env
 
 docker:
   resources:

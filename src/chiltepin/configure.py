@@ -83,55 +83,56 @@ def create_provider(config: Dict[str, Any]) -> ExecutionProvider:
     ExecutionProvider
     """
 
-    match config.get("provider", "localhost"):
-        case "slurm":
-            return SlurmProvider(
-                cores_per_node=(
-                    None if config.get("mpi", False) else config.get("cores_per_node")
-                ),
-                nodes_per_block=config.get("nodes_per_block", 1),
-                init_blocks=config.get("init_blocks", 0),
-                min_blocks=config.get("min_blocks", 0),
-                max_blocks=config.get("max_blocks", 1),
-                exclusive=config.get("exclusive", True),
-                partition=config.get("partition"),
-                qos=config.get("queue"),
-                account=config.get("account"),
-                walltime=config.get("walltime", "00:10:00"),
-                worker_init="\n".join(config.get("environment", [])),
-                launcher=(
-                    SimpleLauncher() if config.get("mpi", False) else SrunLauncher()
-                ),
-            )
-        case "pbspro":
-            return PBSProProvider(
-                cpus_per_node=(
-                    None if config.get("mpi", False) else config.get("cores_per_node")
-                ),
-                nodes_per_block=config.get("nodes_per_block", 1),
-                init_blocks=config.get("init_blocks", 0),
-                min_blocks=config.get("min_blocks", 0),
-                max_blocks=config.get("max_blocks", 1),
-                queue=config.get("queue"),
-                account=config.get("account"),
-                walltime=config.get("walltime", "00:10:00"),
-                worker_init="\n".join(config.get("environment", [])),
-                launcher=(
-                    SimpleLauncher() if config.get("mpi", False) else MpiExecLauncher()
-                ),
-            )
-        case "localhost":
-            return LocalProvider(
-                init_blocks=config.get("init_blocks", 0),
-                min_blocks=config.get("min_blocks", 0),
-                max_blocks=config.get("max_blocks", 1),
-                worker_init="\n".join(config.get("environment", [])),
-                launcher=(
-                    SimpleLauncher()
-                    if config.get("mpi", False)
-                    else SingleNodeLauncher()
-                ),
-            )
+    provider = config.get("provider", "localhost")
+
+    if provider == "slurm":
+        return SlurmProvider(
+            cores_per_node=(
+                None if config.get("mpi", False) else config.get("cores_per_node")
+            ),
+            nodes_per_block=config.get("nodes_per_block", 1),
+            init_blocks=config.get("init_blocks", 0),
+            min_blocks=config.get("min_blocks", 0),
+            max_blocks=config.get("max_blocks", 1),
+            exclusive=config.get("exclusive", True),
+            partition=config.get("partition"),
+            qos=config.get("queue"),
+            account=config.get("account"),
+            walltime=config.get("walltime", "00:10:00"),
+            worker_init="\n".join(config.get("environment", [])),
+            launcher=(
+                SimpleLauncher() if config.get("mpi", False) else SrunLauncher()
+            ),
+        )
+    elif provider == "pbspro":
+        return PBSProProvider(
+            cpus_per_node=(
+                None if config.get("mpi", False) else config.get("cores_per_node")
+            ),
+            nodes_per_block=config.get("nodes_per_block", 1),
+            init_blocks=config.get("init_blocks", 0),
+            min_blocks=config.get("min_blocks", 0),
+            max_blocks=config.get("max_blocks", 1),
+            queue=config.get("queue"),
+            account=config.get("account"),
+            walltime=config.get("walltime", "00:10:00"),
+            worker_init="\n".join(config.get("environment", [])),
+            launcher=(
+                SimpleLauncher() if config.get("mpi", False) else MpiExecLauncher()
+            ),
+        )
+    else:  # localhost
+        return LocalProvider(
+            init_blocks=config.get("init_blocks", 0),
+            min_blocks=config.get("min_blocks", 0),
+            max_blocks=config.get("max_blocks", 1),
+            worker_init="\n".join(config.get("environment", [])),
+            launcher=(
+                SimpleLauncher()
+                if config.get("mpi", False)
+                else SingleNodeLauncher()
+            ),
+        )
 
 
 def create_htex_executor(name: str, config: Dict[str, Any]) -> HighThroughputExecutor:
@@ -377,6 +378,7 @@ def load(
             label="local",
             worker_debug=True,
             cores_per_worker=1,
+            max_workers_per_node=1,
             provider=LocalProvider(
                 init_blocks=0,
                 max_blocks=1,
