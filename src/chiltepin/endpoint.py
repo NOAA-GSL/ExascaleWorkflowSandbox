@@ -1,11 +1,9 @@
 import os
 import pathlib
 import re
-import signal
 import subprocess
 import sys
 import time
-from contextlib import contextmanager
 from typing import Dict, Optional, Union
 
 import yaml
@@ -15,21 +13,6 @@ from globus_compute_sdk.sdk.auth.globus_app import get_globus_app
 from globus_compute_sdk.sdk.web_client import WebClient
 from globus_sdk import ClientApp, GlobusApp, TransferClient, UserApp
 from globus_sdk.gare import GlobusAuthorizationParameters
-
-
-@contextmanager
-def _restore_sigchld():
-    """Context manager to temporarily restore SIGCHLD to default handler.
-
-    This prevents pytest's signal handlers from interfering with subprocess
-    management, particularly when globus-compute-endpoint uses psutil internally.
-    """
-    old_handler = signal.signal(signal.SIGCHLD, signal.SIG_DFL)
-    try:
-        yield
-    finally:
-        signal.signal(signal.SIGCHLD, old_handler)
-
 
 multi_endpoint_template = """# This is the default user-template provided with newly-configured Multi-User
 # endpoints.  User endpoints generate a user-endpoint-specific configuration by
@@ -305,21 +288,15 @@ def configure(
     command.append("configure")
     command.append(name)
 
-    # Run the configure command as a sub process with SIGCHLD restored to default
-    # to prevent pytest's signal handlers from interfering with psutil
-    with _restore_sigchld():
-        p = subprocess.run(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            timeout=timeout,
-            preexec_fn=os.setsid,
-        )
-
+    p = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=timeout,
+        start_new_session=True,
+    )
     assert p.returncode == 0, p.stdout
-
-    # Additional post configuration steps are needed for multi endpoints
 
     # Get the path to the globus compute endpoint configuration
     if config_dir:
@@ -355,7 +332,7 @@ def configure(
         ["env", "-i", "HOME=$HOME", "bash", "-l", "-c", "echo $PATH"],
         capture_output=True,
         text=True,
-        preexec_fn=os.setsid,
+        start_new_session=True,
     )
     assert p.returncode == 0, p.stderr
     login_path = p.stdout.strip()
@@ -402,18 +379,14 @@ def show(
         command.append(f"{os.path.abspath(config_dir)}")
     command.append("list")
 
-    # Run the command as a subprocess with SIGCHLD restored to default
-    # to prevent pytest's signal handlers from interfering with psutil
-    with _restore_sigchld():
-        p = subprocess.run(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            timeout=timeout,
-            preexec_fn=os.setsid,
-        )
-
+    p = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=timeout,
+        start_new_session=True,
+    )
     assert p.returncode == 0, p.stdout
 
     # Build a dictionary from the output and return it
@@ -430,6 +403,39 @@ def show(
                 "state": match.group(2),
             }
     return endpoint_info
+
+
+def exists(
+    name: str,
+    config_dir: Optional[str] = None,
+    timeout: Optional[int] = None,
+) -> bool:
+    """Return True if the endpoint exists, otherwise False
+
+    Parameters
+    ----------
+
+    name: str
+        Name of the endpoint to check
+
+    config_dir: str | None
+        Path to endpoint configuration directory where endpoint information
+        is stored. If None (the default), then $HOME/.globus_compute is used
+
+    timeout: int | None
+        Number of seconds to wait for the command to complete before timing out.
+        Default is None, meaning the command will never time out.
+
+    Returns
+    -------
+
+    bool
+    """
+    # Get the endpoint info
+    endpoints = show(config_dir, timeout)
+
+    # Return whether the endpoint exists in the listing
+    return name in endpoints
 
 
 def is_running(
@@ -504,7 +510,14 @@ def start(
     command.append(name)
 
     # Run the command as a detached daemon process using double-fork
-    # to completely disconnect from the parent process tree
+    # to completely disconnect from the parent process tree.
+    # NOTE: subprocess.Popen with start_new_session=True does not work to
+    # fully detach the process because globus-compute-endpoint uses psutil
+    # to manage subprocesses, and psutil requires the parent process to still
+    # be alive to avoid orphaning the child processes it creates. The double-fork
+    # method is used here to create a new session and then immediately exit
+    # the first child, leaving the grandchild process running as a daemon that
+    # is not a child of the original parent process.
     pid = os.fork()
     if pid == 0:
         # First child - create new session
@@ -569,45 +582,23 @@ def stop(
     command.append("stop")
     command.append(name)
 
-    # Run the command as a subprocess
-    # Note: When running under pytest, the globus-compute-endpoint command uses psutil
-    # internally to manage child processes. Pytest's signal handlers may reap these
-    # child processes before psutil can, causing a ChildProcessError. We handle this
-    # by catching the error and verifying the endpoint actually stopped successfully.
-    try:
-        with _restore_sigchld():
-            p = subprocess.run(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                timeout=timeout,
-                preexec_fn=os.setsid,
-            )
-        returncode = p.returncode
-        output = p.stdout
-    except subprocess.SubprocessError as e:
-        # If subprocess fails, we'll verify the endpoint actually stopped
-        returncode = None
-        output = str(e)
+    subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=timeout,
+        start_new_session=True,
+    )
 
     # Wait for endpoint to enter "Stopped" state
+    start_time = time.time()
     while is_running(name, config_dir, timeout):
+        if timeout is not None and (time.time() - start_time) > timeout:
+            raise TimeoutError(
+                f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to stop"
+            )
         time.sleep(1)
-
-    # If the subprocess failed, only tolerate the known ChildProcessError/psutil case
-    if returncode not in (0, None):
-        # Non-zero return code from globus-compute-endpoint stop
-        if "ChildProcessError" not in (output or ""):
-            raise RuntimeError(
-                f"Failed to stop endpoint '{name}' (return code {returncode}): {output}"
-            )
-    elif returncode is None:
-        # SubprocessError occurred; only tolerate if it matches the known benign case
-        if "ChildProcessError" not in (output or ""):
-            raise RuntimeError(
-                f"Failed to stop endpoint '{name}' due to unexpected subprocess error: {output}"
-            )
 
 
 def delete(
@@ -647,26 +638,20 @@ def delete(
     command.append("--force")
     command.append(name)
 
-    # Run the command as a subprocess
-    # Note: When running under pytest, the globus-compute-endpoint command uses psutil
-    # internally to manage child processes. Pytest's signal handlers may reap these
-    # child processes before psutil can, causing a ChildProcessError. We handle this
-    # by catching the error and verifying the operation succeeded.
-    try:
-        with _restore_sigchld():
-            p = subprocess.run(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                timeout=timeout,
-                preexec_fn=os.setsid,
+    subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=timeout,
+        start_new_session=True,
+    )
+
+    # Wait for endpoint to disappear from the listing
+    start_time = time.time()
+    while exists(name, config_dir, timeout):
+        if timeout is not None and (time.time() - start_time) > timeout:
+            raise TimeoutError(
+                f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to be deleted"
             )
-        assert p.returncode == 0, p.stdout
-    except subprocess.SubprocessError:
-        # If subprocess fails under pytest due to the known psutil/pytest interaction,
-        # we tolerate it and let the tests verify that the endpoint was deleted.
-        if "PYTEST_CURRENT_TEST" in os.environ:
-            return
-        # Outside of pytest, re-raise so callers see that deletion did not complete.
-        raise
+        time.sleep(1)
