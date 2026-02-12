@@ -8,6 +8,7 @@ version = "0.0.1"
 dependencies = [
   "globus-compute-sdk",
   "globus-compute-endpoint",
+  "uwtools @ git+https://github.com/ufs-community/uwtools@v2.5.1#subdirectory=src"
 ]
 requires-python = ">=3.9.0"
 authors = [
