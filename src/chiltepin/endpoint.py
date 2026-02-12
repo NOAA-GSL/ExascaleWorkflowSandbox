@@ -331,7 +331,7 @@ def configure(
     # Do not capture custom user settings set in shell init scripts (e.g., .bashrc)
     # since those may not be applicable to the endpoint environment and could cause issues.
     p = subprocess.run(
-        ["env", "-i", "HOME=foobar", "bash", "-l", "-c", "echo $PATH"],
+        ["env", "-i", "HOME=/tmp", "bash", "-l", "-c", "echo $PATH"],
         capture_output=True,
         text=True,
         start_new_session=True,
@@ -552,7 +552,7 @@ def start(
 def stop(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[int] = None,
+    timeout: Optional[int] = 10,
 ):
     """Stop the specified Globus Compute Endpoint
 
@@ -570,7 +570,7 @@ def stop(
 
     timeout: int | None
         Number of seconds to wait for the command to complete before timing out
-        Default is None, meaning the command will never time out.
+        Default is 10 seconds.
     """
     # Make sure we are logged in
     if login_required():
@@ -614,7 +614,7 @@ def stop(
 def delete(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[int] = None,
+    timeout: Optional[int] = 10,
 ):
     """Delete the specified Globus Compute Endpoint
 
@@ -632,7 +632,7 @@ def delete(
 
     timeout: int
         Number of seconds to wait for the command to complete before timing out
-        Default is None, meaning the command will never time out.
+        Default is 10 seconds.
     """
     # Make sure we are logged in
     if login_required():
