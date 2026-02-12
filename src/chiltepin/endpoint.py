@@ -603,7 +603,7 @@ def stop(
                 f"Failed to stop endpoint '{name}' (return code {returncode}): {output}"
             )
     elif returncode is None:
-        # SubprocessError occurred; only tolderate if it matches the known benign case
+        # SubprocessError occurred; only tolerate if it matches the known benign case
         if "ChildProcessError" not in (output or ""):
             raise RuntimeError(
                 f"Failed to stop endpoint '{name}' due to unexpected subprocess error: {output}"
