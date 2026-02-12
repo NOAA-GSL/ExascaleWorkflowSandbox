@@ -4,7 +4,6 @@ from chiltepin.tasks import bash_task, join_task
 
 
 class Metis:
-
     def __init__(
         self,
         environment="",

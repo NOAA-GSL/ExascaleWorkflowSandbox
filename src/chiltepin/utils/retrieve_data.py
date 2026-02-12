@@ -71,7 +71,7 @@ def clean_up_output_dir(expected_subdir, local_archive, output_path, source_path
             file_name = os.path.basename(file_path)
             expected_output_loc = os.path.join(output_path, file_name)
             if not local_file_path == expected_output_loc:
-                logging.info(f"Moving {local_file_path} to " f"{expected_output_loc}")
+                logging.info(f"Moving {local_file_path} to {expected_output_loc}")
                 shutil.move(local_file_path, expected_output_loc)
 
     # Clean up directories from inside archive, if they exist
@@ -218,7 +218,7 @@ def fill_template(template_str, cycle_date, templates_only=False, **kwargs):
     # range. Set the range as would be indicated in the archive file
     # here. Integer division is intentional here.
     low_end = int(cycle_hour) // 6 * 6
-    bin6 = f"{low_end:02d}-{low_end+5:02d}"
+    bin6 = f"{low_end:02d}-{low_end + 5:02d}"
 
     # Another strategy is to bundle odd cycle hours with their next
     # lowest even cycle hour. Files are named only with the even hour.
@@ -244,7 +244,7 @@ def fill_template(template_str, cycle_date, templates_only=False, **kwargs):
     )
 
     if templates_only:
-        return f'{",".join((format_values.keys()))}'
+        return f"{','.join((format_values.keys()))}"
     return template_str.format(**format_values)
 
 
@@ -269,7 +269,6 @@ def find_archive_files(paths, file_names, cycle_date, ens_group):
     for list_item, (archive_path, archive_file_names) in enumerate(
         zipped_archive_file_paths
     ):
-
         existing_archives = {}
         if not isinstance(archive_file_names, list):
             archive_file_names = [archive_file_names]
@@ -334,7 +333,6 @@ def get_file_templates(cla, known_data_info, data_store, use_cla_tmpl=False):
 
 
 def get_requested_files(cla, file_templates, input_locs, method="disk", **kwargs):
-
     # pylint: disable=too-many-locals
 
     """This function copies files from disk locations
@@ -391,7 +389,6 @@ def get_requested_files(cla, file_templates, input_locs, method="disk", **kwargs
         for fcst_hr in cla.fcst_hrs:
             logging.debug(f"Looking for fhr = {fcst_hr}")
             for loc, templates in locs_files:
-
                 templates = templates if isinstance(templates, list) else [templates]
 
                 logging.debug(f"Looking for files like {templates}")
@@ -417,7 +414,6 @@ def get_requested_files(cla, file_templates, input_locs, method="disk", **kwargs
                             retrieved = copy_file(input_loc, target_path, "cp")
 
                     elif method == "download":
-
                         if cla.check_file:
                             retrieved = check_file(input_loc)
 
@@ -471,7 +467,6 @@ def hsi_single_file(file_path, mode="ls"):
 
 
 def hpss_requested_files(cla, file_names, store_specs, members=-1, ens_group=-1):
-
     # pylint: disable=too-many-locals
 
     """This function interacts with the "hpss" protocol in a provided
@@ -505,7 +500,7 @@ def hpss_requested_files(cla, file_names, store_specs, members=-1, ens_group=-1)
     existing_archives = {}
 
     logging.debug(
-        f"Will try to look for: " f" {list(zip(archive_paths, archive_file_names))}"
+        f"Will try to look for:  {list(zip(archive_paths, archive_file_names))}"
     )
 
     existing_archives, which_archive = find_archive_files(
@@ -571,15 +566,14 @@ def hpss_requested_files(cla, file_names, store_specs, members=-1, ens_group=-1)
             unavailable = {}
             for existing_archive in existing_archives.values():
                 if store_specs.get("archive_format", "tar") == "zip":
-
                     # Get the entire file from HPSS
                     existing_archive = hsi_single_file(existing_archive, mode="get")
 
                     # Grab only the necessary files from the archive
-                    cmd = f'unzip -o {os.path.basename(existing_archive)} {" ".join(source_paths)}'
+                    cmd = f"unzip -o {os.path.basename(existing_archive)} {' '.join(source_paths)}"
 
                 else:
-                    cmd = f'htar -xvf {existing_archive} {" ".join(source_paths)}'
+                    cmd = f"htar -xvf {existing_archive} {' '.join(source_paths)}"
 
                 logging.info(f"Running command \n {cmd}")
 
@@ -671,7 +665,6 @@ def pair_locs_with_files(input_locs, file_templates, check_all):
     """
 
     if not check_all:
-
         # Make sure the length of both input_locs and
         # file_templates is consistent
 
@@ -681,7 +674,6 @@ def pair_locs_with_files(input_locs, file_templates, check_all):
 
         # Case 1 above
         elif len(file_templates) > len(input_locs) and len(input_locs) == 1:
-
             locs_files = list(zip(input_locs, [file_templates]))
         else:
             msg = "Please check your input locations and templates."
@@ -743,10 +735,10 @@ def write_summary_file(cla, data_store, file_templates):
         file_contents = dedent(
             f"""
             DATA_SRC={data_store}
-            EXTRN_MDL_CDATE={cla.cycle_date.strftime('%Y%m%d%H')}
+            EXTRN_MDL_CDATE={cla.cycle_date.strftime("%Y%m%d%H")}
             EXTRN_MDL_STAGING_DIR={output_path}
-            EXTRN_MDL_FNS=( {' '.join(files)} )
-            EXTRN_MDL_FHRS=( {' '.join([str(i) for i in cla.fcst_hrs])} )
+            EXTRN_MDL_FNS=( {" ".join(files)} )
+            EXTRN_MDL_FHRS=( {" ".join([str(i) for i in cla.fcst_hrs])} )
             """
         )
         logging.info(f"Contents: {file_contents}")
@@ -851,7 +843,6 @@ def main(argv):
             raise KeyError(msg)
 
         else:
-
             file_templates = get_file_templates(
                 cla,
                 known_data_info,
@@ -922,8 +913,8 @@ def parse_args(argv):
     description = (
         "Allowable Python templates for paths, urls, and file names are "
         " defined in the fill_template function and include:\n"
-        f'{"-"*120}\n'
-        f'{fill_template("null", dt.datetime.now(), templates_only=True)}'
+        f"{'-' * 120}\n"
+        f"{fill_template('null', dt.datetime.now(), templates_only=True)}"
     )
     parser = argparse.ArgumentParser(
         description=description,
@@ -1060,8 +1051,7 @@ def parse_args(argv):
     # Check required arguments for various conditions
     if not args.ics_or_lbcs and args.file_set in ["anl", "fcst"]:
         raise argparse.ArgumentTypeError(
-            f"--ics_or_lbcs is a required "
-            f"argument when --file_set = {args.file_set}"
+            f"--ics_or_lbcs is a required argument when --file_set = {args.file_set}"
         )
 
     # Check valid arguments for various conditions

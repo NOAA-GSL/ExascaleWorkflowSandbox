@@ -100,9 +100,7 @@ def create_provider(config: Dict[str, Any]) -> ExecutionProvider:
             account=config.get("account"),
             walltime=config.get("walltime", "00:10:00"),
             worker_init="\n".join(config.get("environment", [])),
-            launcher=(
-                SimpleLauncher() if config.get("mpi", False) else SrunLauncher()
-            ),
+            launcher=(SimpleLauncher() if config.get("mpi", False) else SrunLauncher()),
         )
     elif provider == "pbspro":
         return PBSProProvider(
@@ -128,9 +126,7 @@ def create_provider(config: Dict[str, Any]) -> ExecutionProvider:
             max_blocks=config.get("max_blocks", 1),
             worker_init="\n".join(config.get("environment", [])),
             launcher=(
-                SimpleLauncher()
-                if config.get("mpi", False)
-                else SingleNodeLauncher()
+                SimpleLauncher() if config.get("mpi", False) else SingleNodeLauncher()
             ),
         )
 

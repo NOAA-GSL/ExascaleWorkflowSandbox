@@ -7,7 +7,6 @@ from chiltepin.tasks import bash_task, join_task
 
 
 class MPAS:
-
     def __init__(
         self,
         environment="",
@@ -126,7 +125,7 @@ class MPAS:
             export PATH=$PATH:.
             uw mpas_init provisioned_rundir --cycle {cycle_str} \
                --config-file {config_path} --key-path {key_path} --verbose
-            cd {expt_config[key_path]['mpas_init']['rundir']}
+            cd {expt_config[key_path]["mpas_init"]["rundir"]}
             echo "Run Command: '$PARSL_MPI_PREFIX {self.install_path}/mpas/{self.tag}/exe/init_atmosphere_model'"
             $PARSL_MPI_PREFIX --overcommit {self.install_path}/mpas/{self.tag}/exe/init_atmosphere_model
             echo Completed at $(date)
@@ -157,7 +156,7 @@ class MPAS:
             export PATH=$PATH:.
             uw mpas provisioned_rundir --cycle {cycle_str} \
                 --config-file {config_path} --key-path {key_path} --verbose
-            cd {expt_config[key_path]['mpas']['rundir']}
+            cd {expt_config[key_path]["mpas"]["rundir"]}
             echo "Run Command: '$PARSL_MPI_PREFIX {self.install_path}/mpas/{self.tag}/exe/atmosphere_model'"
             $PARSL_MPI_PREFIX --overcommit {self.install_path}/mpas/{self.tag}/exe/atmosphere_model
             echo Completed at $(date)
