@@ -279,10 +279,8 @@ def configure(
     """Configure a Globus Compute Endpoint
 
     This is a thin wrapper around the globus-compute-endpoint configure command.
-    However, only multi-user endpoints are supported. Therefore, the configured
-    endpoint will always be a multi-user endpoint. Additional configuration
-    steps, usually done manually by the user after configuration, are taken to
-    hide complexity from the user.
+    Additional configuration steps, usually done manually by the user after
+    configuration, are taken to hide complexity from the user.
 
     Parameters
     ----------
@@ -517,9 +515,9 @@ def start(
             # Second child (grandchild) - this becomes the daemon
             # Redirect all output to /dev/null
             devnull = os.open(os.devnull, os.O_RDWR)
-            os.dup2(devnull, sys.stdin.fileno())
-            os.dup2(devnull, sys.stdout.fileno())
-            os.dup2(devnull, sys.stderr.fileno())
+            os.dup2(devnull, 0)  # Redirect stdin to /dev/null
+            os.dup2(devnull, 1)  # Redirect stdout to /dev/null
+            os.dup2(devnull, 2)  # Redirect stderr to /dev/null
             if devnull > 2:
                 os.close(devnull)
             # Execute the endpoint command
@@ -597,8 +595,19 @@ def stop(
     while is_running(name, config_dir, timeout):
         time.sleep(1)
 
-    # Assert either the subprocess succeeded, or the endpoint stopped despite the error
-    assert returncode == 0 or not is_running(name, config_dir, timeout), output
+    # If the subprocess failed, only tolerate the known ChildProcessError/psutil case
+    if returncode not in (0, None):
+        # Non-zero return code from globus-compute-endpoint stop
+        if "ChildProcessError" not in (output or ""):
+            raise RuntimeError(
+                f"Failed to stop endpoint '{name}' (return code {returncode}): {output}"
+            )
+    elif returncode is None:
+        # SubprocessError occurred; only tolderate if it matches the known benign case
+        if "ChildProcessError" not in (output or ""):
+            raise RuntimeError(
+                f"Failed to stop endpoint '{name}' due to unexpected subprocess error: {output}"
+            )
 
 
 def delete(
@@ -655,6 +664,9 @@ def delete(
             )
         assert p.returncode == 0, p.stdout
     except subprocess.SubprocessError:
-        # If subprocess fails but the endpoint was actually deleted, that's ok
-        # The deletion is verified by the test checking the directory is gone
-        pass
+        # If subprocess fails under pytest due to the known psutil/pytest interaction,
+        # we tolerate it and let the tests verify that the endpoint was deleted.
+        if "PYTEST_CURRENT_TEST" in os.environ:
+            return
+        # Outside of pytest, re-raise so callers see that deletion did not complete.
+        raise

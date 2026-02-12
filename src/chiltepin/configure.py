@@ -119,7 +119,7 @@ def create_provider(config: Dict[str, Any]) -> ExecutionProvider:
                 SimpleLauncher() if config.get("mpi", False) else MpiExecLauncher()
             ),
         )
-    else:  # localhost
+    elif provider == "localhost":
         return LocalProvider(
             init_blocks=config.get("init_blocks", 0),
             min_blocks=config.get("min_blocks", 0),
@@ -129,6 +129,8 @@ def create_provider(config: Dict[str, Any]) -> ExecutionProvider:
                 SimpleLauncher() if config.get("mpi", False) else SingleNodeLauncher()
             ),
         )
+    else:
+        raise ValueError(f"Unsupported provider: {provider}")
 
 
 def create_htex_executor(name: str, config: Dict[str, Any]) -> HighThroughputExecutor:

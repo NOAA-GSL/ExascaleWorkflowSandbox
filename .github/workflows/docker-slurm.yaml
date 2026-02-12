@@ -17,11 +17,9 @@ jobs:
       -
         name: Format Check
         run:  |
-          pip install flake8 black isort
-          flake8 src tests
-          black src tests --check --diff
-          isort src tests --check --diff --profile black
-
+          pip install ruff
+          ruff check
+          ruff format --check --diff .
 
   build-and-test-chiltepin:
     runs-on: ubuntu2204-16c-64g-600ssd
