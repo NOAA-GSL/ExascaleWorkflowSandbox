@@ -327,9 +327,11 @@ def configure(
     with open(config_path / "user_config_template.yaml.j2", "w") as f:
         f.write(multi_endpoint_template)
 
-    # Capture the required user environment PATH
+    # Capture the required system PATH for the endpoint environment.
+    # Do not capture custom user settings set in shell init scripts (e.g., .bashrc)
+    # since those may not be applicable to the endpoint environment and could cause issues.
     p = subprocess.run(
-        ["env", "-i", "HOME=$HOME", "bash", "-l", "-c", "echo $PATH"],
+        ["env", "-i", "HOME=foobar", "bash", "-l", "-c", "echo $PATH"],
         capture_output=True,
         text=True,
         start_new_session=True,
@@ -349,7 +351,7 @@ def configure(
 def show(
     config_dir: Optional[str] = None,
     timeout: Optional[int] = None,
-) -> Dict[str, str]:
+) -> Dict[str, Dict[str, str]]:
     """Return a list of configured Globus Compute Endpoints
 
     This is a thin wrapper around the globus-compute-endpoint list command.
@@ -370,7 +372,7 @@ def show(
     Returns
     -------
 
-    Dict[str, str]
+    Dict[str, Dict[str, str]]
     """
     # Build the globus-compute-endpoint command to run
     command = ["globus-compute-endpoint"]
@@ -582,7 +584,7 @@ def stop(
     command.append("stop")
     command.append(name)
 
-    subprocess.run(
+    p = subprocess.run(
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -590,6 +592,14 @@ def stop(
         timeout=timeout,
         start_new_session=True,
     )
+
+    # Check for success unless running under pytest
+    # NOTE: pytest interferes with psutil and causes ChildProcessError to be raised even when
+    # the command succeeds, so we skip the check when running under pytest. Either way, we still
+    # verify that the endpoint eventually enters the "Stopped" state in the following loop,
+    # which will raise an error if the command did not succeed in stopping the endpoint.
+    if "PYTEST_CURRENT_TEST" not in os.environ:
+        assert p.returncode == 0, p.stdout
 
     # Wait for endpoint to enter "Stopped" state
     start_time = time.time()
@@ -638,7 +648,7 @@ def delete(
     command.append("--force")
     command.append(name)
 
-    subprocess.run(
+    p = subprocess.run(
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -646,6 +656,14 @@ def delete(
         timeout=timeout,
         start_new_session=True,
     )
+
+    # Check for success unless running under pytest
+    # NOTE: pytest interferes with psutil and causes ChildProcessError to be raised even when
+    # the command succeeds, so we skip the check when running under pytest. Either way, we still
+    # verify that the endpoint eventually gets deleted in the following loop,
+    # which will raise an error if the command did not succeed in deleting the endpoint.
+    if "PYTEST_CURRENT_TEST" not in os.environ:
+        assert p.returncode == 0, p.stdout
 
     # Wait for endpoint to disappear from the listing
     start_time = time.time()

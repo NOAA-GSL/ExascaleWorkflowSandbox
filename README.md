@@ -29,8 +29,7 @@ This software can be installed on Linux systems.  MacOS is not currently
 supported.  It can be used, however, on Macs in a container.  See below for
 instructions for building and using the Docker container.
 
-The recommended method for installation is to use a Python venv if
-Python >= 3.9 is available.
+The recommended method for installation is to use a Python venv.
 
 ```
 python -m venv .chiltepin
