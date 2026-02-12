@@ -18,11 +18,9 @@ jobs:
       -
         name: Format Check
         run:  |
-          pip install flake8 black isort
-          flake8 apps/mpas/bin
-          black apps/mpas/bin --check --diff
-          isort apps/mpas/bin --check --diff --profile black
-
+          pip install ruff
+          ruff check apps/mpas/bin
+          ruff format --check --diff apps/mpas/bin
 
   test-mpas-app-amd64:
     if: ${{ github.event.label.name == 'Test-MPAS-App' }}
@@ -74,7 +72,7 @@ jobs:
         name: Install chiltepin package
         run: |
           docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
-          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip --use-deprecated=legacy-resolver install -e .[test]"
+          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e .[test]"
       -
         name: Run mpas workflow
         run: |
@@ -172,7 +170,7 @@ jobs:
         name: Install chiltepin package
         run: |
           docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
-          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip --use-deprecated=legacy-resolver install -e ."
+          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e ."
       -
         name: Run mpas workflow
         run: |
