@@ -626,7 +626,7 @@ def stop(
         assert p.returncode == 0, p.stdout
 
     # Wait for endpoint to enter "Stopped" state
-    while is_running(name, config_dir, timeout):
+    while is_running(name, config_dir):
         if timeout is not None:
             elapsed = time.time() - start_time
             if elapsed > timeout:
@@ -699,7 +699,7 @@ def delete(
         assert p.returncode == 0, p.stdout
 
     # Wait for endpoint to disappear from the listing
-    while exists(name, config_dir, timeout):
+    while exists(name, config_dir):
         if timeout is not None:
             elapsed = time.time() - start_time
             if elapsed > timeout:
