@@ -344,7 +344,7 @@ def configure(
     )
     assert p.returncode == 0, p.stderr
     login_path = p.stdout.strip()
-    chiltepin_path = pathlib.Path(sys.argv[0]).parent.resolve()
+    chiltepin_path = pathlib.Path(sys.executable).parent.resolve()
 
     # Set the custom user environment path configuration for the endpoint
     with open(config_path / "user_environment.yaml", "a") as f:
@@ -557,11 +557,22 @@ def start(
 
     # Wait for endpoint to enter "Running" state
     start_time = time.time()
-    while not is_running(name, config_dir):
-        if timeout is not None and (time.time() - start_time) > timeout:
-            raise TimeoutError(
-                f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to start"
-            )
+    while True:
+        # Calculate remaining timeout for this iteration
+        if timeout is not None:
+            elapsed = time.time() - start_time
+            if elapsed > timeout:
+                raise TimeoutError(
+                    f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to start"
+                )
+            remaining_timeout = timeout - elapsed
+        else:
+            remaining_timeout = None
+
+        # Check if endpoint is running, passing remaining timeout to prevent hanging
+        if is_running(name, config_dir, remaining_timeout):
+            break
+
         time.sleep(1)
 
 
@@ -626,13 +637,22 @@ def stop(
         assert p.returncode == 0, p.stdout
 
     # Wait for endpoint to enter "Stopped" state
-    while is_running(name, config_dir):
+    while True:
+        # Calculate remaining timeout for this iteration
         if timeout is not None:
             elapsed = time.time() - start_time
             if elapsed > timeout:
                 raise TimeoutError(
                     f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to stop"
                 )
+            remaining_timeout = timeout - elapsed
+        else:
+            remaining_timeout = None
+
+        # Check if endpoint is still running, passing remaining timeout to prevent hanging
+        if not is_running(name, config_dir, remaining_timeout):
+            break
+
         time.sleep(1)
 
 
@@ -699,11 +719,20 @@ def delete(
         assert p.returncode == 0, p.stdout
 
     # Wait for endpoint to disappear from the listing
-    while exists(name, config_dir):
+    while True:
+        # Calculate remaining timeout for this iteration
         if timeout is not None:
             elapsed = time.time() - start_time
             if elapsed > timeout:
                 raise TimeoutError(
                     f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to be deleted"
                 )
+            remaining_timeout = timeout - elapsed
+        else:
+            remaining_timeout = None
+
+        # Check if endpoint still exists, passing remaining timeout to prevent hanging
+        if not exists(name, config_dir, remaining_timeout):
+            break
+
         time.sleep(1)
