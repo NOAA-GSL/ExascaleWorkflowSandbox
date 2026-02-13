@@ -1,5 +1,6 @@
 import os
 import pathlib
+import platform
 import re
 import subprocess
 import sys
@@ -280,6 +281,11 @@ def configure(
         Number of seconds to wait for the command to complete before timing out.
         Default is None, meaning the command will never time out.
     """
+    if platform.system() == "Windows":
+        raise NotImplementedError(
+            "Globus Compute endpoints are not supported on Windows"
+        )
+
     # Build the globus-compute-endpoint command to run
     command = ["globus-compute-endpoint"]
     if config_dir:
@@ -499,6 +505,11 @@ def start(
         Number of seconds to wait for the command to complete before timing out
         Default is None, meaning the command will never time out.
     """
+    if platform.system() == "Windows":
+        raise NotImplementedError(
+            "Globus Compute endpoints are not supported on Windows"
+        )
+
     # Make sure we are logged in
     if login_required():
         raise RuntimeError("Chiltepin login is required")
@@ -577,6 +588,11 @@ def stop(
         Number of seconds to wait for the command to complete before timing out
         Default is None, meaning the command will never time out.
     """
+    if platform.system() == "Windows":
+        raise NotImplementedError(
+            "Globus Compute endpoints are not supported on Windows"
+        )
+
     # Make sure we are logged in
     if login_required():
         raise RuntimeError("Chiltepin login is required")
@@ -643,6 +659,11 @@ def delete(
         Number of seconds to wait for the command to complete before timing out
         Default is None, meaning the command will never time out.
     """
+    if platform.system() == "Windows":
+        raise NotImplementedError(
+            "Globus Compute endpoints are not supported on Windows"
+        )
+
     # Make sure we are logged in
     if login_required():
         raise RuntimeError("Chiltepin login is required")
