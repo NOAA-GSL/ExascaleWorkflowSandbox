@@ -545,14 +545,19 @@ def start(
         os.waitpid(pid, 0)
 
     # Wait for endpoint to enter "Running" state
+    start_time = time.time()
     while not is_running(name, config_dir):
+        if timeout is not None and (time.time() - start_time) > timeout:
+            raise TimeoutError(
+                f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to start"
+            )
         time.sleep(1)
 
 
 def stop(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[int] = 30,
+    timeout: Optional[int] = None,
 ):
     """Stop the specified Globus Compute Endpoint
 
@@ -570,7 +575,7 @@ def stop(
 
     timeout: int | None
         Number of seconds to wait for the command to complete before timing out
-        Default is 30 seconds.
+        Default is None, meaning the command will never time out.
     """
     # Make sure we are logged in
     if login_required():
@@ -583,6 +588,9 @@ def stop(
         command.append(f"{os.path.abspath(config_dir)}")
     command.append("stop")
     command.append(name)
+
+    # Track elapsed time to enforce timeout across both subprocess and wait loop
+    start_time = time.time()
 
     p = subprocess.run(
         command,
@@ -602,19 +610,20 @@ def stop(
         assert p.returncode == 0, p.stdout
 
     # Wait for endpoint to enter "Stopped" state
-    start_time = time.time()
     while is_running(name, config_dir, timeout):
-        if timeout is not None and (time.time() - start_time) > timeout:
-            raise TimeoutError(
-                f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to stop"
-            )
+        if timeout is not None:
+            elapsed = time.time() - start_time
+            if elapsed > timeout:
+                raise TimeoutError(
+                    f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to stop"
+                )
         time.sleep(1)
 
 
 def delete(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[int] = 30,
+    timeout: Optional[int] = None,
 ):
     """Delete the specified Globus Compute Endpoint
 
@@ -630,9 +639,9 @@ def delete(
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
-    timeout: int
+    timeout: int | None
         Number of seconds to wait for the command to complete before timing out
-        Default is 30 seconds.
+        Default is None, meaning the command will never time out.
     """
     # Make sure we are logged in
     if login_required():
@@ -647,6 +656,9 @@ def delete(
     command.append("--yes")
     command.append("--force")
     command.append(name)
+
+    # Track elapsed time to enforce timeout across both subprocess and wait loop
+    start_time = time.time()
 
     p = subprocess.run(
         command,
@@ -666,10 +678,11 @@ def delete(
         assert p.returncode == 0, p.stdout
 
     # Wait for endpoint to disappear from the listing
-    start_time = time.time()
     while exists(name, config_dir, timeout):
-        if timeout is not None and (time.time() - start_time) > timeout:
-            raise TimeoutError(
-                f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to be deleted"
-            )
+        if timeout is not None:
+            elapsed = time.time() - start_time
+            if elapsed > timeout:
+                raise TimeoutError(
+                    f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to be deleted"
+                )
         time.sleep(1)

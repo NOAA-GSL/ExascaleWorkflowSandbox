@@ -57,9 +57,9 @@ def test_endpoint_list_nonempty_initialized():
 def test_endpoint_start():
     pwd = pathlib.Path(__file__).parent.resolve()
     # Start an endpoint without a config_dir
-    endpoint.start("foo")
+    endpoint.start("foo", timeout=30)
     # Start an endpoint with a config_dir
-    endpoint.start("bar", config_dir=f"{pwd}/.globus_compute")
+    endpoint.start("bar", config_dir=f"{pwd}/.globus_compute", timeout=30)
     # Verify they are running
     ep_list = endpoint.show()
     assert ep_list["foo"]["state"] == "Running"
@@ -72,9 +72,9 @@ def test_endpoint_start():
 def test_endpoint_stop():
     pwd = pathlib.Path(__file__).parent.resolve()
     # Stop an endpoint without a config_dir
-    endpoint.stop("foo")
+    endpoint.stop("foo", timeout=30)
     # Stop an endpoint with a config_dir
-    endpoint.stop("bar", config_dir=f"{pwd}/.globus_compute")
+    endpoint.stop("bar", config_dir=f"{pwd}/.globus_compute", timeout=30)
     # Verify they are stopped
     ep_list = endpoint.show()
     assert ep_list["foo"]["state"] == "Stopped"
@@ -87,9 +87,9 @@ def test_endpoint_stop():
 def test_endpoint_delete():
     pwd = pathlib.Path(__file__).parent.resolve()
     # Delete an endpoint without a config_dir
-    endpoint.delete("foo")
+    endpoint.delete("foo", timeout=30)
     # Delete an endpoint with a config_dir
-    endpoint.delete("bar", config_dir=f"{pwd}/.globus_compute")
+    endpoint.delete("bar", config_dir=f"{pwd}/.globus_compute", timeout=30)
     # Verify they are deleted
     assert not os.path.exists(f"{os.environ['HOME']}/.globus_compute/foo")
     assert not os.path.exists(f"{pwd}/.globus_compute/bar")
