@@ -242,6 +242,7 @@ def transfer(
         else:
             raise Exception(err)
 
+
 def delete(
     src_ep: str,
     src_path: str,
