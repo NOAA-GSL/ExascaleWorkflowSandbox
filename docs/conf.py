@@ -3,7 +3,7 @@
 # -- Project information
 
 project = "ExascaleWorkflowSandbox"
-copyright = "2024, Christopher W Harrop"
+copyright = "2024-2026, Christopher W Harrop"
 author = "Christopher W Harrop"
 
 release = "0.1"

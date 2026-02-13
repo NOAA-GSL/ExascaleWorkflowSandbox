@@ -171,14 +171,14 @@ jobs:
         run: |
           docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
           docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e ."
-      # -
-      #   name: Run mpas workflow
-      #   run: |
-      #     docker exec frontend bash -l -c "cd work; source .chiltepin/bin/activate; cd apps/mpas/bin ; python experiment.py ../config/user_config.yaml"
-      #     docker exec frontend bash -l -c "cd work/apps/mpas/experiments/test ; ls -lrt ; tail 2023091500/forecast/log.atmosphere.0000.out"
+      -
+        name: Run mpas workflow
+        run: |
+          docker exec frontend bash -l -c "cd work; source .chiltepin/bin/activate; cd apps/mpas/bin ; python experiment.py ../config/user_config.yaml"
+          docker exec frontend bash -l -c "cd work/apps/mpas/experiments/test ; ls -lrt ; tail 2023091500/forecast/log.atmosphere.0000.out"
       -
         name: Debug session
-        # if: ${{ failure() }}
+        if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 60
         with:
