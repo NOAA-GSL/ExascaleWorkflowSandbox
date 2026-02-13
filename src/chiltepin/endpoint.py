@@ -552,7 +552,7 @@ def start(
 def stop(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[int] = 10,
+    timeout: Optional[int] = 30,
 ):
     """Stop the specified Globus Compute Endpoint
 
@@ -570,7 +570,7 @@ def stop(
 
     timeout: int | None
         Number of seconds to wait for the command to complete before timing out
-        Default is 10 seconds.
+        Default is 30 seconds.
     """
     # Make sure we are logged in
     if login_required():
@@ -614,7 +614,7 @@ def stop(
 def delete(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[int] = 10,
+    timeout: Optional[int] = 30,
 ):
     """Delete the specified Globus Compute Endpoint
 
@@ -632,7 +632,7 @@ def delete(
 
     timeout: int
         Number of seconds to wait for the command to complete before timing out
-        Default is 10 seconds.
+        Default is 30 seconds.
     """
     # Make sure we are logged in
     if login_required():
