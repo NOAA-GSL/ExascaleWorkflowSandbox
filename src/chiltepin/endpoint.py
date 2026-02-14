@@ -17,14 +17,18 @@ from globus_compute_sdk.sdk.web_client import WebClient
 from globus_sdk import ClientApp, GlobusApp, TransferClient, UserApp
 from globus_sdk.gare import GlobusAuthorizationParameters
 
-endpoint_template = """# This is the default user-template provided with newly-configured Multi-User
-# endpoints.  User endpoints generate a user-endpoint-specific configuration by
-# processing this YAML file as a Jinja template against user-provided
+endpoint_template = """# This is the default user-endpoint-process (UEP) template provided with
+# newly-configured endpoints.  Endpoints generate a UEP-specific configuration
+# by processing this YAML file as a Jinja template against SDK-provided (user)
 # variables -- please modify this template to suit your site's requirements.
 #
-# Optionally, you can define a JSON schema for the user-provided variables in a
-# file named `user_config_schema.json` within the same directory. The variables
-# will be validated against the schema before rendering this template.
+# As an optional security and user-debugging aid, consider also specifying a
+# JSON schema for the user-provided variables.  If `user_config_schema.json`
+# exists within the same directory, then before starting the UEP, the MEP will
+# validate the variables against the schema before rendering.  This provides
+# an administrative peace of mind that users cannot specify invalid arguments.
+# From a usability standpoint, however, it also can make invalid values
+# prominently visible to users.
 #
 # For more information, please see the `user_endpoint_config` in Globus Compute
 # SDK's Executor.
@@ -352,10 +356,12 @@ def configure(
 
     # Capture the required system PATH for the endpoint environment.
     # Set $HOME to an empty temporary directory to avoid capturing user-specific settings
-    # that could cause issues in the endpoint environment.  NOTE: Yes, this is a hack, but
-    # it avoids the much more complex problem of trying to parse out which PATH settings are
-    # user-specific vs system-wide.  Use a temporary directory for HOME to avoid security
-    # issues with /tmp
+    # that could cause issues in the endpoint environment.  Use a temporary directory for
+    # $HOME to avoid security issues with /tmp. Providing an empty $HOME is the only way
+    # to reliably capture a clean PATH that doesn't include user-specific directories.
+    # NOTE: This may fail on systems with badly written system init scripts that attempt
+    # to source user-specific files without checking for their existence first, but this
+    # scenario is very unlikely and we will accept that risk until we have a better solution.
     temp_home = tempfile.mkdtemp(prefix="chiltepin_home_")
     try:
         p = subprocess.run(
@@ -703,22 +709,15 @@ def stop(
     # Track elapsed time to enforce timeout across both subprocess and wait loop
     start_time = time.time()
 
-    p = subprocess.run(
+    p = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=timeout,
         start_new_session=True,
     )
-
-    # Check for success unless running under pytest
-    # NOTE: pytest interferes with psutil and causes ChildProcessError to be raised even when
-    # the command succeeds, so we skip the check when running under pytest. Either way, we still
-    # verify that the endpoint eventually enters the "Stopped" state in the following loop,
-    # which will raise an error if the command did not succeed in stopping the endpoint.
-    if "PYTEST_CURRENT_TEST" not in os.environ:
-        assert p.returncode == 0, p.stdout
+    p.wait(timeout=timeout)
+    assert p.returncode == 0, p.stdout
 
     # Wait for endpoint to enter "Stopped" state
     while True:
@@ -785,22 +784,15 @@ def delete(
     # Track elapsed time to enforce timeout across both subprocess and wait loop
     start_time = time.time()
 
-    p = subprocess.run(
+    p = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=timeout,
         start_new_session=True,
     )
-
-    # Check for success unless running under pytest
-    # NOTE: pytest interferes with psutil and causes ChildProcessError to be raised even when
-    # the command succeeds, so we skip the check when running under pytest. Either way, we still
-    # verify that the endpoint eventually gets deleted in the following loop,
-    # which will raise an error if the command did not succeed in deleting the endpoint.
-    if "PYTEST_CURRENT_TEST" not in os.environ:
-        assert p.returncode == 0, p.stdout
+    p.wait(timeout=timeout)
+    assert p.returncode == 0, p.stdout
 
     # Wait for endpoint to disappear from the listing
     while True:
