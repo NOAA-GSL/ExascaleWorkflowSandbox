@@ -258,7 +258,7 @@ def logout():
 def configure(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[int] = None,
+    timeout: Optional[float] = None,
 ) -> bool:
     """Configure a Globus Compute Endpoint
 
@@ -277,7 +277,7 @@ def configure(
         is to be stored. If None (the default), then $HOME/.globus_compute
         is used
 
-    timeout: int | None
+    timeout: float | None
         Number of seconds to wait for the command to complete before timing out.
         Default is None, meaning the command will never time out.
     """
@@ -285,6 +285,9 @@ def configure(
         raise NotImplementedError(
             "Globus Compute endpoints are not supported on Windows"
         )
+
+    # Track elapsed time to enforce timeout across all operations
+    start_time = time.time()
 
     # Build the globus-compute-endpoint command to run
     command = ["globus-compute-endpoint"]
@@ -333,6 +336,18 @@ def configure(
     with open(config_path / "user_config_template.yaml.j2", "w") as f:
         f.write(multi_endpoint_template)
 
+    # Calculate remaining timeout for this operation
+    # Ensure the second subprocess gets at least 1 second to complete even if
+    # the first subprocess consumed most of the timeout, since at this point
+    # the endpoint is mostly configured and we want to finish cleanly.
+    if timeout is not None:
+        elapsed = time.time() - start_time
+        remaining = timeout - elapsed
+        # Use the greater of 1 second or remaining time to ensure completion
+        remaining_timeout = max(1.0, remaining)
+    else:
+        remaining_timeout = None
+
     # Capture the required system PATH for the endpoint environment.
     # Do not capture custom user settings set in shell init scripts (e.g., .bashrc)
     # since those may not be applicable to the endpoint environment and could cause issues.
@@ -341,6 +356,7 @@ def configure(
         capture_output=True,
         text=True,
         start_new_session=True,
+        timeout=remaining_timeout,
     )
     assert p.returncode == 0, p.stderr
     login_path = p.stdout.strip()
@@ -356,7 +372,7 @@ def configure(
 
 def show(
     config_dir: Optional[str] = None,
-    timeout: Optional[int] = None,
+    timeout: Optional[float] = None,
 ) -> Dict[str, Dict[str, str]]:
     """Return a list of configured Globus Compute Endpoints
 
@@ -371,7 +387,7 @@ def show(
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
-    timeout: int | None
+    timeout: float | None
         Number of seconds to wait for the command to complete before timing out
         Default is None, meaning the command will never time out.
 
@@ -416,7 +432,7 @@ def show(
 def exists(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[int] = None,
+    timeout: Optional[float] = None,
 ) -> bool:
     """Return True if the endpoint exists, otherwise False
 
@@ -430,7 +446,7 @@ def exists(
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
-    timeout: int | None
+    timeout: float | None
         Number of seconds to wait for the command to complete before timing out.
         Default is None, meaning the command will never time out.
 
@@ -449,7 +465,7 @@ def exists(
 def is_running(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[int] = None,
+    timeout: Optional[float] = None,
 ) -> bool:
     """Return True if the endpoint is running, otherwise False
 
@@ -463,7 +479,7 @@ def is_running(
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
-    timeout: int | None
+    timeout: float | None
         Number of seconds to wait for the command to complete before timing out.
         Default is None, meaning the command will never time out.
 
@@ -485,7 +501,7 @@ def is_running(
 def start(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[int] = None,
+    timeout: Optional[float] = None,
 ):
     """Start the specified Globus Compute Endpoint
 
@@ -501,7 +517,7 @@ def start(
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
-    timeout: int | None
+    timeout: float | None
         Number of seconds to wait for the command to complete before timing out
         Default is None, meaning the command will never time out.
     """
@@ -579,7 +595,7 @@ def start(
 def stop(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[int] = None,
+    timeout: Optional[float] = None,
 ):
     """Stop the specified Globus Compute Endpoint
 
@@ -595,7 +611,7 @@ def stop(
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
-    timeout: int | None
+    timeout: float | None
         Number of seconds to wait for the command to complete before timing out
         Default is None, meaning the command will never time out.
     """
@@ -659,7 +675,7 @@ def stop(
 def delete(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[int] = None,
+    timeout: Optional[float] = None,
 ):
     """Delete the specified Globus Compute Endpoint
 
@@ -675,7 +691,7 @@ def delete(
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
-    timeout: int | None
+    timeout: float | None
         Number of seconds to wait for the command to complete before timing out
         Default is None, meaning the command will never time out.
     """
