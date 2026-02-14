@@ -210,7 +210,7 @@ ursa:
     compute:
       mpi: False
       provider: "slurm"
-      cores_per_node: 40
+      cores_per_node: 192
       nodes_per_block: 1
       exclusive: True
       partition: "u1-compute"
@@ -224,7 +224,7 @@ ursa:
       max_mpi_apps: 2
       mpi_launcher: "srun"
       provider: "slurm"
-      cores_per_node: 40
+      cores_per_node: 192
       nodes_per_block: 3
       exclusive: True
       partition: "u1-compute"
@@ -248,7 +248,7 @@ ursa:
       endpoint: "{{ compute_endpoint_id }}"
       mpi: False
       provider: "slurm"
-      cores_per_node: 40
+      cores_per_node: 192
       nodes_per_block: 1
       exclusive: True
       partition: "u1-compute"

@@ -2,8 +2,10 @@ import os
 import pathlib
 import platform
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from typing import Dict, Optional, Union
 
@@ -15,7 +17,7 @@ from globus_compute_sdk.sdk.web_client import WebClient
 from globus_sdk import ClientApp, GlobusApp, TransferClient, UserApp
 from globus_sdk.gare import GlobusAuthorizationParameters
 
-multi_endpoint_template = """# This is the default user-template provided with newly-configured Multi-User
+endpoint_template = """# This is the default user-template provided with newly-configured Multi-User
 # endpoints.  User endpoints generate a user-endpoint-specific configuration by
 # processing this YAML file as a Jinja template against user-provided
 # variables -- please modify this template to suit your site's requirements.
@@ -334,7 +336,7 @@ def configure(
 
     # Setup the user config jinja template
     with open(config_path / "user_config_template.yaml.j2", "w") as f:
-        f.write(multi_endpoint_template)
+        f.write(endpoint_template)
 
     # Calculate remaining timeout for this operation
     # Ensure the second subprocess gets at least 1 second to complete even if
@@ -349,17 +351,25 @@ def configure(
         remaining_timeout = None
 
     # Capture the required system PATH for the endpoint environment.
-    # Do not capture custom user settings set in shell init scripts (e.g., .bashrc)
-    # since those may not be applicable to the endpoint environment and could cause issues.
-    p = subprocess.run(
-        ["env", "-i", "HOME=/tmp", "bash", "-l", "-c", "echo $PATH"],
-        capture_output=True,
-        text=True,
-        start_new_session=True,
-        timeout=remaining_timeout,
-    )
-    assert p.returncode == 0, p.stderr
-    login_path = p.stdout.strip()
+    # Set $HOME to an empty temporary directory to avoid capturing user-specific settings
+    # that could cause issues in the endpoint environment.  NOTE: Yes, this is a hack, but
+    # it avoids the much more complex problem of trying to parse out which PATH settings are
+    # user-specific vs system-wide.  Use a temporary directory for HOME to avoid security
+    # issues with /tmp
+    temp_home = tempfile.mkdtemp(prefix="chiltepin_home_")
+    try:
+        p = subprocess.run(
+            ["env", "-i", f"HOME={temp_home}", "bash", "-l", "-c", "echo $PATH"],
+            capture_output=True,
+            text=True,
+            start_new_session=True,
+            timeout=remaining_timeout,
+        )
+        assert p.returncode == 0, p.stderr
+        login_path = p.stdout.strip()
+    finally:
+        # Clean up the temporary directory
+        shutil.rmtree(temp_home, ignore_errors=True)
     chiltepin_path = pathlib.Path(sys.executable).parent.resolve()
 
     # Set the custom user environment path configuration for the endpoint
@@ -538,6 +548,13 @@ def start(
     command.append("start")
     command.append(name)
 
+    # Create a temporary file to capture initial stderr for failure detection
+    temp_stderr = tempfile.NamedTemporaryFile(
+        mode="w+", prefix=f"chiltepin_start_{name}_", suffix=".err", delete=False
+    )
+    temp_stderr_path = temp_stderr.name
+    temp_stderr.close()
+
     # Run the command as a detached daemon process using double-fork
     # to completely disconnect from the parent process tree.
     # NOTE: subprocess.Popen with start_new_session=True does not work to
@@ -555,13 +572,20 @@ def start(
         pid2 = os.fork()
         if pid2 == 0:
             # Second child (grandchild) - this becomes the daemon
-            # Redirect all output to /dev/null
+            # Redirect stdin and stdout to /dev/null, but stderr to temp file
+            # so we can capture immediate failures
             devnull = os.open(os.devnull, os.O_RDWR)
             os.dup2(devnull, 0)  # Redirect stdin to /dev/null
             os.dup2(devnull, 1)  # Redirect stdout to /dev/null
-            os.dup2(devnull, 2)  # Redirect stderr to /dev/null
+            # Redirect stderr to temp file for failure detection
+            stderr_fd = os.open(
+                temp_stderr_path, os.O_WRONLY | os.O_CREAT | os.O_APPEND
+            )
+            os.dup2(stderr_fd, 2)
             if devnull > 2:
                 os.close(devnull)
+            if stderr_fd > 2:
+                os.close(stderr_fd)
             # Execute the endpoint command
             os.execvp(command[0], command)
         else:
@@ -573,23 +597,67 @@ def start(
 
     # Wait for endpoint to enter "Running" state
     start_time = time.time()
-    while True:
-        # Calculate remaining timeout for this iteration
-        if timeout is not None:
-            elapsed = time.time() - start_time
-            if elapsed > timeout:
-                raise TimeoutError(
-                    f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to start"
+    try:
+        while True:
+            # Calculate remaining timeout for this iteration
+            if timeout is not None:
+                elapsed = time.time() - start_time
+                if elapsed > timeout:
+                    # Check for error output before timing out
+                    error_msg = _read_startup_errors(temp_stderr_path)
+                    timeout_msg = f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to start"
+                    if error_msg:
+                        raise TimeoutError(
+                            f"{timeout_msg}\n\nStartup errors:\n{error_msg}"
+                        )
+                    raise TimeoutError(timeout_msg)
+                remaining_timeout = timeout - elapsed
+            else:
+                remaining_timeout = None
+
+            # Check if endpoint is running, passing remaining timeout to prevent hanging
+            if is_running(name, config_dir, remaining_timeout):
+                break
+
+            # Check for errors immediately - if the endpoint failed, report it
+            error_msg = _read_startup_errors(temp_stderr_path)
+            if error_msg:
+                raise RuntimeError(
+                    f"Endpoint '{name}' failed to start. Error output:\n{error_msg}"
                 )
-            remaining_timeout = timeout - elapsed
-        else:
-            remaining_timeout = None
 
-        # Check if endpoint is running, passing remaining timeout to prevent hanging
-        if is_running(name, config_dir, remaining_timeout):
-            break
+            time.sleep(1)
+    finally:
+        # Clean up temporary error file
+        try:
+            os.unlink(temp_stderr_path)
+        except OSError:
+            pass
 
-        time.sleep(1)
+
+def _read_startup_errors(stderr_path: str, max_size: int = 10240) -> str:
+    """Read initial error output from endpoint startup.
+
+    Parameters
+    ----------
+    stderr_path : str
+        Path to the temporary stderr file
+    max_size : int
+        Maximum number of bytes to read from the file
+
+    Returns
+    -------
+    str
+        Error content if any, empty string otherwise
+    """
+    try:
+        if os.path.exists(stderr_path) and os.path.getsize(stderr_path) > 0:
+            with open(stderr_path, "r") as f:
+                content = f.read(max_size)
+                return content.strip()
+    except (OSError, IOError):
+        pass
+    return ""
 
 
 def stop(
