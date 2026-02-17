@@ -8,7 +8,9 @@ def cli_list(config_dir=None):
     if ep_info:
         name_len = max(len(key) for key in ep_info)
         for name, props in ep_info.items():
-            print(f"{name:<{name_len}} {props['id']:<36} {props['state']}")
+            id = props.get("id") or "None"
+            status = props.get("status") or "Unknown"
+            print(f"{name:<{name_len}} {id:<36} {status}")
     else:
         print("No endpoints are configured")
 

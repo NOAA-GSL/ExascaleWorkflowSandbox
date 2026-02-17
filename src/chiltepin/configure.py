@@ -1,7 +1,8 @@
 from typing import Any, Dict, List, Optional
 
 import yaml
-from globus_compute_sdk import Client, Executor
+from globus_compute_sdk import Executor
+from globus_sdk import ComputeClientV2
 from parsl.config import Config
 from parsl.executors import GlobusComputeExecutor, HighThroughputExecutor, MPIExecutor
 from parsl.executors.base import ParslExecutor
@@ -227,7 +228,7 @@ def create_mpi_executor(
 def create_globus_compute_executor(
     name: str,
     config: Dict[str, Any],
-    client: Optional[Client] = None,
+    client: Optional[ComputeClientV2] = None,
 ) -> GlobusComputeExecutor:
     """Construct a GlobusComputeExecutor from the input configuration
 
@@ -259,7 +260,7 @@ def create_globus_compute_executor(
         "walltime":               "00:10:00"
         "environment":            []
 
-    client: Client | None
+    client: ComputeClientV2 | None
         The Globus Compute client to use for instantiating the GlobusComputeExecutor.
         If not specified, Globus Compute will instantiate and use a default client.
 
@@ -302,7 +303,7 @@ def create_globus_compute_executor(
 def create_executor(
     name: str,
     config: Dict[str, Any],
-    client: Optional[Client] = None,
+    client: Optional[ComputeClientV2] = None,
 ) -> ParslExecutor:
     """Create an Executor specified by the given resource configuration
 
@@ -315,7 +316,7 @@ def create_executor(
     config: Dict[str, Any]
         YAML configuration block that contains the resource's configuration
 
-    client: Client | None
+    client: ComputeClientV2 | None
         A Globus Compute client to use when instantiating Globus Compute resources.
         The default is None.  If None, one will be instantiated automatically for
         any Globus Compute resources in the configuration. Only applies to Globus
@@ -339,7 +340,7 @@ def create_executor(
 def load(
     config: Dict[str, Any],
     include: Optional[List[str]] = None,
-    client: Optional[Client] = None,
+    client: Optional[ComputeClientV2] = None,
 ) -> Config:
     """Return a Parsl Config initialized by a list of Executors created  from
     the input configuration dictionary.
@@ -359,7 +360,7 @@ def load(
         Otherwise the configurations for resources whose labels are in the
         list will be loaded.
 
-    client: Client | None
+    client: ComputeClientV2 | None
         A Globus Compute client to use when instantiating Globus Compute resources.
         The default is None.  If None, one will be instantiated automatically for
         any Globus Compute resources in the configuration.

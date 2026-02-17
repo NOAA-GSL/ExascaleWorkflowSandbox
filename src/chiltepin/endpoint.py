@@ -1,20 +1,22 @@
 import os
 import pathlib
 import platform
-import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
+from pathlib import Path
 from typing import Dict, Optional, Union
 
+import psutil
 import yaml
-from globus_compute_sdk import Client
+from globus_compute_endpoint.endpoint.config.utils import get_config
+from globus_compute_endpoint.endpoint.endpoint import Endpoint
 from globus_compute_sdk.sdk.auth.auth_client import ComputeAuthClient
 from globus_compute_sdk.sdk.auth.globus_app import get_globus_app
 from globus_compute_sdk.sdk.web_client import WebClient
-from globus_sdk import ClientApp, GlobusApp, TransferClient, UserApp
+from globus_sdk import ClientApp, ComputeClientV2, GlobusApp, TransferClient, UserApp
 from globus_sdk.gare import GlobusAuthorizationParameters
 
 endpoint_template = """# This is the default user-endpoint-process (UEP) template provided with
@@ -192,7 +194,7 @@ def get_chiltepin_apps() -> (GlobusApp, GlobusApp):
     return (compute_app, transfer_app)
 
 
-def login() -> Dict[str, Union[Client, TransferClient]]:
+def login() -> Dict[str, Union[ComputeClientV2, TransferClient]]:
     """Log in to the Chiltepin app
 
     This initiates the Globus login flow to log the user in to the Globus compute
@@ -204,13 +206,13 @@ def login() -> Dict[str, Union[Client, TransferClient]]:
     Returns
     -------
 
-    Dict[str, Client | TransferClient]
+    Dict[str, ComputeClientV2 | TransferClient]
     """
     # Get the Globus Apps for use in creating the clients
     compute_app, transfer_app = get_chiltepin_apps()
 
     # Initialize the compute client
-    compute_client = Client(app=compute_app)
+    compute_client = ComputeClientV2(app=compute_app)
 
     # Initialize the transfer client
     transfer_client = TransferClient(app=transfer_app)
@@ -303,15 +305,15 @@ def configure(
     command.append("configure")
     command.append(name)
 
-    p = subprocess.run(
+    p = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        timeout=timeout,
         start_new_session=True,
     )
-    assert p.returncode == 0, p.stdout
+    stdout, _ = p.communicate(timeout=timeout)
+    assert p.returncode == 0, stdout
 
     # Get the path to the globus compute endpoint configuration
     if config_dir:
@@ -329,6 +331,9 @@ def configure(
 
     # Set the display name
     yaml_config["display_name"] = name
+
+    # Enable debugging for the endpoint to help with troubleshooting
+    yaml_config["debug"] = True
 
     # Update the configuration with the new settings
     with open(config_path / "config.yaml", "w") as f:
@@ -364,15 +369,16 @@ def configure(
     # scenario is very unlikely and we will accept that risk until we have a better solution.
     temp_home = tempfile.mkdtemp(prefix="chiltepin_home_")
     try:
-        p = subprocess.run(
+        p = subprocess.Popen(
             ["env", "-i", f"HOME={temp_home}", "bash", "-l", "-c", "echo $PATH"],
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
             start_new_session=True,
-            timeout=remaining_timeout,
         )
-        assert p.returncode == 0, p.stderr
-        login_path = p.stdout.strip()
+        stdout, stderr = p.communicate(timeout=remaining_timeout)
+        assert p.returncode == 0, stderr
+        login_path = stdout.strip()
     finally:
         # Clean up the temporary directory
         shutil.rmtree(temp_home, ignore_errors=True)
@@ -388,12 +394,10 @@ def configure(
 
 def show(
     config_dir: Optional[str] = None,
-    timeout: Optional[float] = None,
 ) -> Dict[str, Dict[str, str]]:
-    """Return a list of configured Globus Compute Endpoints
+    """Return a dictionary of configured Globus Compute Endpoints
 
-    This is a thin wrapper around the globus-compute-endpoint list command.
-    The endpoint listing is returned as a dict with keys corresponding to
+    This returns endpoint information in a dict with keys corresponding to
     the endpoint names.
 
     Parameters
@@ -403,52 +407,23 @@ def show(
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
-    timeout: float | None
-        Number of seconds to wait for the command to complete before timing out
-        Default is None, meaning the command will never time out.
-
     Returns
     -------
 
     Dict[str, Dict[str, str]]
     """
-    # Build the globus-compute-endpoint command to run
-    command = ["globus-compute-endpoint"]
-    if config_dir:
-        command.append("-c")
-        command.append(f"{os.path.abspath(config_dir)}")
-    command.append("list")
 
-    p = subprocess.run(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        timeout=timeout,
-        start_new_session=True,
+    config_dir_path = (
+        Path(config_dir) if config_dir else Path.home() / ".globus_compute"
     )
-    assert p.returncode == 0, p.stdout
+    endpoint_info = Endpoint.get_endpoints(config_dir_path)
 
-    # Build a dictionary from the output and return it
-    endpoint_info = {}
-    endpoint_regex = re.compile(
-        r"\|\s+([0-9a-f\-]{36}|None)\s+\|\s+([^\|\s]+)\s+\|\s+([^\|\s]+)\s+\|"
-    )
-    for line in p.stdout.split("\n"):
-        match = endpoint_regex.search(line)
-        if match is not None:
-            assert match.group(1) == "None" or len(match.group(1)) == 36
-            endpoint_info[match.group(3)] = {
-                "id": match.group(1),
-                "state": match.group(2),
-            }
     return endpoint_info
 
 
 def exists(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[float] = None,
 ) -> bool:
     """Return True if the endpoint exists, otherwise False
 
@@ -462,17 +437,13 @@ def exists(
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
-    timeout: float | None
-        Number of seconds to wait for the command to complete before timing out.
-        Default is None, meaning the command will never time out.
-
     Returns
     -------
 
     bool
     """
     # Get the endpoint info
-    endpoints = show(config_dir, timeout)
+    endpoints = show(config_dir)
 
     # Return whether the endpoint exists in the listing
     return name in endpoints
@@ -481,7 +452,6 @@ def exists(
 def is_running(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[float] = None,
 ) -> bool:
     """Return True if the endpoint is running, otherwise False
 
@@ -495,23 +465,19 @@ def is_running(
         Path to endpoint configuration directory where endpoint information
         is stored. If None (the default), then $HOME/.globus_compute is used
 
-    timeout: float | None
-        Number of seconds to wait for the command to complete before timing out.
-        Default is None, meaning the command will never time out.
-
     Returns
     -------
 
     bool
     """
     # Get the endpoint info
-    endpoints = show(config_dir, timeout)
+    endpoints = show(config_dir)
 
     # Extract the endpoint record
     endpoint = endpoints.get(name, {})
 
     # Return whether the endpoint state is "Running"
-    return endpoint.get("state", None) == "Running"
+    return endpoint.get("status", None) == "Running"
 
 
 def start(
@@ -617,12 +583,9 @@ def start(
                             f"{timeout_msg}\n\nStartup errors:\n{error_msg}"
                         )
                     raise TimeoutError(timeout_msg)
-                remaining_timeout = timeout - elapsed
-            else:
-                remaining_timeout = None
 
             # Check if endpoint is running, passing remaining timeout to prevent hanging
-            if is_running(name, config_dir, remaining_timeout):
+            if is_running(name, config_dir):
                 break
 
             # Check for errors immediately - if the endpoint failed, report it
@@ -698,26 +661,15 @@ def stop(
     if login_required():
         raise RuntimeError("Chiltepin login is required")
 
-    # Build the globus-compute-endpoint command to run
-    command = ["globus-compute-endpoint"]
-    if config_dir:
-        command.append("-c")
-        command.append(f"{os.path.abspath(config_dir)}")
-    command.append("stop")
-    command.append(name)
+    # Get the path to the globus compute endpoint configuration
+    config_path = (
+        Path(config_dir) / name
+        if config_dir
+        else Path.home() / ".globus_compute" / name
+    )
 
     # Track elapsed time to enforce timeout across both subprocess and wait loop
     start_time = time.time()
-
-    p = subprocess.Popen(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        start_new_session=True,
-    )
-    p.wait(timeout=timeout)
-    assert p.returncode == 0, p.stdout
 
     # Wait for endpoint to enter "Stopped" state
     while True:
@@ -728,12 +680,16 @@ def stop(
                 raise TimeoutError(
                     f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to stop"
                 )
-            remaining_timeout = timeout - elapsed
-        else:
-            remaining_timeout = None
+
+        try:
+            Endpoint.stop_endpoint(config_path, get_config(config_path), remote=False)
+        except psutil.TimeoutExpired:
+            # Try one more time if we get a psutil timeout, since that can happen if the endpoint
+            # takes too long to shut down. The second attempt should always succeed.
+            Endpoint.stop_endpoint(config_path, get_config(config_path), remote=False)
 
         # Check if endpoint is still running, passing remaining timeout to prevent hanging
-        if not is_running(name, config_dir, remaining_timeout):
+        if not is_running(name, config_dir):
             break
 
         time.sleep(1)
@@ -771,28 +727,15 @@ def delete(
     if login_required():
         raise RuntimeError("Chiltepin login is required")
 
-    # Build the globus-compute-endpoint command to run
-    command = ["globus-compute-endpoint"]
-    if config_dir:
-        command.append("-c")
-        command.append(f"{os.path.abspath(config_dir)}")
-    command.append("delete")
-    command.append("--yes")
-    command.append("--force")
-    command.append(name)
+    # Get the path to the globus compute endpoint configuration
+    config_path = (
+        Path(config_dir) / name
+        if config_dir
+        else Path.home() / ".globus_compute" / name
+    )
 
     # Track elapsed time to enforce timeout across both subprocess and wait loop
     start_time = time.time()
-
-    p = subprocess.Popen(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        start_new_session=True,
-    )
-    p.wait(timeout=timeout)
-    assert p.returncode == 0, p.stdout
 
     # Wait for endpoint to disappear from the listing
     while True:
@@ -803,12 +746,13 @@ def delete(
                 raise TimeoutError(
                     f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to be deleted"
                 )
-            remaining_timeout = timeout - elapsed
-        else:
-            remaining_timeout = None
+
+        Endpoint.delete_endpoint(
+            config_path, get_config(config_path), force=True, ep_uuid=None
+        )
 
         # Check if endpoint still exists, passing remaining timeout to prevent hanging
-        if not exists(name, config_dir, remaining_timeout):
+        if not exists(name, config_dir):
             break
 
         time.sleep(1)

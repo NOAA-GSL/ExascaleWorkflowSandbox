@@ -48,10 +48,10 @@ def test_endpoint_list_nonempty_initialized():
     pwd = pathlib.Path(__file__).parent.resolve()
     # List endpoints without a config_dir
     ep_list = endpoint.show()
-    assert ep_list["foo"] == {"id": "None", "state": "Initialized"}
+    assert ep_list["foo"] == {"id": None, "status": "Initialized"}
     # List endpoints with a config_dir
     ep_list = endpoint.show(config_dir=f"{pwd}/.globus_compute")
-    assert ep_list["bar"] == {"id": "None", "state": "Initialized"}
+    assert ep_list["bar"] == {"id": None, "status": "Initialized"}
 
 
 def test_endpoint_start():
@@ -62,10 +62,10 @@ def test_endpoint_start():
     endpoint.start("bar", config_dir=f"{pwd}/.globus_compute", timeout=30)
     # Verify they are running
     ep_list = endpoint.show()
-    assert ep_list["foo"]["state"] == "Running"
+    assert ep_list["foo"]["status"] == "Running"
     assert len(ep_list["foo"]["id"]) == 36
     ep_list = endpoint.show(config_dir=f"{pwd}/.globus_compute")
-    assert ep_list["bar"]["state"] == "Running"
+    assert ep_list["bar"]["status"] == "Running"
     assert len(ep_list["bar"]["id"]) == 36
 
 
@@ -77,10 +77,10 @@ def test_endpoint_stop():
     endpoint.stop("bar", config_dir=f"{pwd}/.globus_compute", timeout=30)
     # Verify they are stopped
     ep_list = endpoint.show()
-    assert ep_list["foo"]["state"] == "Stopped"
+    assert ep_list["foo"]["status"] == "Stopped"
     assert len(ep_list["foo"]["id"]) == 36
     ep_list = endpoint.show(config_dir=f"{pwd}/.globus_compute")
-    assert ep_list["bar"]["state"] == "Stopped"
+    assert ep_list["bar"]["status"] == "Stopped"
     assert len(ep_list["bar"]["id"]) == 36
 
 
