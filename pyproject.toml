@@ -31,9 +31,6 @@ classifiers = [
 test = [
     "pytest",
     "ruff",
-    "pytest-flake8",
-    "pytest-black",
-    "pytest-isort",
 ]
 
 [project.scripts]

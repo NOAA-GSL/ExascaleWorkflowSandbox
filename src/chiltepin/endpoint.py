@@ -266,7 +266,6 @@ def logout():
 def configure(
     name: str,
     config_dir: Optional[str] = None,
-    timeout: Optional[float] = None,
 ) -> bool:
     """Configure a Globus Compute Endpoint
 
@@ -284,18 +283,11 @@ def configure(
         Path to endpoint configuration directory where endpoint information
         is to be stored. If None (the default), then $HOME/.globus_compute
         is used
-
-    timeout: float | None
-        Number of seconds to wait for the command to complete before timing out.
-        Default is None, meaning the command will never time out.
     """
     if platform.system() == "Windows":
         raise NotImplementedError(
             "Globus Compute endpoints are not supported on Windows"
         )
-
-    # Track elapsed time to enforce timeout across all operations
-    start_time = time.time()
 
     # Build the globus-compute-endpoint command to run
     command = ["globus-compute-endpoint"]
@@ -312,7 +304,7 @@ def configure(
         text=True,
         start_new_session=True,
     )
-    stdout, _ = p.communicate(timeout=timeout)
+    stdout, _ = p.communicate(timeout=5.0)
     assert p.returncode == 0, stdout
 
     # Get the path to the globus compute endpoint configuration
@@ -347,18 +339,6 @@ def configure(
     with open(config_path / "user_config_template.yaml.j2", "w") as f:
         f.write(endpoint_template)
 
-    # Calculate remaining timeout for this operation
-    # Ensure the second subprocess gets at least 1 second to complete even if
-    # the first subprocess consumed most of the timeout, since at this point
-    # the endpoint is mostly configured and we want to finish cleanly.
-    if timeout is not None:
-        elapsed = time.time() - start_time
-        remaining = timeout - elapsed
-        # Use the greater of 1 second or remaining time to ensure completion
-        remaining_timeout = max(1.0, remaining)
-    else:
-        remaining_timeout = None
-
     # Capture the required system PATH for the endpoint environment.
     # Set $HOME to an empty temporary directory to avoid capturing user-specific settings
     # that could cause issues in the endpoint environment.  Use a temporary directory for
@@ -376,7 +356,7 @@ def configure(
             text=True,
             start_new_session=True,
         )
-        stdout, stderr = p.communicate(timeout=remaining_timeout)
+        stdout, stderr = p.communicate(timeout=3.0)
         assert p.returncode == 0, stderr
         login_path = stdout.strip()
     finally:
@@ -671,6 +651,13 @@ def stop(
     # Track elapsed time to enforce timeout across both subprocess and wait loop
     start_time = time.time()
 
+    try:
+        Endpoint.stop_endpoint(config_path, get_config(config_path), remote=False)
+    except psutil.TimeoutExpired:
+        # Try one more time if we get a psutil timeout, since that can happen if the endpoint
+        # enters a bad state and fails to stop within the expected time.
+        Endpoint.stop_endpoint(config_path, get_config(config_path), remote=False)
+
     # Wait for endpoint to enter "Stopped" state
     while True:
         # Calculate remaining timeout for this iteration
@@ -680,13 +667,6 @@ def stop(
                 raise TimeoutError(
                     f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to stop"
                 )
-
-        try:
-            Endpoint.stop_endpoint(config_path, get_config(config_path), remote=False)
-        except psutil.TimeoutExpired:
-            # Try one more time if we get a psutil timeout, since that can happen if the endpoint
-            # takes too long to shut down. The second attempt should always succeed.
-            Endpoint.stop_endpoint(config_path, get_config(config_path), remote=False)
 
         # Check if endpoint is still running, passing remaining timeout to prevent hanging
         if not is_running(name, config_dir):
@@ -734,8 +714,22 @@ def delete(
         else Path.home() / ".globus_compute" / name
     )
 
-    # Track elapsed time to enforce timeout across both subprocess and wait loop
+    # Track elapsed time to enforce timeout
     start_time = time.time()
+
+    # Get the endpoint config
+    try:
+        ep_config = None
+        force = False
+        ep_config = get_config(config_path)
+    except Exception:
+        force = True
+
+    # Delete the endpoint
+    try:
+        Endpoint.delete_endpoint(config_path, ep_config, force=force, ep_uuid=None)
+    except Exception as e:
+        raise RuntimeError(f"Error deleting endpoint: {e}")
 
     # Wait for endpoint to disappear from the listing
     while True:
@@ -747,11 +741,7 @@ def delete(
                     f"Timeout of {timeout}s exceeded while waiting for endpoint '{name}' to be deleted"
                 )
 
-        Endpoint.delete_endpoint(
-            config_path, get_config(config_path), force=True, ep_uuid=None
-        )
-
-        # Check if endpoint still exists, passing remaining timeout to prevent hanging
+        # Check if endpoint still exists
         if not exists(name, config_dir):
             break
 
