@@ -64,7 +64,7 @@ def config(config_file, platform):
     endpoint.stop("test", config_dir=f"{pwd}/.globus_compute", timeout=15)
 
     # Delete the test endpoint
-    endpoint.delete("test", config_dir=f"{pwd}/.globus_compute")
+    endpoint.delete("test", config_dir=f"{pwd}/.globus_compute", timeout=15)
 
 
 # Set endpoint ids in configuration
