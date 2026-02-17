@@ -13,10 +13,11 @@ import psutil
 import yaml
 from globus_compute_endpoint.endpoint.config.utils import get_config
 from globus_compute_endpoint.endpoint.endpoint import Endpoint
+from globus_compute_sdk import Client
 from globus_compute_sdk.sdk.auth.auth_client import ComputeAuthClient
 from globus_compute_sdk.sdk.auth.globus_app import get_globus_app
 from globus_compute_sdk.sdk.web_client import WebClient
-from globus_sdk import ClientApp, ComputeClientV2, GlobusApp, TransferClient, UserApp
+from globus_sdk import ClientApp, GlobusApp, TransferClient, UserApp
 from globus_sdk.gare import GlobusAuthorizationParameters
 
 endpoint_template = """# This is the default user-endpoint-process (UEP) template provided with
@@ -194,7 +195,7 @@ def get_chiltepin_apps() -> (GlobusApp, GlobusApp):
     return (compute_app, transfer_app)
 
 
-def login() -> Dict[str, Union[ComputeClientV2, TransferClient]]:
+def login() -> Dict[str, Union[Client, TransferClient]]:
     """Log in to the Chiltepin app
 
     This initiates the Globus login flow to log the user in to the Globus compute
@@ -206,13 +207,13 @@ def login() -> Dict[str, Union[ComputeClientV2, TransferClient]]:
     Returns
     -------
 
-    Dict[str, ComputeClientV2 | TransferClient]
+    Dict[str, Client | TransferClient]
     """
     # Get the Globus Apps for use in creating the clients
     compute_app, transfer_app = get_chiltepin_apps()
 
     # Initialize the compute client
-    compute_client = ComputeClientV2(app=compute_app)
+    compute_client = Client(app=compute_app)
 
     # Initialize the transfer client
     transfer_client = TransferClient(app=transfer_app)
