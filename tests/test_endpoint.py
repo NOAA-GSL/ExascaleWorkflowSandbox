@@ -93,6 +93,7 @@ def test_endpoint_delete():
     # Verify they are deleted
     ep_list = endpoint.show()
     assert ep_list.get("foo", None) is None
-    assert ep_list.get("bar", None) is None
     assert not os.path.exists(f"{os.environ['HOME']}/.globus_compute/foo")
+    ep_list = endpoint.show(config_dir=f"{pwd}/.globus_compute")
+    assert ep_list.get("bar", None) is None
     assert not os.path.exists(f"{pwd}/.globus_compute/bar")

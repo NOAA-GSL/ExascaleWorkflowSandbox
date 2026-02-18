@@ -267,6 +267,7 @@ def logout():
 def configure(
     name: str,
     config_dir: Optional[str] = None,
+    timeout: Optional[float] = None,
 ) -> bool:
     """Configure a Globus Compute Endpoint
 
@@ -290,6 +291,9 @@ def configure(
             "Globus Compute endpoints are not supported on Windows"
         )
 
+    # Track start time for timeout enforcement
+    start_time = time.time()
+
     # Build the globus-compute-endpoint command to run
     command = ["globus-compute-endpoint"]
     if config_dir:
@@ -305,8 +309,20 @@ def configure(
         text=True,
         start_new_session=True,
     )
-    stdout, _ = p.communicate(timeout=5.0)
-    assert p.returncode == 0, stdout
+
+    try:
+        stdout, _ = p.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        # Kill the process if it times out
+        p.kill()
+        # Wait for it to actually terminate
+        p.wait()
+        raise TimeoutError(
+            f"globus-compute-endpoint configure command timed out after {timeout} seconds"
+        )
+
+    if p.returncode != 0:
+        raise RuntimeError(f"Failed to configure endpoint '{name}': {stdout}")
 
     # Get the path to the globus compute endpoint configuration
     if config_dir:
@@ -350,6 +366,12 @@ def configure(
     # scenario is very unlikely and we will accept that risk until we have a better solution.
     temp_home = tempfile.mkdtemp(prefix="chiltepin_home_")
     try:
+        # Calculate remaining timeout for the second subprocess call
+        remaining_timeout = None
+        if timeout is not None:
+            elapsed = time.time() - start_time
+            remaining_timeout = max(1.0, timeout - elapsed)
+
         p = subprocess.Popen(
             ["env", "-i", f"HOME={temp_home}", "bash", "-l", "-c", "echo $PATH"],
             stdout=subprocess.PIPE,
@@ -357,8 +379,19 @@ def configure(
             text=True,
             start_new_session=True,
         )
-        stdout, stderr = p.communicate(timeout=3.0)
-        assert p.returncode == 0, stderr
+        try:
+            stdout, stderr = p.communicate(timeout=remaining_timeout)
+        except subprocess.TimeoutExpired:
+            # Kill the process if it times out
+            p.kill()
+            # Wait for it to actually terminate
+            p.wait()
+            raise TimeoutError(
+                f"PATH capture command timed out after {remaining_timeout} seconds"
+            )
+
+        if p.returncode != 0:
+            raise RuntimeError(f"Failed to capture system PATH: {stderr}")
         login_path = stdout.strip()
     finally:
         # Clean up the temporary directory
@@ -375,7 +408,7 @@ def configure(
 
 def show(
     config_dir: Optional[str] = None,
-) -> Dict[str, Dict[str, str]]:
+) -> Dict[str, Dict[str, Optional[str]]]:
     """Return a dictionary of configured Globus Compute Endpoints
 
     This returns endpoint information in a dict with keys corresponding to
@@ -391,7 +424,7 @@ def show(
     Returns
     -------
 
-    Dict[str, Dict[str, str]]
+    Dict[str, Dict[str, Optional[str]]]
     """
 
     config_dir_path = (
@@ -730,7 +763,7 @@ def delete(
     try:
         Endpoint.delete_endpoint(config_path, ep_config, force=force, ep_uuid=None)
     except Exception as e:
-        raise RuntimeError(f"Error deleting endpoint: {e}")
+        raise RuntimeError("Error deleting endpoint") from e
 
     # Wait for endpoint to disappear from the listing
     while True:
