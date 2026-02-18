@@ -80,8 +80,16 @@ def config(config_file, platform):
         yaml_config[platform]["resources"],
         include=["compute", "mpi"],
     )
-    with parsl.load(resources):
-        yield {"resources": resources}
+
+    # Load the resources in Parsl
+    dfk = parsl.load(resources)
+
+    # Run the tests with the loaded resources
+    yield {"resources": resources}
+
+    # Cleanup Parsl after tests are done
+    dfk.cleanup()
+    dfk = None
     parsl.clear()
 
 

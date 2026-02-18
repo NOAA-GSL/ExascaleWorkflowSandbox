@@ -19,8 +19,15 @@ def bash_hello(stdout=None, stderr=None):
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture
 def load_config():
-    parsl.load(config)
+    # Load the resources in Parsl
+    dfk = parsl.load(config)
+
+    # Run the tests with the loaded resources
     yield
+
+    # Cleanup Parsl after tests are done
+    dfk.cleanup()
+    dfk = None
     parsl.clear()
 
 

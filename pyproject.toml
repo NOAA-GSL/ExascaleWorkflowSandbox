@@ -6,12 +6,12 @@ build-backend = "setuptools.build_meta"
 name = "chiltepin"
 version = "0.0.1"
 dependencies = [
-    "globus-compute-sdk @ git+https://github.com/globus/globus-compute@main#subdirectory=compute_sdk",
-    "globus-compute-endpoint @ git+https://github.com/globus/globus-compute@main#subdirectory=compute_endpoint",
-    "parsl[monitoring]>=2025.01.20",
-    "uwtools @ git+https://github.com/ufs-community/uwtools@v2.5.1#subdirectory=src",
+  "globus-compute-sdk>=4.5.0",
+  "globus-compute-endpoint>=4.5.0",
+  "parsl>=2026.1.5",
+  "uwtools @ git+https://github.com/ufs-community/uwtools@v2.5.1#subdirectory=src"
 ]
-requires-python = ">=3.9.0"
+requires-python = ">=3.10.0"
 authors = [
   {name = "Christopher Harrop", email = "Christopher.W.Harrop@noaa.gov"}
 ]
@@ -30,9 +30,7 @@ classifiers = [
 [project.optional-dependencies]
 test = [
     "pytest",
-    "pytest-flake8",
-    "pytest-black",
-    "pytest-isort",
+    "ruff",
 ]
 
 [project.scripts]
@@ -44,3 +42,7 @@ addopts = [
     "--ignore=apps",
     "--ignore=tests/jedi-bundle-test",
 ]
+
+[tool.ruff]
+target-version = "py310"
+lint.extend-select = ["I"]

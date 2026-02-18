@@ -40,10 +40,10 @@ def config(config_file, platform):
     )
 
     # Configure the test endpoint
-    endpoint.configure("test", config_dir=f"{pwd}/.globus_compute")
+    endpoint.configure("test", config_dir=f"{pwd}/.globus_compute", timeout=15)
 
     # Start the test endpoint
-    endpoint.start("test", config_dir=f"{pwd}/.globus_compute")
+    endpoint.start("test", config_dir=f"{pwd}/.globus_compute", timeout=15)
 
     # Update resource config with the test endpoint ids
     resource_config = _set_endpoint_ids(resource_config)
@@ -55,15 +55,22 @@ def config(config_file, platform):
         client=compute_client,
     )
 
+    # Load the resources in Parsl
+    dfk = parsl.load(resources)
+
     # Run the tests with the loaded resources
-    with parsl.load(resources):
-        yield
+    yield
+
+    # Cleanup Parsl after tests are done
+    dfk.cleanup()
+    dfk = None
+    parsl.clear()
 
     # Stop the test endpoint now that tests are done
-    endpoint.stop("test", config_dir=f"{pwd}/.globus_compute")
+    endpoint.stop("test", config_dir=f"{pwd}/.globus_compute", timeout=15)
 
     # Delete the test endpoint
-    endpoint.delete("test", config_dir=f"{pwd}/.globus_compute")
+    endpoint.delete("test", config_dir=f"{pwd}/.globus_compute", timeout=15)
 
 
 # Set endpoint ids in configuration

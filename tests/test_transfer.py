@@ -22,10 +22,10 @@ def config(config_file, platform):
 
 def test_data_transfer(config):
     transfer_future = data.transfer_task(
-        "chiltepin-test-niagara",
-        "chiltepin-test-hera",
-        "1MB",
-        "1MB.from_niagara",
+        "chiltepin-test-mercury",
+        "chiltepin-test-ursa",
+        "1MB.from_mercury",
+        "1MB.to_ursa",
         timeout=120,
         polling_interval=10,
         executor=["local"],
@@ -37,8 +37,8 @@ def test_data_transfer(config):
 
 def test_data_delete(config):
     delete_future = data.delete_task(
-        "chiltepin-test-hera",
-        "1MB.from_niagara",
+        "chiltepin-test-ursa",
+        "1MB.to_ursa",
         timeout=120,
         polling_interval=10,
         executor=["local"],

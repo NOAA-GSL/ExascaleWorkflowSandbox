@@ -4,7 +4,6 @@ from chiltepin.tasks import bash_task
 
 
 class LimitedArea:
-
     def __init__(
         self,
         environment="",

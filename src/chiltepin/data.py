@@ -19,7 +19,7 @@ def transfer_task(
     recursive: bool = False,
     dependencies: Optional[Future] = None,
 ):
-    """Trnsfer data asynchronously in a Parsl task
+    """Transfer data asynchronously in a Parsl task
 
     This wraps synchronous Globus data transfer into a Parsl python_app task.
     Calling this function will immediately return a future. The result of the
@@ -99,7 +99,7 @@ def delete_task(
     ----------
 
     src_ep: str
-        Name of the source endpoint for the data to be deletd.  Can be a
+        Name of the source endpoint for the data to be deleted.  Can be a
         display name or a UUID string.
 
     src_path: str
@@ -147,7 +147,7 @@ def transfer(
     client: Optional[TransferClient] = None,
     recursive: bool = False,
 ):
-    """Trnsfer data synchronously with Globus
+    """Transfer data synchronously with Globus
 
     This performs a Globus transfer of data from one Globus transfer endpoint
     to another. This function will not return until the transfer completes or
@@ -260,7 +260,7 @@ def delete(
     ----------
 
     src_ep: str
-        Name of the source endpoint for the data to be deletd.  Can be a
+        Name of the source endpoint for the data to be deleted.  Can be a
         display name or a UUID string.
 
     src_path: str

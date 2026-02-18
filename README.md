@@ -29,36 +29,24 @@ This software can be installed on Linux systems.  MacOS is not currently
 supported.  It can be used, however, on Macs in a container.  See below for
 instructions for building and using the Docker container.
 
-The recommended method for installation is to use a Python venv if
-Python >= 3.9 is available.
+The recommended method for installation is to use a Python venv.
 
 ```
 python -m venv .chiltepin
 source .chiltepin/bin/activate
-pip --use-deprecated=legacy-resolver install -e .[test]
+pip install -e .[test]
 ```
 
 Alternatively, a conda environment (anaconda3, miniconda3, miniforge, etc.)
-can be used. NOTE: Dependencies must still be installed with pip because
-of certain known (and accepted) dependency conflicts that must be ignored.
+can be used.
 
 ```
 conda create -n "chiltepin" python=3.10
 source activate chiltepin
-pip --use-deprecated=legacy-resolver install -e .[test]
+pip install -e .[test]
 ```
 
 NOTE: The `[test]` ensures that dependencies required for running the tests are installed.
-
-NOTE: There may be some warnings about incompatible package versions similar
-to the following:
-
-```
-ERROR: pip's legacy dependency resolver does not consider dependency conflicts when selecting packages. This behaviour is the source of the following dependency conflicts.
-globus-identity-mapping 0.3.0 requires typing-extensions<4.10,>=4.9, but you'll have typing-extensions 4.12.2 which is incompatible.
-```
-
-Those dependency conflicts can be safely ignored.
 
 Once installed, Chiltepin can be used simply by activating the environment using
 the command appropriate for your environment type (venv, conda, etc).
@@ -82,6 +70,7 @@ Where `<platform>` is the specific platform where you are running the tests:
 1. `docker`  #  Platform used for the container
 2. `hercules`
 3. `hera`
+4. `ursa`
 
 For more detailed information during testing
 ```
@@ -113,7 +102,7 @@ container environment), and run the tests
 
 ```
 cd chiltepin
-pip --use-deprecated=legacy-resolver install -e .[test]
+pip install -e .[test]
 pytest --assert=plain --config=tests/config.yaml --platform=docker
 ```
 

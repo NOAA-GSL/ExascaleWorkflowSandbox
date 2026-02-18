@@ -17,11 +17,9 @@ jobs:
       -
         name: Format Check
         run:  |
-          pip install flake8 black isort
-          flake8 src tests
-          black src tests --check --diff
-          isort src tests --check --diff --profile black
-
+          pip install ruff
+          ruff check
+          ruff format --check --diff .
 
   build-and-test-chiltepin:
     runs-on: ubuntu2204-16c-64g-600ssd
@@ -73,7 +71,7 @@ jobs:
         name: Install chiltepin package
         run: |
           docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
-          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip --use-deprecated=legacy-resolver install -e .[test]"
+          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e .[test]"
       -
         name: Run test suite
         env:

@@ -51,7 +51,6 @@ def main(user_config_file: Path) -> None:
         include=["service", "compute", "mpi"],
     )
     with parsl.load(resources):
-
         # Instantiate LimitedArea object
         limited_area = LimitedArea(
             install_path=experiment_path,
@@ -143,7 +142,6 @@ def main(user_config_file: Path) -> None:
         # Run the experiment cycles
         cycle = experiment_config["user"]["first_cycle"]
         while cycle <= experiment_config["user"]["last_cycle"]:
-
             # Create string representations of the cycle
             yyyymmddhh = cycle.strftime("%Y%m%d%H")
             cycle_iso = cycle.strftime("%Y-%m-%dT%H:%M:%S")
@@ -260,7 +258,6 @@ def main(user_config_file: Path) -> None:
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         description="Configure an experiment with the following input:"
     )
