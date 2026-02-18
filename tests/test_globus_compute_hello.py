@@ -34,10 +34,10 @@ def config(config_file, platform):
     )
 
     # Configure the test endpoint
-    endpoint.configure("test", config_dir=f"{pwd}/.globus_compute")
+    endpoint.configure("test", config_dir=f"{pwd}/.globus_compute", timeout=15)
 
     # Start the test endpoint
-    endpoint.start("test", config_dir=f"{pwd}/.globus_compute")
+    endpoint.start("test", config_dir=f"{pwd}/.globus_compute", timeout=15)
 
     # Update resource config with the test endpoint id
     resource_config = _set_endpoint_ids(resource_config)

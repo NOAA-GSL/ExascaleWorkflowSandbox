@@ -285,6 +285,10 @@ def configure(
         Path to endpoint configuration directory where endpoint information
         is to be stored. If None (the default), then $HOME/.globus_compute
         is used
+
+    timeout: float | None
+        Number of seconds to wait for the command to complete before timing out
+        Default is None, meaning the command will never time out.
     """
     if platform.system() == "Windows":
         raise NotImplementedError(
