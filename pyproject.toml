@@ -9,7 +9,6 @@ dependencies = [
   "globus-compute-sdk>=4.5.0",
   "globus-compute-endpoint>=4.5.0",
   "parsl>=2026.1.5",
-  "uwtools @ git+https://github.com/ufs-community/uwtools@v2.5.1#subdirectory=src"
 ]
 requires-python = ">=3.10.0"
 authors = [
@@ -39,8 +38,6 @@ chiltepin = "chiltepin.cli:main"
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",
-    "--ignore=apps",
-    "--ignore=tests/jedi-bundle-test",
 ]
 
 [tool.ruff]

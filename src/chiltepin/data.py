@@ -70,10 +70,10 @@ def transfer_task(
         dst_ep,
         src_path,
         dst_path,
-        timeout=3600,
-        polling_interval=30,
-        client=None,
-        recursive=False,
+        timeout=timeout,
+        polling_interval=polling_interval,
+        client=client,
+        recursive=recursive,
     )
     return completed
 
@@ -129,10 +129,10 @@ def delete_task(
     completed = delete(
         src_ep,
         src_path,
-        timeout=3600,
-        polling_interval=30,
-        client=None,
-        recursive=False,
+        timeout=timeout,
+        polling_interval=polling_interval,
+        client=client,
+        recursive=recursive,
     )
     return completed
 
