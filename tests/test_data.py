@@ -14,6 +14,10 @@ def config(config_file, platform):
     if endpoint.login_required():
         raise RuntimeError("Chiltepin login is required")
 
+    # Get transfer client
+    clients = endpoint.login()
+    transfer_client = clients["transfer"]
+
     # Load the default resource configuration
     resources = chiltepin.configure.load({})
 
@@ -21,7 +25,7 @@ def config(config_file, platform):
     dfk = parsl.load(resources)
 
     # Run the tests with the loaded resources
-    yield
+    yield {"client": transfer_client}
 
     dfk.cleanup()
     dfk = None
@@ -37,6 +41,7 @@ def test_data_transfer(config):
         timeout=120,
         polling_interval=10,
         executor=["local"],
+        client=config["client"],
     )
     completed = transfer_future.result()
 
@@ -50,6 +55,7 @@ def test_data_delete(config):
         timeout=120,
         polling_interval=10,
         executor=["local"],
+        client=config["client"],
     )
     completed = delete_future.result()
 
