@@ -9,15 +9,23 @@ import chiltepin.endpoint as endpoint
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
 def config(config_file, platform):
-    # Log in
-    endpoint.login()
+
+    # Make sure we are logged in
+    if endpoint.login_required():
+        raise RuntimeError("Chiltepin login is required")
 
     # Load the default resource configuration
     resources = chiltepin.configure.load({})
 
+    # Load the resources in Parsl
+    dfk = parsl.load(resources)
+
     # Run the tests with the loaded resources
-    with parsl.load(resources):
-        yield
+    yield
+
+    dfk.cleanup()
+    dfk = None
+    parsl.clear()
 
 
 def test_data_transfer(config):
