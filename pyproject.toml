@@ -38,8 +38,6 @@ chiltepin = "chiltepin.cli:main"
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",
-    "--ignore=apps",
-    "--ignore=tests/jedi-bundle-test",
 ]
 
 [tool.ruff]
