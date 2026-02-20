@@ -32,7 +32,7 @@ def config(config_file, platform):
     resources = chiltepin.configure.load(
         yaml_config[platform]["resources"],
         include=["service"],
-        run_dir=str(output_dir / "test_parsl_hello_runinfo")
+        run_dir=str(output_dir / "test_parsl_hello_runinfo"),
     )
 
     # Load the resources in Parsl

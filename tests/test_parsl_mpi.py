@@ -38,7 +38,7 @@ def config(config_file, platform):
     resources = chiltepin.configure.load(
         yaml_config[platform]["resources"],
         include=["compute", "mpi"],
-        run_dir=str(output_dir / "test_parsl_mpi_runinfo")
+        run_dir=str(output_dir / "test_parsl_mpi_runinfo"),
     )
 
     # Load the resources in Parsl
@@ -72,7 +72,10 @@ def test_parsl_hello_mpi(config):
     # Define a bash task to run the MPI program
     @bash_task
     def run_mpi_hello(
-        dirpath, stdout=None, stderr=None, parsl_resource_specification=None,
+        dirpath,
+        stdout=None,
+        stderr=None,
+        parsl_resource_specification=None,
     ):
         return f"""
         cd {dirpath}

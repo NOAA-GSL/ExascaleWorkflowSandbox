@@ -33,7 +33,9 @@ def config(config_file, platform):
     )
 
     # Load the default resource configuration
-    resources = chiltepin.configure.load({}, run_dir=str(output_dir / "test_data_runinfo"))
+    resources = chiltepin.configure.load(
+        {}, run_dir=str(output_dir / "test_data_runinfo")
+    )
 
     # Load the resources in Parsl
     dfk = parsl.load(resources)

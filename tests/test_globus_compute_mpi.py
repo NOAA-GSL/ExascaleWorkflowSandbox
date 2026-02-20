@@ -69,7 +69,7 @@ def config(config_file, platform):
         resource_config,
         include=["gc-compute", "gc-mpi"],
         client=compute_client,
-        run_dir=str(output_dir / "test_globus_compute_mpi_runinfo")
+        run_dir=str(output_dir / "test_globus_compute_mpi_runinfo"),
     )
 
     # Load the resources in Parsl
