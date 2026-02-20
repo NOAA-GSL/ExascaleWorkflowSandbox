@@ -1,3 +1,4 @@
+import logging
 import os.path
 import pathlib
 import re
@@ -17,6 +18,10 @@ from chiltepin.tasks import bash_task
 @pytest.fixture(scope="module")
 def config(config_file, platform):
     pwd = pathlib.Path(__file__).parent.resolve()
+
+    # Create directory for test output
+    output_dir = pwd / "test_output"
+    output_dir.mkdir(exist_ok=True)
 
     # Make sure we are logged in
     if endpoint.login_required():
@@ -39,64 +44,73 @@ def config(config_file, platform):
         f"export PYTHONPATH={pwd.parent.resolve()}"
     )
 
+    # Delete test endpoint if it already exists from a previous test run
+    ep_list = endpoint.show(config_dir=f"{output_dir}/.globus_compute")
+    if "test" in ep_list:
+        endpoint.delete("test", config_dir=f"{output_dir}/.globus_compute", timeout=15)
+
     # Configure the test endpoint
-    endpoint.configure("test", config_dir=f"{pwd}/.globus_compute", timeout=15)
+    endpoint.configure("test", config_dir=f"{output_dir}/.globus_compute", timeout=15)
 
     # Start the test endpoint
-    endpoint.start("test", config_dir=f"{pwd}/.globus_compute", timeout=15)
+    endpoint.start("test", config_dir=f"{output_dir}/.globus_compute", timeout=15)
 
     # Update resource config with the test endpoint ids
-    resource_config = _set_endpoint_ids(resource_config)
+    resource_config = _set_endpoint_ids(resource_config, output_dir)
+
+    # Set Parsl logging to DEBUG and redirect to a file in the output directory
+    logger_handler = parsl.set_file_logger(
+        filename=str(output_dir / "test_globus_compute_mpi_parsl.log"),
+        level=logging.DEBUG,
+    )
 
     # Load the finalized resource configuration
     resources = chiltepin.configure.load(
         resource_config,
         include=["gc-compute", "gc-mpi"],
         client=compute_client,
+        run_dir=str(output_dir / "test_globus_compute_mpi_runinfo"),
     )
 
     # Load the resources in Parsl
     dfk = parsl.load(resources)
 
     # Run the tests with the loaded resources
-    yield
+    yield {"output_dir": output_dir}
 
     # Cleanup Parsl after tests are done
     dfk.cleanup()
     dfk = None
     parsl.clear()
+    logger_handler()
 
     # Stop the test endpoint now that tests are done
-    endpoint.stop("test", config_dir=f"{pwd}/.globus_compute", timeout=15)
+    endpoint.stop("test", config_dir=f"{output_dir}/.globus_compute", timeout=15)
 
     # Delete the test endpoint
-    endpoint.delete("test", config_dir=f"{pwd}/.globus_compute", timeout=15)
+    endpoint.delete("test", config_dir=f"{output_dir}/.globus_compute", timeout=15)
 
 
 # Set endpoint ids in configuration
-def _set_endpoint_ids(config):
-    pwd = pathlib.Path(__file__).parent.resolve()
-
+def _set_endpoint_ids(resource_config, output_dir):
     # Get a listing of the endpoints
-    ep_info = endpoint.show(config_dir=f"{pwd}/.globus_compute")
-    gc_compute_endpoint_id = ep_info["test"]["id"]
-    gc_mpi_endpoint_id = ep_info["test"]["id"]
-    assert len(gc_mpi_endpoint_id) == 36
-    assert len(gc_compute_endpoint_id) == 36
+    ep_info = endpoint.show(config_dir=f"{output_dir}/.globus_compute")
+    endpoint_id = ep_info["test"]["id"]
+    assert len(endpoint_id) == 36
 
-    config_string = yaml.dump(config)
+    config_string = yaml.dump(resource_config)
     template = Environment(loader=BaseLoader()).from_string(config_string)
     content = template.render(
-        compute_endpoint_id=gc_compute_endpoint_id,
-        mpi_endpoint_id=gc_mpi_endpoint_id,
+        compute_endpoint_id=endpoint_id,
+        mpi_endpoint_id=endpoint_id,
     )
     content_yaml = yaml.safe_load(content)
     return content_yaml
 
 
 # Test endpoint use
-def test_endpoint_mpi_hello(config):
-    pwd = pathlib.Path(__file__).parent.resolve()
+def test_endpoint_hello_mpi(config):
+    output_dir = config["output_dir"]
 
     # Define a bash task to compile the MPI code
     @bash_task
@@ -107,7 +121,7 @@ def test_endpoint_mpi_hello(config):
     ):
         return f"""
         cd {dirpath}
-        $CHILTEPIN_MPIF90 -o mpi_hello.exe mpi_hello.f90
+        $CHILTEPIN_MPIF90 -o mpi_hello.exe ../mpi_hello.f90
         """
 
     # Define a bash task to run the MPI program
@@ -124,28 +138,30 @@ def test_endpoint_mpi_hello(config):
         """
 
     # Remove any previous output if necessary
-    if os.path.exists(pwd / "globus_compute_mpi_hello_compile_mep.out"):
-        os.remove(pwd / "globus_compute_mpi_hello_compile_mep.out")
-    if os.path.exists(pwd / "globus_compute_mpi_hello_compile_mep.err"):
-        os.remove(pwd / "globus_compute_mpi_hello_compile_mep.err")
-    if os.path.exists(pwd / "globus_compute_mpi_hello_run_mep.out"):
-        os.remove(pwd / "globus_compute_mpi_hello_run_mep.out")
-    if os.path.exists(pwd / "globus_compute_mpi_hello_run_mep.err"):
-        os.remove(pwd / "globus_compute_mpi_hello_run_mep.err")
+    if os.path.exists(output_dir / "test_endpoint_hello_mpi_compile.out"):
+        os.remove(output_dir / "test_endpoint_hello_mpi_compile.out")
+    if os.path.exists(output_dir / "test_endpoint_hello_mpi_compile.err"):
+        os.remove(output_dir / "test_endpoint_hello_mpi_compile.err")
+    if os.path.exists(output_dir / "test_endpoint_hello_mpi_run.out"):
+        os.remove(output_dir / "test_endpoint_hello_mpi_run.out")
+    if os.path.exists(output_dir / "test_endpoint_hello_mpi_run.err"):
+        os.remove(output_dir / "test_endpoint_hello_mpi_run.err")
 
     future = compile_func(
-        pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_hello_compile_mep.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_hello_compile_mep.err"),
+        output_dir,
+        stdout=os.path.join(output_dir, "test_endpoint_hello_mpi_compile.out"),
+        stderr=os.path.join(output_dir, "test_endpoint_hello_mpi_compile.err"),
         executor=["gc-compute"],
     )
     r = future.result()
     assert r == 0
+    assert os.path.isfile(output_dir / "mpi_hello.exe")
+    assert os.stat(output_dir / "test_endpoint_hello_mpi_compile.out").st_size == 0
 
     future = hello_func(
-        pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_hello_run_mep.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_hello_run_mep.err"),
+        output_dir,
+        stdout=os.path.join(output_dir, "test_endpoint_hello_mpi_run.out"),
+        stderr=os.path.join(output_dir, "test_endpoint_hello_mpi_run.err"),
         executor=["gc-mpi"],
         parsl_resource_specification={
             "num_nodes": 3,  # Number of nodes required for the application instance
@@ -157,21 +173,21 @@ def test_endpoint_mpi_hello(config):
     assert r == 0
 
     # Check output
-    with open(pwd / "globus_compute_mpi_hello_run_mep.out", "r") as f:
+    with open(output_dir / "test_endpoint_hello_mpi_run.out", "r") as f:
         for line in f:
             assert re.match(r"Hello world from host \S+, rank \d+ out of 6", line)
 
 
 # Test endpoint use
-def test_endpoint_mpi_pi(config):
-    pwd = pathlib.Path(__file__).parent.resolve()
+def test_endpoint_pi_mpi(config):
+    output_dir = config["output_dir"]
 
     # Define a bash task to compile the MPI code
     @bash_task
     def compile_func(dirpath, stdout=None, stderr=None):
         return f"""
         cd {dirpath}
-        $CHILTEPIN_MPIF90 -o mpi_pi.exe mpi_pi.f90
+        $CHILTEPIN_MPIF90 -o mpi_pi.exe ../mpi_pi.f90
         """
 
     # Define a bash task to run the MPI program
@@ -183,33 +199,35 @@ def test_endpoint_mpi_pi(config):
         """
 
     # Remove any previous output if necessary
-    if os.path.exists(pwd / "globus_compute_mpi_pi_compile_mep.out"):
-        os.remove(pwd / "globus_compute_mpi_pi_compile_mep.out")
-    if os.path.exists(pwd / "globus_compute_mpi_pi_compile_mep.err"):
-        os.remove(pwd / "globus_compute_mpi_pi_compile_mep.err")
-    if os.path.exists(pwd / "globus_compute_mpi_pi1_run_mep.out"):
-        os.remove(pwd / "globus_compute_mpi_pi1_run_mep.out")
-    if os.path.exists(pwd / "globus_compute_mpi_pi1_run_mep.err"):
-        os.remove(pwd / "globus_compute_mpi_pi1_run_mep.err")
-    if os.path.exists(pwd / "globus_compute_mpi_pi2_run_mep.out"):
-        os.remove(pwd / "globus_compute_mpi_pi2_run_mep.out")
-    if os.path.exists(pwd / "globus_compute_mpi_pi2_run_mep.err"):
-        os.remove(pwd / "globus_compute_mpi_pi2_run_mep.err")
+    if os.path.exists(output_dir / "test_endpoint_pi_mpi_compile.out"):
+        os.remove(output_dir / "test_endpoint_pi_mpi_compile.out")
+    if os.path.exists(output_dir / "test_endpoint_pi_mpi_compile.err"):
+        os.remove(output_dir / "test_endpoint_pi_mpi_compile.err")
+    if os.path.exists(output_dir / "test_endpoint_pi_mpi_run1.out"):
+        os.remove(output_dir / "test_endpoint_pi_mpi_run1.out")
+    if os.path.exists(output_dir / "test_endpoint_pi_mpi_run1.err"):
+        os.remove(output_dir / "test_endpoint_pi_mpi_run1.err")
+    if os.path.exists(output_dir / "test_endpoint_pi_mpi_run2.out"):
+        os.remove(output_dir / "test_endpoint_pi_mpi_run2.out")
+    if os.path.exists(output_dir / "test_endpoint_pi_mpi_run2.err"):
+        os.remove(output_dir / "test_endpoint_pi_mpi_run2.err")
 
     cores_per_node = 8
     future = compile_func(
-        pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_pi_compile_mep.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_pi_compile_mep.err"),
+        output_dir,
+        stdout=os.path.join(output_dir, "test_endpoint_pi_mpi_compile.out"),
+        stderr=os.path.join(output_dir, "test_endpoint_pi_mpi_compile.err"),
         executor=["gc-compute"],
     )
     r = future.result()
     assert r == 0
+    assert os.path.isfile(output_dir / "mpi_pi.exe")
+    assert os.stat(output_dir / "test_endpoint_pi_mpi_compile.out").st_size == 0
 
     future1 = pi_func(
-        pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_pi1_run_mep.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_pi1_run_mep.err"),
+        output_dir,
+        stdout=os.path.join(output_dir, "test_endpoint_pi_mpi_run1.out"),
+        stderr=os.path.join(output_dir, "test_endpoint_pi_mpi_run1.err"),
         executor=["gc-mpi"],
         parsl_resource_specification={
             "num_nodes": 2,  # Number of nodes required for the application instance
@@ -219,9 +237,9 @@ def test_endpoint_mpi_pi(config):
     )
 
     future2 = pi_func(
-        pwd,
-        stdout=os.path.join(pwd, "globus_compute_mpi_pi2_run_mep.out"),
-        stderr=os.path.join(pwd, "globus_compute_mpi_pi2_run_mep.err"),
+        output_dir,
+        stdout=os.path.join(output_dir, "test_endpoint_pi_mpi_run2.out"),
+        stderr=os.path.join(output_dir, "test_endpoint_pi_mpi_run2.err"),
         executor=["gc-mpi"],
         parsl_resource_specification={
             "num_nodes": 1,  # Number of nodes required for the application instance
@@ -236,13 +254,13 @@ def test_endpoint_mpi_pi(config):
     assert r2 == 0
 
     # Extract the hostnames used by pi1
-    with open(pwd / "globus_compute_mpi_pi1_run_mep.out", "r") as f:
+    with open(output_dir / "test_endpoint_pi_mpi_run1.out", "r") as f:
         pi1_hosts = []
         for line in f:
             if re.match(r"Host ", line):
                 pi1_hosts.append(line.split()[1])
     # Extract the hostnames used by pi2
-    with open(pwd / "globus_compute_mpi_pi2_run_mep.out", "r") as f:
+    with open(output_dir / "test_endpoint_pi_mpi_run2.out", "r") as f:
         pi2_hosts = []
         for line in f:
             if re.match(r"Host ", line):
@@ -250,12 +268,12 @@ def test_endpoint_mpi_pi(config):
     # Verify each pi test ran on a different set of nodes
     assert set(pi1_hosts).intersection(pi2_hosts) == set()
 
-    # Verify pi tests run concurrently
+    # Verify pi tests ran concurrently
     start_time = []
     end_time = []
-    files = ["globus_compute_mpi_pi1_run_mep.out", "globus_compute_mpi_pi2_run_mep.out"]
+    files = ["test_endpoint_pi_mpi_run1.out", "test_endpoint_pi_mpi_run2.out"]
     for f in files:
-        with open(pwd / f, "r") as pi:
+        with open(output_dir / f, "r") as pi:
             for line in pi:
                 if re.match(r"Start Time ", line):
                     line = line.strip().lstrip("Start Time = ")

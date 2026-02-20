@@ -1,3 +1,6 @@
+import logging
+import pathlib
+
 import parsl
 import pytest
 
@@ -9,6 +12,11 @@ import chiltepin.endpoint as endpoint
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
 def config(config_file, platform):
+    pwd = pathlib.Path(__file__).parent.resolve()
+
+    # Create directory for test output
+    output_dir = pwd / "test_output"
+    output_dir.mkdir(exist_ok=True)
 
     # Make sure we are logged in
     if endpoint.login_required():
@@ -18,8 +26,16 @@ def config(config_file, platform):
     clients = endpoint.login()
     transfer_client = clients["transfer"]
 
+    # Set Parsl logging to DEBUG and redirect to a file in the output directory
+    logger_handler = parsl.set_file_logger(
+        filename=str(output_dir / "test_data_parsl.log"),
+        level=logging.DEBUG,
+    )
+
     # Load the default resource configuration
-    resources = chiltepin.configure.load({})
+    resources = chiltepin.configure.load(
+        {}, run_dir=str(output_dir / "test_data_runinfo")
+    )
 
     # Load the resources in Parsl
     dfk = parsl.load(resources)
@@ -30,6 +46,7 @@ def config(config_file, platform):
     dfk.cleanup()
     dfk = None
     parsl.clear()
+    logger_handler()
 
 
 def test_data_transfer(config):

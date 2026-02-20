@@ -10,11 +10,4 @@
 __pycache__
 
 # Ignore test output
-*.swp
-runinfo/
-tests/*.err
-tests/*.exe
-tests/*.out
-tests/core.*
-tests/flux_*
-tests/runinfo
+tests/test_output/

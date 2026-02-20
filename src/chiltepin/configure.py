@@ -340,6 +340,7 @@ def load(
     config: Dict[str, Any],
     include: Optional[List[str]] = None,
     client: Optional[Client] = None,
+    run_dir: Optional[str] = None,
 ) -> Config:
     """Return a Parsl Config initialized by a list of Executors created  from
     the input configuration dictionary.
@@ -363,6 +364,10 @@ def load(
         A Globus Compute client to use when instantiating Globus Compute resources.
         The default is None.  If None, one will be instantiated automatically for
         any Globus Compute resources in the configuration.
+
+    run_dir: str | None
+        The directory to use for runtime files. The default is None, which means
+        Parsl's default runinfo directory location will be used.
 
     Returns
     -------
@@ -398,4 +403,7 @@ def load(
             ),
         )
 
-    return Config(executors)
+    config_kwargs = {"executors": executors}
+    if run_dir is not None:
+        config_kwargs["run_dir"] = run_dir
+    return Config(**config_kwargs)
