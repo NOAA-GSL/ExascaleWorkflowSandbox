@@ -338,9 +338,9 @@ def create_executor(
 
 def load(
     config: Dict[str, Any],
-    run_dir: Optional[str] = None,
     include: Optional[List[str]] = None,
     client: Optional[Client] = None,
+    run_dir: Optional[str] = None,
 ) -> Config:
     """Return a Parsl Config initialized by a list of Executors created  from
     the input configuration dictionary.
@@ -354,9 +354,6 @@ def load(
         YAML configuration block that contains the configuration for a list of
         resources
 
-    rundir: str | None
-        The directory to use for runtime files. The default is None.
-
     include: List[str] | None
         A list of the labels of the resource configurations to load. The
         default is None. If None, all resource configurations are loaded.
@@ -367,6 +364,10 @@ def load(
         A Globus Compute client to use when instantiating Globus Compute resources.
         The default is None.  If None, one will be instantiated automatically for
         any Globus Compute resources in the configuration.
+
+    run_dir: str | None
+        The directory to use for runtime files. The default is None, which means
+        Parsl's default runinfo directory location will be used.
 
     Returns
     -------
