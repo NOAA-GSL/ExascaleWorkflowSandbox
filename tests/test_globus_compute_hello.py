@@ -64,6 +64,7 @@ def config(config_file, platform):
         resource_config,
         include=["gc-service"],
         client=compute_client,
+        run_dir=str(output_dir / "test_globus_compute_hello_runinfo")
     )
 
     # Load the resources in Parsl
@@ -87,7 +88,7 @@ def config(config_file, platform):
 
 # Set endpoint ids in configuration
 def _set_endpoint_ids(resource_config, output_dir):
-    # Set endpoint id in resource config using Jinja2 tempates
+    # Set endpoint id in resource config using Jinja2 templates
     ep_info = endpoint.show(config_dir=f"{output_dir}/.globus_compute")
     endpoint_id = ep_info["test"]["id"]
     assert len(endpoint_id) == 36

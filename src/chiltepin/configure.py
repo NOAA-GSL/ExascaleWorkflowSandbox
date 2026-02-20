@@ -338,6 +338,7 @@ def create_executor(
 
 def load(
     config: Dict[str, Any],
+    run_dir: Optional[str] = None,
     include: Optional[List[str]] = None,
     client: Optional[Client] = None,
 ) -> Config:
@@ -352,6 +353,9 @@ def load(
     config: Dict[str, Any]
         YAML configuration block that contains the configuration for a list of
         resources
+
+    rundir: str | None
+        The directory to use for runtime files. The default is None.
 
     include: List[str] | None
         A list of the labels of the resource configurations to load. The
@@ -398,4 +402,7 @@ def load(
             ),
         )
 
-    return Config(executors)
+    config_kwargs = {"executors": executors}
+    if run_dir is not None:
+        config_kwargs["run_dir"] = run_dir
+    return Config(**config_kwargs)
