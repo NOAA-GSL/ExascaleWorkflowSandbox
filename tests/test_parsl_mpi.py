@@ -1,3 +1,4 @@
+import logging
 import os
 import os.path
 import pathlib
@@ -6,9 +7,10 @@ from datetime import datetime as dt
 
 import parsl
 import pytest
-from chiltepin.tasks import bash_task
 
 import chiltepin.configure
+from chiltepin.tasks import bash_task
+
 
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
@@ -26,6 +28,13 @@ def config(config_file, platform):
     yaml_config[platform]["resources"]["mpi"]["environment"].append(
         f"export PYTHONPATH={pwd.parent.resolve()}"
     )
+
+    # Set Parsl logging to DEBUG and redirect to a file in the output directory
+    logger_handler = parsl.set_file_logger(
+        filename=str(output_dir / "test_parsl_mpi_parsl.log"),
+        level=logging.DEBUG,
+    )
+
     resources = chiltepin.configure.load(
         yaml_config[platform]["resources"],
         include=["compute", "mpi"],
@@ -41,6 +50,7 @@ def config(config_file, platform):
     dfk.cleanup()
     dfk = None
     parsl.clear()
+    logger_handler()
 
 
 def test_parsl_hello_mpi(config):
@@ -61,10 +71,7 @@ def test_parsl_hello_mpi(config):
     # Define a bash task to run the MPI program
     @bash_task
     def run_mpi_hello(
-        dirpath,
-        stdout=None,
-        stderr=None,
-        parsl_resource_specification={}
+        dirpath, stdout=None, stderr=None, parsl_resource_specification={}
     ):
         return f"""
         cd {dirpath}
@@ -128,7 +135,7 @@ def test_parsl_pi_mpi(config):
         cd {dirpath}
         $CHILTEPIN_MPIF90 -o mpi_pi.exe ../mpi_pi.f90
         """
- 
+
     # Define a bash task to run the MPI program
     @bash_task
     def run_mpi_pi(

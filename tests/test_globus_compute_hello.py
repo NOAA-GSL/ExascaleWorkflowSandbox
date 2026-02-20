@@ -1,3 +1,4 @@
+import logging
 import os.path
 import pathlib
 
@@ -52,6 +53,12 @@ def config(config_file, platform):
     # Update resource config with the test endpoint id
     resource_config = _set_endpoint_ids(resource_config, output_dir)
 
+    # Set Parsl logging to DEBUG and redirect to a file in the output directory
+    logger_handler = parsl.set_file_logger(
+        filename=str(output_dir / "test_globus_compute_hello_parsl.log"),
+        level=logging.DEBUG,
+    )
+
     # Load the finalized resource configuration
     resources = chiltepin.configure.load(
         resource_config,
@@ -69,6 +76,7 @@ def config(config_file, platform):
     dfk.cleanup()
     dfk = None
     parsl.clear()
+    logger_handler()
 
     # Stop the test endpoint now that tests are done
     endpoint.stop("test", config_dir=f"{output_dir}/.globus_compute", timeout=15)
@@ -98,6 +106,7 @@ def test_endpoint_hello_python(config):
 
     future = hello(executor=["gc-service"])
     assert future.result() == "Hello"
+
 
 def test_endpoint_hello_bash(config):
     output_dir = config["output_dir"]

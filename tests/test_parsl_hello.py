@@ -1,11 +1,12 @@
+import logging
 import os.path
 import pathlib
 
 import parsl
 import pytest
-from chiltepin.tasks import bash_task, python_task
 
 import chiltepin.configure
+from chiltepin.tasks import bash_task, python_task
 
 
 # Set up fixture to initialize and cleanup Parsl
@@ -20,6 +21,12 @@ def config(config_file, platform):
     yaml_config = chiltepin.configure.parse_file(config_file)
     yaml_config[platform]["resources"]["service"]["environment"].append(
         f"export PYTHONPATH={pwd.parent.resolve()}"
+    )
+
+    # Set Parsl logging to DEBUG and redirect to a file in the output directory
+    logger_handler = parsl.set_file_logger(
+        filename=str(output_dir / "test_parsl_hello_parsl.log"),
+        level=logging.DEBUG,
     )
 
     resources = chiltepin.configure.load(
@@ -37,6 +44,7 @@ def config(config_file, platform):
     dfk.cleanup()
     dfk = None
     parsl.clear()
+    logger_handler()
 
 
 # Test bash hello world
@@ -82,4 +90,5 @@ def test_parsl_hello_python(config):
     def python_hello():
         return "Hello World! from python task"
 
-    assert python_hello(executor=["service"]).result() == "Hello World! from python task"
+    future = python_hello(executor=["service"])
+    assert future.result() == "Hello World! from python task"

@@ -1,3 +1,4 @@
+import logging
 import os.path
 import pathlib
 import re
@@ -47,7 +48,7 @@ def config(config_file, platform):
     ep_list = endpoint.show(config_dir=f"{output_dir}/.globus_compute")
     if "test" in ep_list:
         endpoint.delete("test", config_dir=f"{output_dir}/.globus_compute", timeout=15)
-    
+
     # Configure the test endpoint
     endpoint.configure("test", config_dir=f"{output_dir}/.globus_compute", timeout=15)
 
@@ -56,6 +57,12 @@ def config(config_file, platform):
 
     # Update resource config with the test endpoint ids
     resource_config = _set_endpoint_ids(resource_config, output_dir)
+
+    # Set Parsl logging to DEBUG and redirect to a file in the output directory
+    logger_handler = parsl.set_file_logger(
+        filename=str(output_dir / "test_globus_compute_mpi_parsl.log"),
+        level=logging.DEBUG,
+    )
 
     # Load the finalized resource configuration
     resources = chiltepin.configure.load(
@@ -74,6 +81,7 @@ def config(config_file, platform):
     dfk.cleanup()
     dfk = None
     parsl.clear()
+    logger_handler()
 
     # Stop the test endpoint now that tests are done
     endpoint.stop("test", config_dir=f"{output_dir}/.globus_compute", timeout=15)
@@ -84,8 +92,6 @@ def config(config_file, platform):
 
 # Set endpoint ids in configuration
 def _set_endpoint_ids(resource_config, output_dir):
-    pwd = pathlib.Path(__file__).parent.resolve()
-
     # Get a listing of the endpoints
     ep_info = endpoint.show(config_dir=f"{output_dir}/.globus_compute")
     endpoint_id = ep_info["test"]["id"]
@@ -137,8 +143,8 @@ def test_endpoint_hello_mpi(config):
         os.remove(output_dir / "test_endpoint_hello_mpi_compile.err")
     if os.path.exists(output_dir / "test_endpoint_hello_mpi_run.out"):
         os.remove(output_dir / "test_endpoint_hello_mpi_run.out")
-    if os.path.exists(output_dir / "test_endpoint_mpi_hello_run.err"):
-        os.remove(output_dir / "test_endpoint_mpi_hello_run.err")
+    if os.path.exists(output_dir / "test_endpoint_hello_mpi_run.err"):
+        os.remove(output_dir / "test_endpoint_hello_mpi_run.err")
 
     future = compile_func(
         output_dir,
