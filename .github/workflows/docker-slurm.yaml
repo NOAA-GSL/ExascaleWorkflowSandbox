@@ -73,12 +73,28 @@ jobs:
           docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
           docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e .[test]"
       -
-        name: Run test suite
+        name: Run test suite with coverage
         env:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --config=tests/config.yaml --platform=docker"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term --cov-report=xml --cov-report=html --cov-fail-under=80 --config=tests/config.yaml --platform=docker"
+      -
+        name: Copy coverage reports from container
+        if: always()
+        run: |
+          docker cp frontend:/home/chiltepin/work/coverage.xml ./coverage-amd64.xml || true
+          docker cp frontend:/home/chiltepin/work/htmlcov ./htmlcov-amd64 || true
+      -
+        name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-amd64
+          path: |
+            coverage-amd64.xml
+            htmlcov-amd64/
+          retention-days: 30
       -
         name: Debug session
         if: ${{ failure() }}
@@ -173,12 +189,28 @@ jobs:
           docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
           docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e .[test]"
       -
-        name: Run test suite
+        name: Run test suite with coverage
         env:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --config=tests/config.yaml --platform=docker"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term --cov-report=xml --cov-report=html --cov-fail-under=80 --config=tests/config.yaml --platform=docker"
+      -
+        name: Copy coverage reports from container
+        if: always()
+        run: |
+          docker cp frontend:/home/chiltepin/work/coverage.xml ./coverage-arm64.xml || true
+          docker cp frontend:/home/chiltepin/work/htmlcov ./htmlcov-arm64 || true
+      -
+        name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-arm64
+          path: |
+            coverage-arm64.xml
+            htmlcov-arm64/
+          retention-days: 30
       -
         name: Debug session
         if: ${{ failure() }}
