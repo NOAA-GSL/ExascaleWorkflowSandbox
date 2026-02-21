@@ -78,7 +78,7 @@ jobs:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term --cov-report=xml --cov-report=html --cov-fail-under=80 --config=tests/config.yaml --platform=docker"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term --cov-report=xml --cov-report=html --config=tests/config.yaml --platform=docker"
       -
         name: Copy coverage reports from container
         if: always()
@@ -194,7 +194,7 @@ jobs:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term --cov-report=xml --cov-report=html --cov-fail-under=80 --config=tests/config.yaml --platform=docker"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term --cov-report=xml --cov-report=html --config=tests/config.yaml --platform=docker"
       -
         name: Copy coverage reports from container
         if: always()

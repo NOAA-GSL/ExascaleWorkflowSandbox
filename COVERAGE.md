@@ -29,7 +29,8 @@ pytest --cov=src/chiltepin --cov-report=term --cov-report=html --cov-report=xml
 
 ### Check Coverage Threshold
 ```bash
-pytest --cov=src/chiltepin --cov-fail-under=80
+# Threshold is automatically enforced from pyproject.toml
+pytest --cov=src/chiltepin
 ```
 
 ## Coverage Configuration
@@ -82,14 +83,11 @@ def debug_only_function():  # pragma: no cover
 
 ## Adjusting the Threshold
 
-To change the coverage threshold, edit `pyproject.toml`:
+To change the coverage threshold, edit the `fail_under` setting in `pyproject.toml`:
 
 ```toml
 [tool.coverage.report]
 fail_under = 80  # Change this value
 ```
 
-And update the GitHub workflow files to match:
-```yaml
---cov-fail-under=80  # Change this value
-```
+The GitHub workflow will automatically use this threshold setting - no workflow changes needed.
