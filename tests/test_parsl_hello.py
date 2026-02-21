@@ -54,7 +54,7 @@ def test_parsl_hello_bash(config):
 
     # Define a "hello world" Bash task
     @bash_task
-    def bash_hello(stdout=None, stderr=None):
+    def bash_hello():
         return 'echo "Hello World! from bash task"'
 
     # Remove previous test output if it exists

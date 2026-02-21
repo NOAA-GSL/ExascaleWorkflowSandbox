@@ -114,11 +114,7 @@ def test_endpoint_hello_mpi(config):
 
     # Define a bash task to compile the MPI code
     @bash_task
-    def compile_func(
-        dirpath,
-        stdout=None,
-        stderr=None,
-    ):
+    def compile_func(dirpath):
         return f"""
         cd {dirpath}
         $CHILTEPIN_MPIF90 -o mpi_hello.exe ../mpi_hello.f90
@@ -126,12 +122,7 @@ def test_endpoint_hello_mpi(config):
 
     # Define a bash task to run the MPI program
     @bash_task
-    def hello_func(
-        dirpath,
-        stdout=None,
-        stderr=None,
-        parsl_resource_specification=None,
-    ):
+    def hello_func(dirpath):
         return f"""
         cd {dirpath}
         $PARSL_MPI_PREFIX --overcommit ./mpi_hello.exe
@@ -184,7 +175,7 @@ def test_endpoint_pi_mpi(config):
 
     # Define a bash task to compile the MPI code
     @bash_task
-    def compile_func(dirpath, stdout=None, stderr=None):
+    def compile_func(dirpath):
         return f"""
         cd {dirpath}
         $CHILTEPIN_MPIF90 -o mpi_pi.exe ../mpi_pi.f90
@@ -192,7 +183,7 @@ def test_endpoint_pi_mpi(config):
 
     # Define a bash task to run the MPI program
     @bash_task
-    def pi_func(dirpath, stdout=None, stderr=None, parsl_resource_specification=None):
+    def pi_func(dirpath):
         return f"""
         cd {dirpath}
         $PARSL_MPI_PREFIX --overcommit ./mpi_pi.exe
