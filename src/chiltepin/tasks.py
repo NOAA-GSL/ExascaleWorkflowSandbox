@@ -1,5 +1,5 @@
 from functools import wraps
-from inspect import signature
+from inspect import Parameter, signature
 from typing import Callable
 
 from parsl.app.app import bash_app, join_app, python_app
@@ -25,11 +25,20 @@ def _create_filtered_wrapper(function: Callable) -> Callable:
     sig = signature(function)
     func_params = sig.parameters
 
+    # Check if the function accepts **kwargs (VAR_KEYWORD)
+    has_var_keyword = any(
+        param.kind == Parameter.VAR_KEYWORD for param in func_params.values()
+    )
+
     @wraps(function)
     def wrapper(*args, **kwargs):
-        # Filter kwargs to only include parameters the user's function accepts
-        filtered_kwargs = {k: v for k, v in kwargs.items() if k in func_params}
-        return function(*args, **filtered_kwargs)
+        # If function has **kwargs, pass all kwargs through
+        # Otherwise, filter to only include parameters the function explicitly accepts
+        if has_var_keyword:
+            return function(*args, **kwargs)
+        else:
+            filtered_kwargs = {k: v for k, v in kwargs.items() if k in func_params}
+            return function(*args, **filtered_kwargs)
 
     return wrapper
 
