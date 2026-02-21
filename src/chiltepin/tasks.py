@@ -1,7 +1,37 @@
 from functools import wraps
+from inspect import signature
 from typing import Callable
 
 from parsl.app.app import bash_app, join_app, python_app
+
+
+def _create_filtered_wrapper(function: Callable) -> Callable:
+    """Create a wrapper that filters kwargs to only pass what the function accepts.
+
+    This helper function creates an intermediate wrapper for Parsl app decorators.
+    The wrapper accepts any arguments that Parsl injects (stdout, stderr, etc.)
+    but only forwards the ones that the user's function signature expects.
+
+    Parameters
+    ----------
+    function: Callable
+        The user's function to wrap
+
+    Returns
+    -------
+    Callable
+        A wrapper function that filters kwargs based on the function's signature
+    """
+    sig = signature(function)
+    func_params = sig.parameters
+
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+        # Filter kwargs to only include parameters the user's function accepts
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in func_params}
+        return function(*args, **filtered_kwargs)
+
+    return wrapper
 
 
 def python_task(function: Callable) -> Callable:
@@ -32,7 +62,9 @@ def python_task(function: Callable) -> Callable:
         executor="all",
         **kwargs,
     ):
-        return python_app(function, executors=executor)(*args, **kwargs)
+        return python_app(_create_filtered_wrapper(function), executors=executor)(
+            *args, **kwargs
+        )
 
     return function_wrapper
 
@@ -66,7 +98,9 @@ def bash_task(function: Callable) -> Callable:
         executor="all",
         **kwargs,
     ):
-        return bash_app(function, executors=executor)(*args, **kwargs)
+        return bash_app(_create_filtered_wrapper(function), executors=executor)(
+            *args, **kwargs
+        )
 
     return function_wrapper
 
@@ -100,6 +134,6 @@ def join_task(function: Callable) -> Callable:
         *args,
         **kwargs,
     ):
-        return join_app(function)(*args, **kwargs)
+        return join_app(_create_filtered_wrapper(function))(*args, **kwargs)
 
     return function_wrapper

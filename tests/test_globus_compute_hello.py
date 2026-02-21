@@ -113,7 +113,7 @@ def test_endpoint_hello_bash(config):
     output_dir = config["output_dir"]
 
     @bash_task
-    def hello(stdout=None, stderr=None):
+    def hello():
         return "echo Hello"
 
     # Remove previous test output if it exists
