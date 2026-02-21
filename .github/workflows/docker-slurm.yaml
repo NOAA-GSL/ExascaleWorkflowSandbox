@@ -83,8 +83,8 @@ jobs:
         name: Copy coverage reports from container
         if: always()
         run: |
-          docker cp frontend:/home/chiltepin/work/coverage.xml ./coverage-amd64.xml || true
-          docker cp frontend:/home/chiltepin/work/htmlcov ./htmlcov-amd64 || true
+          docker cp frontend:/home/admin/work/coverage.xml ./coverage-amd64.xml || true
+          docker cp frontend:/home/admin/work/htmlcov ./htmlcov-amd64 || true
       -
         name: Upload coverage reports
         if: always()
@@ -199,8 +199,8 @@ jobs:
         name: Copy coverage reports from container
         if: always()
         run: |
-          docker cp frontend:/home/chiltepin/work/coverage.xml ./coverage-arm64.xml || true
-          docker cp frontend:/home/chiltepin/work/htmlcov ./htmlcov-arm64 || true
+          docker cp frontend:/home/admin/work/coverage.xml ./coverage-arm64.xml || true
+          docker cp frontend:/home/admin/work/htmlcov ./htmlcov-arm64 || true
       -
         name: Upload coverage reports
         if: always()
