@@ -90,7 +90,7 @@ jobs:
         name: Comment coverage report on PR
         if: github.event_name == 'pull_request'
         run:
-          gh pr comment $((github.event.pull_request.number)) -F coverage.md || echo "No coverage report to post"
+          gh pr comment ${{ github.event.pull_request.number }} -F coverage.md || echo "No coverage report to post"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # -
