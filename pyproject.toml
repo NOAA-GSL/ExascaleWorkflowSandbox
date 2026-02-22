@@ -29,6 +29,7 @@ classifiers = [
 [project.optional-dependencies]
 test = [
     "pytest",
+    "pytest-cov",
     "ruff",
 ]
 
@@ -39,6 +40,25 @@ chiltepin = "chiltepin.cli:main"
 addopts = [
     "--import-mode=importlib",
 ]
+
+[tool.coverage.run]
+source = ["src/chiltepin"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.chiltepin/*",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+# Fail if coverage is below this threshold
+fail_under = 55 # Should be at least 80, but need to get test cov PR in first
+
+[tool.coverage.html]
+directory = "htmlcov"
 
 [tool.ruff]
 target-version = "py310"

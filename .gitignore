@@ -11,3 +11,11 @@ __pycache__
 
 # Ignore test output
 tests/test_output/
+
+# Ignore coverage files
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+*.cover
+.pytest_cache/

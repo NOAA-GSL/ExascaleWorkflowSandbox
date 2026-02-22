@@ -73,15 +73,36 @@ jobs:
           docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
           docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e .[test]"
       -
-        name: Run test suite
+        name: Run test suite with coverage
+        id: pytest
+        continue-on-error: true
         env:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --config=tests/config.yaml --platform=docker"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term-missing --cov-report=markdown:coverage.md --cov-report=xml --cov-report=html --config=tests/config.yaml --platform=docker"
+      -
+        name: Copy coverage reports from container
+        if: always()
+        run: |
+          docker cp frontend:/home/admin/work/coverage.md ./coverage.md || true
+          docker cp frontend:/home/admin/work/coverage.xml ./coverage.xml || true
+          docker cp frontend:/home/admin/work/htmlcov ./htmlcov || true
+      -
+        name: Upload coverage reports
+        id: upload-coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.md
+            coverage.xml
+            htmlcov/
+          retention-days: 30
       -
         name: Debug session
-        if: ${{ failure() }}
+        if: steps.pytest.outcome == 'failure' && steps.upload-coverage.outcome != 'success'
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 60
         with:
@@ -193,3 +214,42 @@ jobs:
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
           docker compose -f docker-compose-test.yml down
+
+  coverage-report:
+    name: Post Coverage Report to PR
+    if: github.event_name == 'pull_request' && !cancelled()
+    needs: [build-and-test-chiltepin-amd64]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      -
+        name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: ./coverage
+        continue-on-error: true
+      -
+        name: Parse coverage report
+        id: coverage
+        run: |
+          echo "COVERAGE_REPORT<<EOF" >> $GITHUB_OUTPUT
+          echo "## 📊 Test Coverage Report" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          cat ./coverage/coverage.md >> $GITHUB_OUTPUT || echo "❌ Coverage report not available" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      -
+        name: Post coverage comment to PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: process.env.COVERAGE_REPORT
+            });
+        env:
+          COVERAGE_REPORT: ${{ steps.coverage.outputs.COVERAGE_REPORT }}
