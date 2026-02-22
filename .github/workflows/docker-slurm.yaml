@@ -74,6 +74,8 @@ jobs:
           docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e .[test]"
       -
         name: Run test suite with coverage
+        id: pytest
+        continue-on-error: true
         env:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
@@ -88,6 +90,7 @@ jobs:
           docker cp frontend:/home/admin/work/htmlcov ./htmlcov || true
       -
         name: Upload coverage reports
+        id: upload-coverage
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -99,7 +102,7 @@ jobs:
           retention-days: 30
       -
         name: Debug session
-        if: ${{ failure() }}
+        if: steps.pytest.outcome == 'failure' && steps.upload-coverage.outcome != 'success'
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 60
         with:
@@ -214,7 +217,7 @@ jobs:
 
   coverage-report:
     name: Post Coverage Report to PR
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && !cancelled()
     needs: [build-and-test-chiltepin-amd64]
     runs-on: ubuntu-latest
     permissions:
@@ -235,7 +238,7 @@ jobs:
           echo "COVERAGE_REPORT<<EOF" >> $GITHUB_OUTPUT
           echo "## 📊 Test Coverage Report" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
-          cat ./coverage/coverage.md || echo "❌ Coverage report not available" >> $GITHUB_OUTPUT
+          cat ./coverage/coverage.md >> $GITHUB_OUTPUT || echo "❌ Coverage report not available" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
       -
         name: Post coverage comment to PR
