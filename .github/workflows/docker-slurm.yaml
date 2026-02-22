@@ -78,23 +78,32 @@ jobs:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term --cov-report=xml --cov-report=html --config=tests/config.yaml --platform=docker"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term-missing --cov-report=markdown:coverage.md --cov-report=xml --cov-report=html --config=tests/config.yaml --platform=docker"
       -
         name: Copy coverage reports from container
         if: always()
         run: |
-          docker cp frontend:/home/admin/work/coverage.xml ./coverage-amd64.xml || true
-          docker cp frontend:/home/admin/work/htmlcov ./htmlcov-amd64 || true
+          docker cp frontend:/home/admin/work/coverage.md ./coverage.md || true
+          # docker cp frontend:/home/admin/work/coverage.xml ./coverage-amd64.xml || true
+          # docker cp frontend:/home/admin/work/htmlcov ./htmlcov-amd64 || true
       -
-        name: Upload coverage reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report-amd64
-          path: |
-            coverage-amd64.xml
-            htmlcov-amd64/
-          retention-days: 30
+        name: Comment coverage report on PR
+        if: github.event_name == 'pull_request'
+        run:
+          gh pr comment $((github.event.pull_request.number)) -F coverage.md || echo "No coverage report to post"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # -
+      #   name: Upload coverage reports
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: coverage-report-amd64
+      #     path: |
+      #       coverage-amd64.md
+      #       # coverage-amd64.xml
+      #       # htmlcov-amd64/
+      #     retention-days: 30
       -
         name: Debug session
         if: ${{ failure() }}
@@ -210,114 +219,114 @@ jobs:
           export COMPOSE_HTTP_TIMEOUT=600
           docker compose -f docker-compose-test.yml down
 
-  coverage-report:
-    name: Post Coverage Report to PR
-    if: github.event_name == 'pull_request'
-    needs: [build-and-test-chiltepin-amd64]
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: read
-    steps:
-      -
-        name: Download coverage report
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-report-amd64
-          path: ./coverage
-        continue-on-error: true
-      -
-        name: Parse coverage report
-        id: coverage
-        run: |
-          COVERAGE_FILE="./coverage/coverage-amd64.xml"
+  # coverage-report:
+  #   name: Post Coverage Report to PR
+  #   if: github.event_name == 'pull_request'
+  #   needs: [build-and-test-chiltepin-amd64]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     pull-requests: write
+  #     contents: read
+  #   steps:
+  #     -
+  #       name: Download coverage report
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: coverage-report-amd64
+  #         path: ./coverage
+  #       continue-on-error: true
+  #     -
+  #       name: Parse coverage report
+  #       id: coverage
+  #       run: |
+  #         COVERAGE_FILE="./coverage/coverage-amd64.xml"
 
-          if [ ! -f "$COVERAGE_FILE" ]; then
-            echo "❌ Coverage report not found"
-            exit 1
-          fi
+  #         if [ ! -f "$COVERAGE_FILE" ]; then
+  #           echo "❌ Coverage report not found"
+  #           exit 1
+  #         fi
 
-          # Extract coverage metrics from XML
-          line_rate=$(grep -oP 'line-rate="\K[0-9.]+' "$COVERAGE_FILE" | head -1)
-          coverage=$(echo "$line_rate * 100" | bc -l | xargs printf "%.2f")
-          statements=$(grep -oP 'lines-valid="\K[0-9]+' "$COVERAGE_FILE" | head -1)
-          covered=$(grep -oP 'lines-covered="\K[0-9]+' "$COVERAGE_FILE" | head -1)
-          missed=$((statements - covered))
+  #         # Extract coverage metrics from XML
+  #         line_rate=$(grep -oP 'line-rate="\K[0-9.]+' "$COVERAGE_FILE" | head -1)
+  #         coverage=$(echo "$line_rate * 100" | bc -l | xargs printf "%.2f")
+  #         statements=$(grep -oP 'lines-valid="\K[0-9]+' "$COVERAGE_FILE" | head -1)
+  #         covered=$(grep -oP 'lines-covered="\K[0-9]+' "$COVERAGE_FILE" | head -1)
+  #         missed=$((statements - covered))
 
-          # Determine threshold status
-          threshold=55.0
-          threshold_int=$(echo "$threshold" | cut -d. -f1)
-          coverage_int=$(echo "$coverage" | cut -d. -f1)
+  #         # Determine threshold status
+  #         threshold=55.0
+  #         threshold_int=$(echo "$threshold" | cut -d. -f1)
+  #         coverage_int=$(echo "$coverage" | cut -d. -f1)
 
-          if [ "$coverage_int" -ge "$threshold_int" ]; then
-            status="✅ **PASS**"
-          else
-            status="❌ **FAIL**"
-          fi
+  #         if [ "$coverage_int" -ge "$threshold_int" ]; then
+  #           status="✅ **PASS**"
+  #         else
+  #           status="❌ **FAIL**"
+  #         fi
 
-          # Create coverage report content
-          {
-            echo "## 📊 Test Coverage Report"
-            echo ""
-            echo "### Overall Coverage: **${coverage}%** ${status}"
-            echo ""
-            echo "| Metric | Value |"
-            echo "|--------|-------|"
-            echo "| **Coverage** | ${coverage}% |"
-            echo "| **Statements Covered** | ${covered} / ${statements} |"
-            echo "| **Statements Missing** | ${missed} |"
-            echo "| **Threshold** | ${threshold}% |"
-            echo ""
-            echo "---"
-            echo "*Coverage report generated by pytest-cov. Full HTML report available in workflow artifacts.*"
-          } > coverage-comment.md
+  #         # Create coverage report content
+  #         {
+  #           echo "## 📊 Test Coverage Report"
+  #           echo ""
+  #           echo "### Overall Coverage: **${coverage}%** ${status}"
+  #           echo ""
+  #           echo "| Metric | Value |"
+  #           echo "|--------|-------|"
+  #           echo "| **Coverage** | ${coverage}% |"
+  #           echo "| **Statements Covered** | ${covered} / ${statements} |"
+  #           echo "| **Statements Missing** | ${missed} |"
+  #           echo "| **Threshold** | ${threshold}% |"
+  #           echo ""
+  #           echo "---"
+  #           echo "*Coverage report generated by pytest-cov. Full HTML report available in workflow artifacts.*"
+  #         } > coverage-comment.md
 
-          # Display report
-          cat coverage-comment.md
+  #         # Display report
+  #         cat coverage-comment.md
 
-          # Save as multiline output
-          echo "COVERAGE_REPORT<<EOF" >> $GITHUB_OUTPUT
-          cat coverage-comment.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-      -
-        name: Post coverage comment to PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const coverageReport = process.env.COVERAGE_REPORT;
+  #         # Save as multiline output
+  #         echo "COVERAGE_REPORT<<EOF" >> $GITHUB_OUTPUT
+  #         cat coverage-comment.md >> $GITHUB_OUTPUT
+  #         echo "EOF" >> $GITHUB_OUTPUT
+  #     -
+  #       name: Post coverage comment to PR
+  #       uses: actions/github-script@v7
+  #       with:
+  #         script: |
+  #           const coverageReport = process.env.COVERAGE_REPORT;
 
-            // Find existing coverage comment
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
+  #           // Find existing coverage comment
+  #           const { data: comments } = await github.rest.issues.listComments({
+  #             owner: context.repo.owner,
+  #             repo: context.repo.repo,
+  #             issue_number: context.issue.number,
+  #           });
 
-            const botComment = comments.find(comment =>
-              comment.user.type === 'Bot' &&
-              comment.body.includes('📊 Test Coverage Report')
-            );
+  #           const botComment = comments.find(comment =>
+  #             comment.user.type === 'Bot' &&
+  #             comment.body.includes('📊 Test Coverage Report')
+  #           );
 
-            const commentBody = coverageReport;
+  #           const commentBody = coverageReport;
 
-            if (botComment) {
-              // Update existing comment
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: commentBody
-              });
-              console.log('Updated existing coverage comment');
-            } else {
-              // Create new comment
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: commentBody
-              });
-              console.log('Created new coverage comment');
-            }
-        env:
-          COVERAGE_REPORT: ${{ steps.coverage.outputs.COVERAGE_REPORT }}
+  #           if (botComment) {
+  #             // Update existing comment
+  #             await github.rest.issues.updateComment({
+  #               owner: context.repo.owner,
+  #               repo: context.repo.repo,
+  #               comment_id: botComment.id,
+  #               body: commentBody
+  #             });
+  #             console.log('Updated existing coverage comment');
+  #           } else {
+  #             // Create new comment
+  #             await github.rest.issues.createComment({
+  #               owner: context.repo.owner,
+  #               repo: context.repo.repo,
+  #               issue_number: context.issue.number,
+  #               body: commentBody
+  #             });
+  #             console.log('Created new coverage comment');
+  #           }
+  #       env:
+  #         COVERAGE_REPORT: ${{ steps.coverage.outputs.COVERAGE_REPORT }}

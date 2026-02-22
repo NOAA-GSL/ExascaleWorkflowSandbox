@@ -219,9 +219,7 @@ class TestCLIMainSafely:
         mock_func = mock.Mock()
         mock_args = argparse.Namespace(func=mock_func, name="test-ep", config_dir=None)
 
-        with mock.patch.object(
-            cli.root_parser, "parse_args", return_value=mock_args
-        ):
+        with mock.patch.object(cli.root_parser, "parse_args", return_value=mock_args):
             cli.main()
             mock_func.assert_called_once_with(name="test-ep", config_dir=None)
 
@@ -235,9 +233,7 @@ class TestCLIMainSafely:
             some_other_arg="value",
         )
 
-        with mock.patch.object(
-            cli.root_parser, "parse_args", return_value=mock_args
-        ):
+        with mock.patch.object(cli.root_parser, "parse_args", return_value=mock_args):
             cli.main()
             mock_func.assert_called_once_with(
                 name="test-endpoint",
@@ -249,9 +245,7 @@ class TestCLIMainSafely:
         """Test that main() raises KeyError when no subcommand is provided."""
         mock_args = argparse.Namespace()  # Empty namespace, no 'func' attribute
 
-        with mock.patch.object(
-            cli.root_parser, "parse_args", return_value=mock_args
-        ):
+        with mock.patch.object(cli.root_parser, "parse_args", return_value=mock_args):
             with pytest.raises(KeyError, match="func"):
                 cli.main()
 

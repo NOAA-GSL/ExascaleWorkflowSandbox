@@ -2,7 +2,6 @@ import logging
 import pathlib
 from unittest import mock
 
-import globus_sdk
 import parsl
 import pytest
 
@@ -80,6 +79,7 @@ def test_data_delete_task(config):
 
     assert completed is True
 
+
 def test_data_transfer(config):
     completed = data.transfer(
         "chiltepin-test-mercury",
@@ -101,9 +101,12 @@ def test_data_delete(config):
     )
     assert completed is True
 
+
 def test_data_transfer_with_bad_src_ep(config):
-    with pytest.raises(RuntimeError, match="Source endpoint 'does-not-exist' could not be found"):
-        completed = data.transfer(
+    with pytest.raises(
+        RuntimeError, match="Source endpoint 'does-not-exist' could not be found"
+    ):
+        data.transfer(
             "does-not-exist",
             "chiltepin-test-ursa",
             "1MB.from_mercury",
@@ -115,8 +118,10 @@ def test_data_transfer_with_bad_src_ep(config):
 
 
 def test_data_transfer_with_bad_dst_ep(config):
-    with pytest.raises(RuntimeError, match="Destination endpoint 'does-not-exist' could not be found"):
-        completed = data.transfer(
+    with pytest.raises(
+        RuntimeError, match="Destination endpoint 'does-not-exist' could not be found"
+    ):
+        data.transfer(
             "chiltepin-test-ursa",
             "does-not-exist",
             "1MB.from_mercury",
@@ -128,8 +133,10 @@ def test_data_transfer_with_bad_dst_ep(config):
 
 
 def test_data_delete_with_bad_ep(config):
-    with pytest.raises(RuntimeError, match="Source endpoint 'does-not-exist' could not be found"):
-        completed = data.delete(
+    with pytest.raises(
+        RuntimeError, match="Source endpoint 'does-not-exist' could not be found"
+    ):
+        data.delete(
             "does-not-exist",
             "1MB.to_ursa",
             timeout=120,
@@ -140,6 +147,7 @@ def test_data_delete_with_bad_ep(config):
 
 class MockTransferAPIError(Exception):
     """Mock exception that mimics globus_sdk.TransferAPIError structure."""
+
     def __init__(self, consent_required=False, message="API Error"):
         super().__init__(message)
         self.info = mock.Mock()
@@ -157,8 +165,12 @@ def test_data_transfer_consent_required_error(config):
 
     # Patch both the submit_transfer method AND the exception class being caught
     with mock.patch("globus_sdk.TransferAPIError", MockTransferAPIError):
-        with mock.patch.object(config["client"], "submit_transfer", side_effect=raise_consent_error):
-            with pytest.raises(RuntimeError, match="Encountered a ConsentRequired error"):
+        with mock.patch.object(
+            config["client"], "submit_transfer", side_effect=raise_consent_error
+        ):
+            with pytest.raises(
+                RuntimeError, match="Encountered a ConsentRequired error"
+            ):
                 data.transfer(
                     "chiltepin-test-ursa",
                     "chiltepin-test-mercury",
@@ -173,14 +185,18 @@ def test_data_transfer_consent_required_error(config):
 def test_data_transfer_other_api_error(config):
     """Test that transfer properly handles TransferAPIError without consent_required."""
     # Create a mock TransferAPIError with consent_required=False
-    mock_error = MockTransferAPIError(consent_required=False, message="Generic transfer API error")
+    mock_error = MockTransferAPIError(
+        consent_required=False, message="Generic transfer API error"
+    )
 
     def raise_api_error(*args, **kwargs):
         raise mock_error
 
     # Patch both the submit_transfer method AND the exception class being caught
     with mock.patch("globus_sdk.TransferAPIError", MockTransferAPIError):
-        with mock.patch.object(config["client"], "submit_transfer", side_effect=raise_api_error):
+        with mock.patch.object(
+            config["client"], "submit_transfer", side_effect=raise_api_error
+        ):
             with pytest.raises(RuntimeError):
                 data.transfer(
                     "chiltepin-test-ursa",
@@ -203,8 +219,12 @@ def test_data_delete_consent_required_error(config):
 
     # Patch both the submit_delete method AND the exception class being caught
     with mock.patch("globus_sdk.TransferAPIError", MockTransferAPIError):
-        with mock.patch.object(config["client"], "submit_delete", side_effect=raise_consent_error):
-            with pytest.raises(RuntimeError, match="Encountered a ConsentRequired error"):
+        with mock.patch.object(
+            config["client"], "submit_delete", side_effect=raise_consent_error
+        ):
+            with pytest.raises(
+                RuntimeError, match="Encountered a ConsentRequired error"
+            ):
                 data.delete(
                     "chiltepin-test-ursa",
                     "test.txt",
@@ -217,14 +237,18 @@ def test_data_delete_consent_required_error(config):
 def test_data_delete_other_api_error(config):
     """Test that delete properly handles TransferAPIError without consent_required."""
     # Create a mock TransferAPIError with consent_required=False
-    mock_error = MockTransferAPIError(consent_required=False, message="Generic delete API error")
+    mock_error = MockTransferAPIError(
+        consent_required=False, message="Generic delete API error"
+    )
 
     def raise_api_error(*args, **kwargs):
         raise mock_error
 
     # Patch both the submit_delete method AND the exception class being caught
     with mock.patch("globus_sdk.TransferAPIError", MockTransferAPIError):
-        with mock.patch.object(config["client"], "submit_delete", side_effect=raise_api_error):
+        with mock.patch.object(
+            config["client"], "submit_delete", side_effect=raise_api_error
+        ):
             with pytest.raises(RuntimeError):
                 data.delete(
                     "chiltepin-test-ursa",
