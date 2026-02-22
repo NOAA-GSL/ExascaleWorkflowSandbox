@@ -246,5 +246,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `${{ steps.coverage.outputs.COVERAGE_REPORT }}`
+              body: process.env.COVERAGE_REPORT
             });
+        env:
+          COVERAGE_REPORT: ${{ steps.coverage.outputs.COVERAGE_REPORT }}
