@@ -64,8 +64,8 @@ def transfer_task(
         None, the transfer will be run at the next available scheduling
         opportunity
     """
-    # Run the transfer
-    completed = transfer(
+    # Run the transfer (executes in remote Parsl worker)
+    completed = transfer(  # pragma: no cover
         src_ep,
         dst_ep,
         src_path,
@@ -75,7 +75,7 @@ def transfer_task(
         client=client,
         recursive=recursive,
     )
-    return completed
+    return completed  # pragma: no cover
 
 
 @python_task
@@ -126,7 +126,8 @@ def delete_task(
         None, the deletion will be run at the next available scheduling
         opportunity
     """
-    completed = delete(
+    # Run the deletion (executes in remote Parsl worker)
+    completed = delete(  # pragma: no cover
         src_ep,
         src_path,
         timeout=timeout,
@@ -134,7 +135,7 @@ def delete_task(
         client=client,
         recursive=recursive,
     )
-    return completed
+    return completed  # pragma: no cover
 
 
 def transfer(
@@ -199,7 +200,7 @@ def transfer(
         if ep["display_name"] == src_ep or ep["id"] == src_ep:
             src_id = ep["id"]
     if not src_id:
-        raise Exception(f"Source endpoint '{src_ep}' could not be found")
+        raise RuntimeError(f"Source endpoint '{src_ep}' could not be found")
 
     # Get the destination endpoint
     dst_id = None
@@ -207,7 +208,7 @@ def transfer(
         if ep["display_name"] == dst_ep or ep["id"] == dst_ep:
             dst_id = ep["id"]
     if not dst_id:
-        raise Exception(f"Destination endpoint '{dst_ep}' could not be found")
+        raise RuntimeError(f"Destination endpoint '{dst_ep}' could not be found")
 
     # Add data access scopes for both endpoints (just in case)
     # client.add_app_data_access_scope([src_id, dst_id])
@@ -234,13 +235,13 @@ def transfer(
         return done
     except globus_sdk.TransferAPIError as err:
         if err.info.consent_required:
-            raise Exception(
+            raise RuntimeError(
                 "Encountered a ConsentRequired error.\n"
                 "You must login a second time to grant consents.\n\n"
                 "err.info"
             )
         else:
-            raise Exception(err)
+            raise RuntimeError(err)
 
 
 def delete(
@@ -295,7 +296,7 @@ def delete(
         if ep["display_name"] == src_ep or ep["id"] == src_ep:
             src_id = ep["id"]
     if not src_id:
-        raise Exception(f"Source endpoint '{src_ep}' could not be found")
+        raise RuntimeError(f"Source endpoint '{src_ep}' could not be found")
 
     # Add data access scopes for both endpoints (just in case)
     # client.add_app_data_access_scope([src_id, dst_id])
@@ -316,10 +317,10 @@ def delete(
         return done
     except globus_sdk.TransferAPIError as err:
         if err.info.consent_required:
-            raise Exception(
+            raise RuntimeError(
                 "Encountered a ConsentRequired error.\n"
                 "You must login a second time to grant consents.\n\n"
                 "err.info"
             )
         else:
-            raise Exception(err)
+            raise RuntimeError(err)
