@@ -278,12 +278,12 @@ jobs:
           # # Display report
           # cat coverage-comment.md
 
-        # Save as multiline output
-        echo "COVERAGE_REPORT<<EOF" >> $GITHUB_OUTPUT
-        echo "## 📊 Test Coverage Report" >> $GITHUB_OUTPUT
-        echo "" >> $GITHUB_OUTPUT
-        cat ./coverage/coverage.md || echo "❌ Coverage report not available" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+          # Save as multiline output
+          echo "COVERAGE_REPORT<<EOF" >> $GITHUB_OUTPUT
+          echo "## 📊 Test Coverage Report" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          cat ./coverage/coverage.md || echo "❌ Coverage report not available" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
       -
         name: Post coverage comment to PR
         uses: actions/github-script@v7
