@@ -152,7 +152,7 @@ def get_chiltepin_apps() -> (GlobusApp, GlobusApp):
 
     # If a client secret was found, make sure a client id was also found
     if client_secret and not client_id:
-        raise Exception(
+        raise RuntimeError(
             "$GLOBUS_COMPUTE_CLIENT_SECRET is set but $GLOBUS_COMPUTE_CLIENT_ID is not"
         )
 

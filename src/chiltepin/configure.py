@@ -393,7 +393,13 @@ def load(
     if include is None:
         resources = config
     else:
-        resources = {key: config[key] for key in include if key in config}
+        # Validate that all requested resources exist
+        missing = [key for key in include if key not in config]
+        if missing:
+            raise RuntimeError(
+                f"Resources specified in include list not found in config: {missing}"
+            )
+        resources = {key: config[key] for key in include}
     for resource_name, resource_config in resources.items():
         executors.append(
             create_executor(
