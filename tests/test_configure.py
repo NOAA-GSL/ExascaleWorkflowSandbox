@@ -38,9 +38,7 @@ class TestParseFile:
             },
         }
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yaml", delete=False
-        ) as tmp:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as tmp:
             yaml.dump(config_data, tmp)
             tmp_path = tmp.name
 
@@ -54,9 +52,7 @@ class TestParseFile:
 
     def test_parse_invalid_yaml(self):
         """Test parsing an invalid YAML file raises an error."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yaml", delete=False
-        ) as tmp:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as tmp:
             tmp.write("invalid: yaml: content:\n  - broken")
             tmp_path = tmp.name
 
@@ -337,7 +333,7 @@ class TestCreateGlobusComputeExecutor:
 
         assert isinstance(executor, GlobusComputeExecutor)
         assert executor.label == "gc-test"
-        
+
         # Verify user_endpoint_config has correct defaults
         uec = executor.executor.user_endpoint_config
         assert uec["provider"] == "localhost"
@@ -368,7 +364,7 @@ class TestCreateGlobusComputeExecutor:
         )
 
         assert isinstance(executor, GlobusComputeExecutor)
-        
+
         # Verify user_endpoint_config is set correctly
         uec = executor.executor.user_endpoint_config
         assert uec["provider"] == "localhost"
@@ -389,7 +385,7 @@ class TestCreateGlobusComputeExecutor:
 
         assert isinstance(executor, GlobusComputeExecutor)
         assert executor.label == "gc-mpi"
-        
+
         # Verify user_endpoint_config has correct MPI settings
         uec = executor.executor.user_endpoint_config
         assert uec["provider"] == "slurm"
@@ -419,7 +415,7 @@ class TestCreateGlobusComputeExecutor:
         executor = configure.create_globus_compute_executor("gc-full", config)
 
         assert isinstance(executor, GlobusComputeExecutor)
-        
+
         # Verify user_endpoint_config has all custom values
         uec = executor.executor.user_endpoint_config
         assert uec["provider"] == "slurm"
@@ -557,8 +553,11 @@ class TestLoad:
         resources = {
             "compute": {"provider": "slurm"},
         }
-        
-        with pytest.raises(RuntimeError, match="Resources specified in include list not found in config"):
+
+        with pytest.raises(
+            RuntimeError,
+            match="Resources specified in include list not found in config",
+        ):
             configure.load(resources, include=["compute", "nonexistent"])
 
     def test_load_with_run_dir(self):
@@ -651,17 +650,17 @@ class TestIntegrationScenarios:
         config = configure.load(resources)
 
         assert len(config.executors) == 4
-        
+
         # Verify service partition executor
         service_ex = [ex for ex in config.executors if ex.label == "service"][0]
         assert isinstance(service_ex, HighThroughputExecutor)
         assert service_ex.provider.exclusive is False
-        
+
         # Verify compute partition executor
         compute_ex = [ex for ex in config.executors if ex.label == "compute"][0]
         assert isinstance(compute_ex, HighThroughputExecutor)
         assert compute_ex.provider.cores_per_node == 48
-        
+
         # Verify MPI executor
         mpi_ex = [ex for ex in config.executors if ex.label == "mpi"][0]
         assert isinstance(mpi_ex, MPIExecutor)
@@ -686,13 +685,13 @@ class TestIntegrationScenarios:
         config = configure.load(resources)
 
         assert len(config.executors) == 3
-        
+
         # Check for HTEX executors (local + local-compute)
         htex_executors = [
             ex for ex in config.executors if isinstance(ex, HighThroughputExecutor)
         ]
         assert len(htex_executors) == 2
-        
+
         # Check for GlobusCompute executor
         gc_executors = [
             ex for ex in config.executors if isinstance(ex, GlobusComputeExecutor)
