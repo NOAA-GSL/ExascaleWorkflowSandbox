@@ -606,3 +606,79 @@ class TestTaskMetadata:
             return "test"
 
         assert documented_function.__doc__ == "This is a test docstring."
+
+    def test_python_task_with_var_kwargs_and_file_output(self, parsl_config):
+        """Test python_task with **kwargs that receives Parsl-injected stdout/stderr."""
+
+        @python_task
+        def task_with_var_kwargs(x, **kwargs):
+            # This function accepts **kwargs, so all kwargs should be passed through
+            # Including any user-provided kwargs beyond Parsl-injected ones
+            bonus = kwargs.get('bonus', 0)
+            return x * 2 + bonus
+
+        # Pass both a user kwarg and stdout to test kwargs passthrough
+        future = task_with_var_kwargs(
+            5, bonus=10, executor=["test-local"]
+        )
+        result = future.result()
+        assert result == 20  # (5 * 2) + 10
+
+    def test_decorated_method_accessed_on_class(self, parsl_config):
+        """Test accessing decorated method on class (not instance) returns descriptor."""
+
+        class TestClass:
+            @python_task
+            def my_method(self, x):
+                return x + 1
+
+        # Access on class (not instance) should return the MethodWrapper itself
+        method_on_class = TestClass.my_method
+        assert hasattr(method_on_class, "__get__")  # It's a descriptor
+        # Verify it's a MethodWrapper by checking for the wrapper_func attribute
+        assert hasattr(method_on_class, "wrapper_func")
+
+    def test_bash_task_with_var_kwargs_and_user_args(self, parsl_config):
+        """Test bash_task with **kwargs receiving both user and Parsl kwargs."""
+
+        @bash_task
+        def bash_with_var_kwargs(message, **kwargs):
+            # Extra kwargs available if needed
+            prefix = kwargs.get('prefix', '')
+            return f"echo '{prefix}{message}'"
+
+        future = bash_with_var_kwargs(
+            "test message", prefix="[INFO] ", executor=["test-local"]
+        )
+        result = future.result()
+        assert result == 0
+
+    def test_create_filtered_wrapper_with_var_keyword(self, parsl_config):
+        """Test _create_filtered_wrapper directly with a function that has **kwargs."""
+        from chiltepin.tasks import _create_filtered_wrapper
+
+        # Function with **kwargs should pass all kwargs through
+        def func_with_var_kwargs(x, y=10, **kwargs):
+            bonus = kwargs.get('bonus', 0)
+            extra = kwargs.get('extra', 0)
+            return x + y + bonus + extra
+
+        wrapped = _create_filtered_wrapper(func_with_var_kwargs)
+
+        # Call the wrapper directly (not through Parsl) with extra kwargs
+        result = wrapped(5, y=20, bonus=10, extra=3, ignored_kwarg="should_be_passed")
+        assert result == 38  # 5 + 20 + 10 + 3 = 38
+
+    def test_create_filtered_wrapper_without_var_keyword(self, parsl_config):
+        """Test _create_filtered_wrapper directly with a function that does NOT have **kwargs."""
+        from chiltepin.tasks import _create_filtered_wrapper
+
+        # Function without **kwargs should filter out unknown kwargs
+        def func_without_var_kwargs(x, y=10):
+            return x + y
+
+        wrapped = _create_filtered_wrapper(func_without_var_kwargs)
+
+        # Call the wrapper with extra kwargs that should be filtered out
+        result = wrapped(5, y=20, ignored_kwarg="should_be_filtered")
+        assert result == 25  # 5 + 20 = 25
