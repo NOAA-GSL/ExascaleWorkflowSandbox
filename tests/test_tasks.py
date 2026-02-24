@@ -614,13 +614,11 @@ class TestTaskMetadata:
         def task_with_var_kwargs(x, **kwargs):
             # This function accepts **kwargs, so all kwargs should be passed through
             # Including any user-provided kwargs beyond Parsl-injected ones
-            bonus = kwargs.get('bonus', 0)
+            bonus = kwargs.get("bonus", 0)
             return x * 2 + bonus
 
         # Pass both a user kwarg and stdout to test kwargs passthrough
-        future = task_with_var_kwargs(
-            5, bonus=10, executor=["test-local"]
-        )
+        future = task_with_var_kwargs(5, bonus=10, executor=["test-local"])
         result = future.result()
         assert result == 20  # (5 * 2) + 10
 
@@ -644,7 +642,7 @@ class TestTaskMetadata:
         @bash_task
         def bash_with_var_kwargs(message, **kwargs):
             # Extra kwargs available if needed
-            prefix = kwargs.get('prefix', '')
+            prefix = kwargs.get("prefix", "")
             return f"echo '{prefix}{message}'"
 
         future = bash_with_var_kwargs(
@@ -659,8 +657,8 @@ class TestTaskMetadata:
 
         # Function with **kwargs should pass all kwargs through
         def func_with_var_kwargs(x, y=10, **kwargs):
-            bonus = kwargs.get('bonus', 0)
-            extra = kwargs.get('extra', 0)
+            bonus = kwargs.get("bonus", 0)
+            extra = kwargs.get("extra", 0)
             return x + y + bonus + extra
 
         wrapped = _create_filtered_wrapper(func_with_var_kwargs)
