@@ -64,7 +64,7 @@ TOTAL                      83      5    94%
 
 The GitHub workflow automatically:
 1. Runs tests with coverage on both AMD64 and ARM64 platforms
-2. Fails the build if coverage drops below 80%
+2. Fails the build if coverage drops below 100%
 3. Uploads coverage reports as artifacts (available for 30 days)
 4. Generates both XML and HTML reports for inspection
 

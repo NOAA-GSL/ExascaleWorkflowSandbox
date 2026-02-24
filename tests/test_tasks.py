@@ -490,7 +490,7 @@ class TestJoinTaskClassMethods:
 class TestTaskEdgeCases:
     """Test edge cases and special scenarios."""
 
-    # NOTE: The following test is commented out because it raises an excption:
+    # NOTE: The following test is commented out because it raises an exception:
     #
     #   parsl.errors.NoDataFlowKernelError: Must first load config
     #

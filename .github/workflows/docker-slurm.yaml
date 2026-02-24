@@ -80,7 +80,7 @@ jobs:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term-missing --cov-report=markdown:coverage.md --cov-report=xml --cov-report=html --config=tests/config.yaml --platform=docker"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term-missing --cov-report=markdown:coverage.md --cov-report=xml --cov-report=html --cov-fail-under=0 --config=tests/config.yaml --platform=docker"
       -
         name: Copy coverage reports from container
         if: always()
@@ -101,8 +101,49 @@ jobs:
             htmlcov/
           retention-days: 30
       -
+        name: Check coverage threshold
+        id: check-coverage
+        if: always()
+        run: |
+          # Extract threshold from pyproject.toml
+          THRESHOLD=$(grep -A 5 '\[tool.coverage.report\]' pyproject.toml | grep 'fail_under' | grep -oP '\d+(\.\d+)?' | head -1)
+          THRESHOLD=${THRESHOLD:-80.0}  # Default to 80.0 if not found
+          
+          # Extract coverage percentage from XML
+          if [ -f ./coverage.xml ]; then
+            line_rate=$(grep -oP 'line-rate="\K[0-9.]+' ./coverage.xml | head -1)
+            coverage=$(echo "$line_rate * 100" | bc -l | xargs printf "%.2f")
+            
+            echo "Coverage: ${coverage}% | Threshold: ${THRESHOLD}%"
+            
+            # Check if coverage meets threshold
+            if (( $(echo "$coverage < $THRESHOLD" | bc -l) )); then
+              echo "❌ Coverage ${coverage}% is below threshold ${THRESHOLD}%"
+              echo "COVERAGE_FAILED=true" >> $GITHUB_OUTPUT
+              exit 1
+            else
+              echo "✅ Coverage ${coverage}% meets threshold ${THRESHOLD}%"
+              echo "COVERAGE_FAILED=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "❌ Coverage report not found"
+            echo "COVERAGE_FAILED=true" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+      -
+        name: Check test suite status
+        if: always()
+        run: |
+          if [ "${{ steps.pytest.outcome }}" == "failure" ]; then
+            echo "❌ Tests failed"
+            exit 1
+          elif [ "${{ steps.check-coverage.outcome }}" == "failure" ]; then
+            echo "❌ Coverage threshold not met"
+            exit 1
+          fi
+      -
         name: Debug session
-        if: steps.pytest.outcome == 'failure' && steps.upload-coverage.outcome != 'success'
+        if: steps.pytest.outcome == 'failure'
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 60
         with:
