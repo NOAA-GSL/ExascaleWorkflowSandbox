@@ -38,10 +38,10 @@ def config(config_file, platform):
     # Ensure PYTHONPATH is set in the environment so that pytest
     # can import this test module on the remote workers
     resource_config["gc-compute"]["environment"].append(
-        f"export PYTHONPATH={pwd.parent.resolve()}"
+        f"export PYTHONPATH=${{PYTHONPATH}}:{pwd.parent.resolve()}"
     )
     resource_config["gc-mpi"]["environment"].append(
-        f"export PYTHONPATH={pwd.parent.resolve()}"
+        f"export PYTHONPATH=${{PYTHONPATH}}:{pwd.parent.resolve()}"
     )
 
     # Delete test endpoint if it already exists from a previous test run

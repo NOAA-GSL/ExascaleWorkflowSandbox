@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml
@@ -375,7 +376,11 @@ def load(
     Config
     """
 
+    # Get project root directory for setting PYTHONPATH
+    project_base = Path(__file__).parent.parent.parent.resolve()
+
     # Define a default HTEX Executor with a local provider
+    # This includes adding project root directory to PYTHONPATH
     executors = [
         HighThroughputExecutor(
             label="local",
@@ -385,6 +390,7 @@ def load(
             provider=LocalProvider(
                 init_blocks=0,
                 max_blocks=1,
+                worker_init=f"export PYTHONPATH=${{PYTHONPATH}}:{project_base}",
             ),
         )
     ]

@@ -55,7 +55,7 @@ precision = 2
 show_missing = true
 skip_covered = false
 # Fail if coverage is below this threshold
-fail_under = 55 # Should be at least 80, but need to get test cov PR in first
+fail_under = 80
 
 [tool.coverage.html]
 directory = "htmlcov"

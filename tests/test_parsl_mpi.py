@@ -23,10 +23,10 @@ def config(config_file, platform):
 
     yaml_config = chiltepin.configure.parse_file(config_file)
     yaml_config[platform]["resources"]["compute"]["environment"].append(
-        f"export PYTHONPATH={pwd.parent.resolve()}"
+        f"export PYTHONPATH=${{PYTHONPATH}}:{pwd.parent.resolve()}"
     )
     yaml_config[platform]["resources"]["mpi"]["environment"].append(
-        f"export PYTHONPATH={pwd.parent.resolve()}"
+        f"export PYTHONPATH=${{PYTHONPATH}}:{pwd.parent.resolve()}"
     )
 
     # Set Parsl logging to DEBUG and redirect to a file in the output directory

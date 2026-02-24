@@ -43,6 +43,34 @@ def _create_filtered_wrapper(function: Callable) -> Callable:
     return wrapper
 
 
+class MethodWrapper:
+    """Wrapper that preserves method behavior for decorated functions.
+
+    This descriptor ensures that when a decorated function is accessed as a
+    method, it properly creates a bound method with the instance.
+    """
+
+    def __init__(self, func, wrapper_func):
+        self.func = func
+        self.wrapper_func = wrapper_func
+        # Copy over metadata
+        wraps(func)(self)
+
+    def __get__(self, obj, objtype=None):
+        """Support instance methods."""
+        if obj is None:
+            # Accessed on class, return self
+            return self
+        # Return a bound version of the wrapper
+        from functools import partial
+
+        return partial(self.wrapper_func, obj)
+
+    def __call__(self, *args, **kwargs):
+        """Support standalone function calls."""
+        return self.wrapper_func(*args, **kwargs)
+
+
 def python_task(function: Callable) -> Callable:
     """Decorator function for making Chiltepin python tasks.
 
@@ -65,7 +93,6 @@ def python_task(function: Callable) -> Callable:
 
     """
 
-    @wraps(function)
     def function_wrapper(
         *args,
         executor="all",
@@ -75,7 +102,7 @@ def python_task(function: Callable) -> Callable:
             *args, **kwargs
         )
 
-    return function_wrapper
+    return MethodWrapper(function, function_wrapper)
 
 
 def bash_task(function: Callable) -> Callable:
@@ -101,7 +128,6 @@ def bash_task(function: Callable) -> Callable:
 
     """
 
-    @wraps(function)
     def function_wrapper(
         *args,
         executor="all",
@@ -111,7 +137,7 @@ def bash_task(function: Callable) -> Callable:
             *args, **kwargs
         )
 
-    return function_wrapper
+    return MethodWrapper(function, function_wrapper)
 
 
 def join_task(function: Callable) -> Callable:
@@ -138,11 +164,10 @@ def join_task(function: Callable) -> Callable:
 
     """
 
-    @wraps(function)
     def function_wrapper(
         *args,
         **kwargs,
     ):
         return join_app(_create_filtered_wrapper(function))(*args, **kwargs)
 
-    return function_wrapper
+    return MethodWrapper(function, function_wrapper)
