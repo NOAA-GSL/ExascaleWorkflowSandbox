@@ -39,7 +39,7 @@ Coverage settings are configured in `pyproject.toml`:
 
 - **Source**: `src/chiltepin/` (only code in this directory is measured)
 - **Omits**: Test files, cache directories, virtual environments
-- **Threshold**: 80% minimum coverage required
+- **Threshold**: 100% minimum coverage required
 - **Reports**: Terminal output shows missing lines
 
 ## Understanding Coverage Reports
@@ -87,7 +87,7 @@ To change the coverage threshold, edit the `fail_under` setting in `pyproject.to
 
 ```toml
 [tool.coverage.report]
-fail_under = 80  # Change this value
+fail_under = 100  # Change this value
 ```
 
 The GitHub workflow will automatically use this threshold setting - no workflow changes needed.
