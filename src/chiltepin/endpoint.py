@@ -555,8 +555,8 @@ def start(
     # the first child, leaving the grandchild process running as a daemon that
     # is not a child of the original parent process.
     pid = os.fork()
-    if pid == 0:
-        # First child - create new session
+    if pid == 0:  # pragma: no cover
+        # First child - create new session (runs in forked process, untestable)
         os.setsid()
         # Fork again
         pid2 = os.fork()

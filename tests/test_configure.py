@@ -198,7 +198,7 @@ class TestCreateProvider:
         assert provider.queue == "normal"
         assert provider.account == "account456"
         assert provider.walltime == "04:00:00"
-        assert "source /etc/bashr" in provider.worker_init
+        assert "source /etc/bashrc" in provider.worker_init
 
     def test_pbspro_provider_mpi_mode(self):
         """Test PBSProProvider in MPI mode."""
