@@ -73,15 +73,35 @@ jobs:
           docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
           docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e .[test]"
       -
-        name: Run test suite
+        name: Run test suite with coverage
+        id: pytest
         env:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --config=tests/config.yaml --platform=docker"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term-missing --cov-report=markdown:coverage.md --cov-report=xml --cov-report=html --cov-fail-under=0 --config=tests/config.yaml --platform=docker"
+      -
+        name: Copy coverage reports from container
+        if: always()
+        run: |
+          docker cp frontend:/home/admin/work/coverage.md ./coverage.md || true
+          docker cp frontend:/home/admin/work/coverage.xml ./coverage.xml || true
+          docker cp frontend:/home/admin/work/htmlcov ./htmlcov || true
+      -
+        name: Upload coverage reports
+        id: upload-coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.md
+            coverage.xml
+            htmlcov/
+          retention-days: 30
       -
         name: Debug session
-        if: ${{ failure() }}
+        if: failure()
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 60
         with:
@@ -193,3 +213,96 @@ jobs:
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
           docker compose -f docker-compose-test.yml down
+
+  coverage-check:
+    name: Coverage Check
+    runs-on: ubuntu-latest
+    needs: [build-and-test-chiltepin-amd64]
+    if: always()
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: ./coverage
+        continue-on-error: true
+      -
+        name: Check coverage threshold
+        id: coverage
+        run: |
+          # Extract threshold from pyproject.toml
+          THRESHOLD=$(grep -A 5 '\[tool.coverage.report\]' pyproject.toml | grep 'fail_under' | grep -oP '\d+(\.\d+)?' | head -1)
+          THRESHOLD=${THRESHOLD:-80.0}  # Default to 80.0 if not found
+          
+          # Extract coverage percentage from XML
+          if [ -f ./coverage/coverage.xml ]; then
+            line_rate=$(grep -oP 'line-rate="\K[0-9.]+' ./coverage/coverage.xml | head -1)
+            coverage=$(echo "$line_rate * 100" | bc -l | xargs printf "%.2f")
+            
+            echo "Coverage: ${coverage}% | Threshold: ${THRESHOLD}%"
+            
+            # Determine pass/fail
+            if (( $(echo "$coverage >= $THRESHOLD" | bc -l) )); then
+              STATUS="✅ **PASS**"
+              RESULT="success"
+              echo "✅ Coverage ${coverage}% meets threshold ${THRESHOLD}%"
+            else
+              STATUS="❌ **FAIL**"
+              RESULT="failure"
+              echo "❌ Coverage ${coverage}% is below threshold ${THRESHOLD}%"
+            fi
+          else
+            STATUS="⚠️ **UNKNOWN**"
+            coverage="N/A"
+            RESULT="failure"
+            echo "⚠️ Coverage report not found"
+          fi
+          
+          # Save outputs
+          echo "coverage=$coverage" >> $GITHUB_OUTPUT
+          echo "threshold=$THRESHOLD" >> $GITHUB_OUTPUT
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "result=$RESULT" >> $GITHUB_OUTPUT
+          
+          # Build PR comment
+          echo "COVERAGE_REPORT<<EOF" >> $GITHUB_OUTPUT
+          echo "## 📊 Test Coverage Report" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "**Status:** $STATUS (Coverage: ${coverage}% | Threshold: ${THRESHOLD}%)" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          if [ -f ./coverage/coverage.md ]; then
+            cat ./coverage/coverage.md >> $GITHUB_OUTPUT
+          else
+            echo "❌ Coverage report not available" >> $GITHUB_OUTPUT
+          fi
+          echo "" >> $GITHUB_OUTPUT
+          echo "---" >> $GITHUB_OUTPUT
+          echo "*Coverage report generated by pytest-cov. Full HTML report available in workflow artifacts.*" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      -
+        name: Post coverage comment to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: process.env.COVERAGE_REPORT
+            });
+        env:
+          COVERAGE_REPORT: ${{ steps.coverage.outputs.COVERAGE_REPORT }}
+      -
+        name: Fail if coverage below threshold
+        if: steps.coverage.outputs.result == 'failure'
+        run: |
+          echo "❌ Coverage check failed: ${{ steps.coverage.outputs.coverage }}% < ${{ steps.coverage.outputs.threshold }}%"
+          exit 1
