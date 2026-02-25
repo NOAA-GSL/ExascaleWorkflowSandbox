@@ -19,6 +19,7 @@ def config(config_file):
     output_dir.mkdir(exist_ok=True)
 
     yaml_config = chiltepin.configure.parse_file(config_file)
+    yaml_config["service"]["environment"] = yaml_config["service"]["environment"].copy()
     yaml_config["service"]["environment"].append(
         f"export PYTHONPATH=${{PYTHONPATH}}:{pwd.parent.resolve()}"
     )

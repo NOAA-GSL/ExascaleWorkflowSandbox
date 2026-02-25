@@ -46,7 +46,7 @@ gc-mpi:
   mpi: True
   max_mpi_apps: 2
   mpi_launcher: "srun"
-  provider: "slurm"      
+  provider: "slurm"
   cores_per_node: 40
   nodes_per_block: 3
   exclusive: True

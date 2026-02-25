@@ -22,9 +22,11 @@ def config(config_file):
     output_dir.mkdir(exist_ok=True)
 
     yaml_config = chiltepin.configure.parse_file(config_file)
+    yaml_config["compute"]["environment"] = yaml_config["compute"]["environment"].copy()
     yaml_config["compute"]["environment"].append(
         f"export PYTHONPATH=${{PYTHONPATH}}:{pwd.parent.resolve()}"
     )
+    yaml_config["mpi"]["environment"] = yaml_config["mpi"]["environment"].copy()
     yaml_config["mpi"]["environment"].append(
         f"export PYTHONPATH=${{PYTHONPATH}}:{pwd.parent.resolve()}"
     )

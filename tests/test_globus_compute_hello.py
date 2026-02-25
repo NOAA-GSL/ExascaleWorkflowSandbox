@@ -34,6 +34,9 @@ def config(config_file):
 
     # Ensure PYTHONPATH is set in the environment so that pytest
     # can import this test module on the remote workers
+    yaml_config["gc-service"]["environment"] = yaml_config["gc-service"][
+        "environment"
+    ].copy()
     yaml_config["gc-service"]["environment"].append(
         f"export PYTHONPATH=${{PYTHONPATH}}:{pwd.parent.resolve()}"
     )
@@ -49,7 +52,7 @@ def config(config_file):
     # Start the test endpoint
     endpoint.start("test", config_dir=f"{output_dir}/.globus_compute", timeout=15)
 
-    # Update resource config with the test endpoint id
+    # Update YAML config with the test endpoint id
     yaml_config = _set_endpoint_ids(yaml_config, output_dir)
 
     # Set Parsl logging to DEBUG and redirect to a file in the output directory
