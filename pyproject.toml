@@ -6,8 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "chiltepin"
 version = "0.0.1"
 dependencies = [
-  "globus-compute-sdk>=4.5.0",
-  "globus-compute-endpoint>=4.5.0",
+  "globus-compute-sdk==4.5.0",
+  "globus-compute-endpoint==4.5.0",
   "parsl>=2026.1.5",
 ]
 requires-python = ">=3.10.0"
