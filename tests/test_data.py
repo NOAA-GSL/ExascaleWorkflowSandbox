@@ -12,7 +12,7 @@ import chiltepin.endpoint as endpoint
 
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
-def config(config_file, platform):
+def config():
     pwd = pathlib.Path(__file__).parent.resolve()
 
     # Create directory for test output

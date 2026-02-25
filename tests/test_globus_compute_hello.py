@@ -14,7 +14,7 @@ from chiltepin.tasks import bash_task, python_task
 
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
-def config(config_file, platform):
+def config(config_file):
     pwd = pathlib.Path(__file__).parent.resolve()
 
     # Create directory for test output
@@ -29,13 +29,12 @@ def config(config_file, platform):
     clients = endpoint.login()
     compute_client = clients["compute"]
 
-    # Parse the configuration for the chosen platform
+    # Parse the configuration
     yaml_config = chiltepin.configure.parse_file(config_file)
-    resource_config = yaml_config[platform]["resources"]
 
     # Ensure PYTHONPATH is set in the environment so that pytest
     # can import this test module on the remote workers
-    resource_config["gc-service"]["environment"].append(
+    yaml_config["gc-service"]["environment"].append(
         f"export PYTHONPATH=${{PYTHONPATH}}:{pwd.parent.resolve()}"
     )
 
@@ -51,7 +50,7 @@ def config(config_file, platform):
     endpoint.start("test", config_dir=f"{output_dir}/.globus_compute", timeout=15)
 
     # Update resource config with the test endpoint id
-    resource_config = _set_endpoint_ids(resource_config, output_dir)
+    yaml_config = _set_endpoint_ids(yaml_config, output_dir)
 
     # Set Parsl logging to DEBUG and redirect to a file in the output directory
     logger_handler = parsl.set_file_logger(
@@ -61,7 +60,7 @@ def config(config_file, platform):
 
     # Load the finalized resource configuration
     resources = chiltepin.configure.load(
-        resource_config,
+        yaml_config,
         include=["gc-service"],
         client=compute_client,
         run_dir=str(output_dir / "test_globus_compute_hello_runinfo"),
@@ -87,13 +86,13 @@ def config(config_file, platform):
 
 
 # Set endpoint ids in configuration
-def _set_endpoint_ids(resource_config, output_dir):
+def _set_endpoint_ids(yaml_config, output_dir):
     # Set endpoint id in resource config using Jinja2 templates
     ep_info = endpoint.show(config_dir=f"{output_dir}/.globus_compute")
     endpoint_id = ep_info["test"]["id"]
     assert len(endpoint_id) == 36
 
-    config_string = yaml.dump(resource_config)
+    config_string = yaml.dump(yaml_config)
     template = Environment(loader=BaseLoader()).from_string(config_string)
     content = template.render(service_endpoint_id=endpoint_id)
     content_yaml = yaml.safe_load(content)

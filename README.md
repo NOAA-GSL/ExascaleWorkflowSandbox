@@ -62,7 +62,7 @@ with the `globus-compute-endpoint login` command.
 
 ```
 globus-compute-endpoint login
-pytest --assert=plain --config=tests/config.yaml --platform=<platform>
+pytest --assert=plain --config=tests/configs/<platform>.yaml
 ```
 
 Where `<platform>` is the specific platform where you are running the tests:
@@ -74,7 +74,7 @@ Where `<platform>` is the specific platform where you are running the tests:
 
 For more detailed information during testing
 ```
-pytest -s -vvv --assert=plain --config=tests/config.yaml --platform=<platform>
+pytest -s -vvv --assert=plain --config=tests/configs/<platform>.yaml
 ```
 
 # Building and running the Chiltepin container
@@ -103,7 +103,7 @@ container environment), and run the tests
 ```
 cd chiltepin
 pip install -e .[test]
-pytest --assert=plain --config=tests/config.yaml --platform=docker
+pytest --assert=plain --config=tests/configs/docker.yaml
 ```
 
 NOTE: the `[test]` ensures that dependencies required for running the tests are installed.

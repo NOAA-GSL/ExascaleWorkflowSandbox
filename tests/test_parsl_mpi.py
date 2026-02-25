@@ -14,7 +14,7 @@ from chiltepin.tasks import bash_task
 
 # Set up fixture to initialize and cleanup Parsl
 @pytest.fixture(scope="module")
-def config(config_file, platform):
+def config(config_file):
     pwd = pathlib.Path(__file__).parent.resolve()
 
     # Create directory for test output
@@ -22,10 +22,10 @@ def config(config_file, platform):
     output_dir.mkdir(exist_ok=True)
 
     yaml_config = chiltepin.configure.parse_file(config_file)
-    yaml_config[platform]["resources"]["compute"]["environment"].append(
+    yaml_config["compute"]["environment"].append(
         f"export PYTHONPATH=${{PYTHONPATH}}:{pwd.parent.resolve()}"
     )
-    yaml_config[platform]["resources"]["mpi"]["environment"].append(
+    yaml_config["mpi"]["environment"].append(
         f"export PYTHONPATH=${{PYTHONPATH}}:{pwd.parent.resolve()}"
     )
 
@@ -36,7 +36,7 @@ def config(config_file, platform):
     )
 
     resources = chiltepin.configure.load(
-        yaml_config[platform]["resources"],
+        yaml_config,
         include=["compute", "mpi"],
         run_dir=str(output_dir / "test_parsl_mpi_runinfo"),
     )

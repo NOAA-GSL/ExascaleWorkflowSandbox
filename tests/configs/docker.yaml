@@ -1,0 +1,78 @@
+docker-env: &docker-env
+  environment:
+    - "source /usr/lmod/lmod/init/bash"
+    - "module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core"
+    - "module load stack-gcc"
+    - "module load stack-openmpi"
+    - "module load stack-python"
+    - "module load jedi-fv3-env"
+    - "module unload py-attrs"
+    - "export CHILTEPIN_MPIF90=$MPIF90"
+
+mpi:
+  mpi: True
+  max_mpi_apps: 2
+  mpi_launcher: "srun"
+  provider: "slurm"
+  cores_per_node: 8
+  nodes_per_block: 3
+  exclusive: True
+  partition: "slurmpar"
+  account: ""
+  walltime: "1:00:00"
+  <<: *docker-env
+service:
+  mpi: False
+  provider: "slurm"
+  cores_per_node: 1
+  nodes_per_block: 1
+  exclusive: False
+  partition: "slurmpar"
+  account: ""
+  walltime: "1:00:00"
+  <<: *docker-env
+compute:
+  mpi: False
+  provider: "slurm"
+  cores_per_node: 8
+  nodes_per_block: 1
+  exclusive: True
+  partition: "slurmpar"
+  account: ""
+  walltime: "1:00:00"
+  <<: *docker-env
+gc-mpi:
+  endpoint: "{{ mpi_endpoint_id }}"
+  mpi: True
+  max_mpi_apps: 2
+  mpi_launcher: "srun"
+  provider: "slurm"
+  cores_per_node: 8
+  nodes_per_block: 3
+  exclusive: True
+  partition: "slurmpar"
+  account: ""
+  walltime: "1:00:00"
+  <<: *docker-env
+gc-service:
+  endpoint: "{{ service_endpoint_id }}"
+  mpi: False
+  provider: "slurm"
+  cores_per_node: 1
+  nodes_per_block: 1
+  exclusive: False
+  partition: "slurmpar"
+  account: ""
+  walltime: "1:00:00"
+  <<: *docker-env
+gc-compute:
+  endpoint: "{{ compute_endpoint_id }}"
+  mpi: False
+  provider: "slurm"
+  cores_per_node: 8
+  nodes_per_block: 1
+  exclusive: True
+  partition: "slurmpar"
+  account: ""
+  walltime: "1:00:00"
+  <<: *docker-env
