@@ -4,8 +4,6 @@ import pathlib
 
 import parsl
 import pytest
-import yaml
-from jinja2 import BaseLoader, Environment
 
 import chiltepin.configure
 import chiltepin.endpoint as endpoint
@@ -53,7 +51,10 @@ def config(config_file):
     endpoint.start("test", config_dir=f"{output_dir}/.globus_compute", timeout=15)
 
     # Update YAML config with the test endpoint id
-    yaml_config = _set_endpoint_ids(yaml_config, output_dir)
+    ep_info = endpoint.show(config_dir=f"{output_dir}/.globus_compute")
+    endpoint_id = ep_info["test"]["id"]
+    assert len(endpoint_id) == 36
+    yaml_config["gc-service"]["endpoint"] = f"{endpoint_id}"
 
     # Set Parsl logging to DEBUG and redirect to a file in the output directory
     logger_handler = parsl.set_file_logger(
@@ -86,20 +87,6 @@ def config(config_file):
 
     # Delete the test endpoint
     endpoint.delete("test", config_dir=f"{output_dir}/.globus_compute", timeout=15)
-
-
-# Set endpoint ids in configuration
-def _set_endpoint_ids(yaml_config, output_dir):
-    # Set endpoint id in resource config using Jinja2 templates
-    ep_info = endpoint.show(config_dir=f"{output_dir}/.globus_compute")
-    endpoint_id = ep_info["test"]["id"]
-    assert len(endpoint_id) == 36
-
-    config_string = yaml.dump(yaml_config)
-    template = Environment(loader=BaseLoader()).from_string(config_string)
-    content = template.render(service_endpoint_id=endpoint_id)
-    content_yaml = yaml.safe_load(content)
-    return content_yaml
 
 
 def test_endpoint_hello_python(config):
