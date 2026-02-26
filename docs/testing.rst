@@ -83,6 +83,9 @@ Test Organization
 
 The test suite is organized into several files:
 
+* ``test_configure.py`` - Tests for configuration parsing and executor creation
+* ``test_cli.py`` - Tests for command-line interface functionality
+* ``test_tasks.py`` - Tests for task decorators and execution
 * ``test_endpoint.py`` - Tests for Globus Compute endpoint management
 * ``test_data.py`` - Tests for data handling utilities
 * ``test_parsl_hello.py`` - Basic Parsl integration tests

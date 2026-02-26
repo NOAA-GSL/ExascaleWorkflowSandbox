@@ -1,7 +1,7 @@
 Installation
 ============
 
-This software can be installed on Linux systems. MacOS is not currently supported, 
+This software can be installed on Linux systems. macOS is not currently supported,
 but can be used on Macs via the Docker container (see :doc:`container`).
 
 Prerequisites
