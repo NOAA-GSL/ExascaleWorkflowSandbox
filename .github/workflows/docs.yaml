@@ -1,0 +1,37 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ develop, main ]
+  pull_request:
+    branches: [ develop, main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v4
+      -
+        name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      -
+        name: Install documentation dependencies
+        run: |
+          pip install -r docs/requirements.txt
+      -
+        name: Build documentation
+        run: |
+          cd docs
+          sphinx-build -W --keep-going -b html . _build/html
+      -
+        name: Upload documentation artifacts
+        uses: actions/upload-artifact@v3
+        if: success()
+        with:
+          name: documentation
+          path: docs/_build/html
