@@ -28,10 +28,3 @@ jobs:
         run: |
           cd docs
           sphinx-build -W --keep-going -b html . _build/html
-      -
-        name: Upload documentation artifacts
-        uses: actions/upload-artifact@v3
-        if: success()
-        with:
-          name: documentation
-          path: docs/_build/html
