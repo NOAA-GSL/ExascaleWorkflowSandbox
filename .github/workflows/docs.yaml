@@ -20,8 +20,9 @@ jobs:
         with:
           python-version: '3.10'
       -
-        name: Install documentation dependencies
+        name: Install package and documentation dependencies
         run: |
+          pip install .
           pip install -r docs/requirements.txt
       -
         name: Build documentation
