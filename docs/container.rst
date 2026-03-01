@@ -99,12 +99,14 @@ To stop the container environment:
 
 .. code-block:: console
 
+   $ cd docker
    $ docker compose -f docker-compose.yml down
 
 To stop and remove all data:
 
 .. code-block:: console
 
+   $ cd docker
    $ docker compose -f docker-compose.yml down -v
 
 Troubleshooting
