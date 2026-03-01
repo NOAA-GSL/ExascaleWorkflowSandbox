@@ -1,6 +1,7 @@
 # Configuration file for the Sphinx documentation builder.
 
-from importlib.metadata import PackageNotFoundError, version as get_version
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as get_version
 
 # -- Project information
 

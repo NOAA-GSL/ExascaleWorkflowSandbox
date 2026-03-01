@@ -47,12 +47,24 @@ Coverage settings are configured in `pyproject.toml`:
 ### Terminal Report
 Shows percentage coverage per module and highlights missing line numbers:
 ```
+Name                         Stmts   Miss    Cover   Missing
+------------------------------------------------------------
+src/chiltepin/cli.py            38      0  100.00%
+src/chiltepin/configure.py      59      0  100.00%
+src/chiltepin/data.py           59      0  100.00%
+src/chiltepin/endpoint.py      215      0  100.00%
+src/chiltepin/tasks.py          39      0  100.00%
+------------------------------------------------------------
+TOTAL                          410      0  100.00%
+```
+
+If coverage is below the threshold, missing line numbers appear:
+```
 Name                    Stmts   Miss  Cover   Missing
 -----------------------------------------------------
 src/chiltepin/cli.py       45      5    89%   23-27
-src/chiltepin/tasks.py     38      0   100%
 -----------------------------------------------------
-TOTAL                      83      5    94%
+TOTAL                      45      5    89%
 ```
 
 ### HTML Report
