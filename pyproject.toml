@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chiltepin"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
-  "globus-compute-sdk==4.5.0",
-  "globus-compute-endpoint==4.5.0",
+  "globus-compute-sdk>=4.5.0,<4.7.0",
+  "globus-compute-endpoint>=4.5.0,<4.7.0",
   "parsl>=2026.1.5",
 ]
 requires-python = ">=3.10.0"
@@ -20,11 +20,28 @@ maintainers = [
 description = "Federated NWP Workflow Tools"
 readme = "README.md"
 license = {file = "LICENSE"}
-keywords = ["federated", "workflow"]
+keywords = ["federated", "workflow", "parsl", "globus-compute", "hpc", "scientific-computing"]
 classifiers = [
   "Development Status :: 4 - Beta",
-  "Programming Language :: Python",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "License :: Public Domain",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
+  "Topic :: System :: Distributed Computing",
 ]
+
+[project.urls]
+Homepage = "https://github.com/NOAA-GSL/ExascaleWorkflowSandbox"
+Documentation = "https://exascaleworkflowsandbox.readthedocs.io"
+Repository = "https://github.com/NOAA-GSL/ExascaleWorkflowSandbox"
+Issues = "https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/issues"
 
 [project.optional-dependencies]
 test = [
@@ -35,6 +52,12 @@ test = [
 
 [project.scripts]
 chiltepin = "chiltepin.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 addopts = [
