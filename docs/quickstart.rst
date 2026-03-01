@@ -42,16 +42,20 @@ You can load a configuration using:
 .. code-block:: python
 
    import chiltepin.configure
+   import parsl
    
-   # Parse the configuration file
+   # Parse the Chiltepin configuration file
    config = chiltepin.configure.parse_file("tests/configs/docker.yaml")
    
-   # Load resources for use with Parsl
-   resources = chiltepin.configure.load(
+   # Create a Parsl Config from the Chiltepin configuration
+   parsl_config = chiltepin.configure.load(
        config,
        include=["service"],
        run_dir="./runinfo"
    )
+
+   # Load the Parsl configuration to initialize executors
+   parsl.load(parsl_config)
 
 Working with Tasks
 ------------------

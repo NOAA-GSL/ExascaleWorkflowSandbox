@@ -1,5 +1,5 @@
-Running Tests
-=============
+Testing
+=======
 
 The Chiltepin test suite uses pytest and requires an editable installation of the 
 package (achieved using the ``pip install -e .`` installation step).

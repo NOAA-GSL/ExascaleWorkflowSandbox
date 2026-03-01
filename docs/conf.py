@@ -2,7 +2,7 @@
 
 # -- Project information
 
-project = "ExascaleWorkflowSandbox"
+project = "Chiltepin"
 copyright = "2024-2026, Christopher W Harrop"
 author = "Christopher W Harrop"
 
