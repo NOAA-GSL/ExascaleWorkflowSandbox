@@ -1,5 +1,5 @@
 [![ExascaleSandboxTests](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yaml/badge.svg)](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yaml)
-[![MPAS App](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/mpas-app.yaml/badge.svg)](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/mpas-app.yaml)
+[![Documentation](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docs.yaml/badge.svg)](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docs.yaml)
 
 ```
 This repository is a scientific product and is not official communication

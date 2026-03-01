@@ -55,14 +55,14 @@ jobs:
       -
         name: Start Slurm cluster containers
         run: |
-          cd tests
+          cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
           docker compose version
-          docker compose -f docker-compose-test.yml config
+          docker compose -f docker-compose.yml config
           docker images
           docker ps -a
-          docker compose -f docker-compose-test.yml up -d
+          docker compose -f docker-compose.yml up -d
       -
         name: Copy test files to work directory
         run: |
@@ -109,10 +109,10 @@ jobs:
       -
         name: Shut down Slurm cluster containers
         run: |
-          cd tests
+          cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          docker compose -f docker-compose-test.yml down
+          docker compose -f docker-compose.yml down
 
   build-and-test-chiltepin-arm64:
     runs-on: LinuxARM64-16core-64G-600Gb
@@ -175,14 +175,14 @@ jobs:
       -
         name: Start Slurm cluster containers
         run: |
-          cd tests
+          cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
           docker compose version
-          docker compose -f docker-compose-test.yml config
+          docker compose -f docker-compose.yml config
           docker images
           docker ps -a
-          docker compose -f docker-compose-test.yml up -d
+          docker compose -f docker-compose.yml up -d
       -
         name: Copy test files to work directory
         run: |
@@ -209,10 +209,10 @@ jobs:
       -
         name: Shut down Slurm cluster containers
         run: |
-          cd tests
+          cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          docker compose -f docker-compose-test.yml down
+          docker compose -f docker-compose.yml down
 
   coverage-check:
     name: Coverage Check
