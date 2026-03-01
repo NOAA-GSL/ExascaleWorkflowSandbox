@@ -43,6 +43,8 @@ Getting Started
 
    installation
    quickstart
+   configuration
+   endpoints
    testing
    container
 
