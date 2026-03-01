@@ -1,6 +1,6 @@
 # Configuration file for the Sphinx documentation builder.
 
-from importlib.metadata import version as get_version
+from importlib.metadata import PackageNotFoundError, version as get_version
 
 # -- Project information
 
@@ -9,8 +9,13 @@ copyright = "2024-2026, Christopher W Harrop"
 author = "Christopher W Harrop"
 
 # Get version from the installed package
-release = get_version("chiltepin")
-version = release
+try:
+    release = get_version("chiltepin")
+    version = release
+except PackageNotFoundError:
+    # Package not installed - use a placeholder for local development
+    release = "dev"
+    version = "dev"
 
 # -- General configuration
 
