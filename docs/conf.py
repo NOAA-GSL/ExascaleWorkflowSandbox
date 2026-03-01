@@ -1,13 +1,16 @@
 # Configuration file for the Sphinx documentation builder.
 
+from importlib.metadata import version as get_version
+
 # -- Project information
 
 project = "Chiltepin"
 copyright = "2024-2026, Christopher W Harrop"
 author = "Christopher W Harrop"
 
-release = "0.1"
-version = "0.1.0"
+# Get version from the installed package
+release = get_version("chiltepin")
+version = release
 
 # -- General configuration
 

@@ -4,7 +4,7 @@ This project uses `pytest-cov` to measure and enforce test coverage.
 
 ## Coverage Threshold
 
-**Minimum required coverage: 80%**
+**Minimum required coverage: 100%**
 
 Pull requests must meet this threshold to pass CI checks.
 

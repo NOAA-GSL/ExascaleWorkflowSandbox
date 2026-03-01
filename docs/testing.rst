@@ -65,7 +65,7 @@ To run a specific test function:
 
 .. code-block:: console
 
-   $ pytest -vvv --config=tests/configs/docker.yaml tests/test_endpoint.py::TestEndpointIntegration::test_configure
+   $ pytest -vvv --config=tests/configs/docker.yaml tests/test_endpoint.py::TestEndpointIntegration::test_configure_default_config_dir
 
 Coverage Reports
 ----------------
