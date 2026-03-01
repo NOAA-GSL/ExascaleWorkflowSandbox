@@ -24,6 +24,10 @@ jobs:
   build-and-test-chiltepin-amd64:
     runs-on: ubuntu2204-16c-64g-600ssd
     timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13']
     permissions:
       packages: write
       contents: read
@@ -68,9 +72,15 @@ jobs:
         run: |
           docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
       -
+        name: Install Python ${{ matrix.python-version }}
+        run: |
+          docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y software-properties-common"
+          docker exec frontend bash -c "sudo add-apt-repository -y ppa:deadsnakes/ppa"
+          docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y python${{ matrix.python-version }} python${{ matrix.python-version }}-venv python${{ matrix.python-version }}-dev"
+      -
         name: Install chiltepin package
         run: |
-          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
+          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi ; python${{ matrix.python-version }} -m venv .chiltepin"
           docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e .[test]"
       -
         name: Run test suite with coverage
@@ -93,7 +103,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-report-py${{ matrix.python-version }}
           path: |
             coverage.md
             coverage.xml
@@ -117,6 +127,10 @@ jobs:
   build-and-test-chiltepin-arm64:
     runs-on: LinuxARM64-16core-64G-600Gb
     timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13']
     permissions:
       packages: write
       contents: read
@@ -188,9 +202,15 @@ jobs:
         run: |
           docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
       -
+        name: Install Python ${{ matrix.python-version }}
+        run: |
+          docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y software-properties-common"
+          docker exec frontend bash -c "sudo add-apt-repository -y ppa:deadsnakes/ppa"
+          docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y python${{ matrix.python-version }} python${{ matrix.python-version }}-venv python${{ matrix.python-version }}-dev"
+      -
         name: Install chiltepin package
         run: |
-          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
+          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi ; python${{ matrix.python-version }} -m venv .chiltepin"
           docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e .[test]"
       -
         name: Run test suite
@@ -230,7 +250,7 @@ jobs:
         name: Download coverage report
         uses: actions/download-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-report-py3.11
           path: ./coverage
         continue-on-error: true
       -
