@@ -26,6 +26,7 @@ jobs:
     timeout-minutes: 360
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13']
     permissions:
@@ -50,6 +51,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           logout: false
+      -
+        name: Clean up any existing containers from previous runs
+        run: |
+          # Stop and remove any containers from previous runs
+          cd docker
+          docker compose -f docker-compose.yml down --remove-orphans --volumes || true
+          # Force remove any remaining containers
+          docker ps -aq | xargs -r docker rm -f || true
+          # Clean up networks
+          docker network prune -f || true
+          # Prune volumes
+          docker volume prune -f || true
       -
         name: Prune pre-loaded GHA docker images
         run: |
@@ -118,17 +131,19 @@ jobs:
           limit-access-to-actor: true
       -
         name: Shut down Slurm cluster containers
+        if: always()
         run: |
           cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          docker compose -f docker-compose.yml down
+          docker compose -f docker-compose.yml down --remove-orphans --volumes
 
   build-and-test-chiltepin-arm64:
     runs-on: LinuxARM64-16core-64G-600Gb
     timeout-minutes: 360
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13']
     permissions:
@@ -181,6 +196,18 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           logout: false
       -
+        name: Clean up any existing containers from previous runs
+        run: |
+          # Stop and remove any containers from previous runs
+          cd docker
+          docker compose -f docker-compose.yml down --remove-orphans --volumes || true
+          # Force remove any remaining containers
+          docker ps -aq | xargs -r docker rm -f || true
+          # Clean up networks
+          docker network prune -f || true
+          # Prune volumes
+          docker volume prune -f || true
+      -
         name: Prune pre-loaded GHA docker images
         run: |
           docker images
@@ -228,11 +255,12 @@ jobs:
           limit-access-to-actor: true
       -
         name: Shut down Slurm cluster containers
+        if: always()
         run: |
           cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          docker compose -f docker-compose.yml down
+          docker compose -f docker-compose.yml down --remove-orphans --volumes
 
   coverage-check:
     name: Coverage Check
