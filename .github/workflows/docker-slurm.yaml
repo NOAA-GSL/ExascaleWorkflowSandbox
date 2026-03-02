@@ -1,5 +1,8 @@
 name: ExascaleSandboxTests
 
+env:
+  LATEST_PYTHON_VERSION: '3.13'
+
 on:
   push:
     branches: [ develop, main ]
@@ -93,8 +96,8 @@ jobs:
       -
         name: Install chiltepin package
         run: |
-          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi ; python${{ matrix.python-version }} -m venv .chiltepin"
-          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e .[test]"
+          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi ; python${{ matrix.python-version }} -m venv .venv-py${{ matrix.python-version }}"
+          docker exec frontend bash -l -c "cd work ; source .venv-py${{ matrix.python-version }}/bin/activate ; pip install -e .[test]"
       -
         name: Run test suite with coverage
         id: pytest
@@ -102,7 +105,7 @@ jobs:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term-missing --cov-report=markdown:coverage.md --cov-report=xml --cov-report=html --cov-fail-under=0 --config=tests/configs/docker.yaml"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .venv-py${{ matrix.python-version }}/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term-missing --cov-report=markdown:coverage.md --cov-report=xml --cov-report=html --cov-fail-under=0 --config=tests/configs/docker.yaml"
       -
         name: Copy coverage reports from container
         if: always()
@@ -141,11 +144,6 @@ jobs:
   build-and-test-chiltepin-arm64:
     runs-on: LinuxARM64-16core-64G-600Gb
     timeout-minutes: 360
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13']
     permissions:
       packages: write
       contents: read
@@ -229,23 +227,23 @@ jobs:
         run: |
           docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
       -
-        name: Install Python ${{ matrix.python-version }}
+        name: Install Python ${{ env.LATEST_PYTHON_VERSION }}
         run: |
           docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y software-properties-common"
           docker exec frontend bash -c "sudo add-apt-repository -y ppa:deadsnakes/ppa"
-          docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y python${{ matrix.python-version }} python${{ matrix.python-version }}-venv python${{ matrix.python-version }}-dev"
+          docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y python${{ env.LATEST_PYTHON_VERSION }} python${{ env.LATEST_PYTHON_VERSION }}-venv python${{ env.LATEST_PYTHON_VERSION }}-dev"
       -
         name: Install chiltepin package
         run: |
-          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi ; python${{ matrix.python-version }} -m venv .chiltepin"
-          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e .[test]"
+          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi ; python${{ env.LATEST_PYTHON_VERSION }} -m venv .venv-py${{ env.LATEST_PYTHON_VERSION }}"
+          docker exec frontend bash -l -c "cd work ; source .venv-py${{ env.LATEST_PYTHON_VERSION }}/bin/activate ; pip install -e .[test]"
       -
         name: Run test suite
         env:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --config=tests/configs/docker.yaml"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .venv-py${{ env.LATEST_PYTHON_VERSION }}/bin/activate; pytest -s -v --assert=plain --config=tests/configs/docker.yaml"
       -
         name: Debug session
         if: ${{ failure() }}
