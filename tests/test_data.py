@@ -1,5 +1,6 @@
 import logging
 import pathlib
+import uuid
 from unittest import mock
 
 import parsl
@@ -41,8 +42,11 @@ def config(config_file):
     # Load the resources in Parsl
     dfk = parsl.load(resources)
 
+    # Generate unique destination filename to avoid conflicts in concurrent tests
+    unique_dst = f"1MB.to_ursa.{uuid.uuid4()}"
+
     # Run the tests with the loaded resources
-    yield {"client": transfer_client}
+    yield {"client": transfer_client, "unique_dst": unique_dst}
 
     dfk.cleanup()
     dfk = None
@@ -55,7 +59,7 @@ def test_data_transfer_task(config):
         "chiltepin-test-mercury",
         "chiltepin-test-ursa",
         "1MB.from_mercury",
-        "1MB.to_ursa",
+        config["unique_dst"],
         timeout=120,
         polling_interval=10,
         executor=["local"],
@@ -69,7 +73,7 @@ def test_data_transfer_task(config):
 def test_data_delete_task(config):
     delete_future = data.delete_task(
         "chiltepin-test-ursa",
-        "1MB.to_ursa",
+        config["unique_dst"],
         timeout=120,
         polling_interval=10,
         executor=["local"],
@@ -85,7 +89,7 @@ def test_data_transfer(config):
         "chiltepin-test-mercury",
         "chiltepin-test-ursa",
         "1MB.from_mercury",
-        "1MB.to_ursa",
+        config["unique_dst"],
         timeout=120,
         polling_interval=10,
     )
@@ -95,7 +99,7 @@ def test_data_transfer(config):
 def test_data_delete(config):
     completed = data.delete(
         "chiltepin-test-ursa",
-        "1MB.to_ursa",
+        config["unique_dst"],
         timeout=120,
         polling_interval=10,
     )
@@ -110,7 +114,7 @@ def test_data_transfer_with_bad_src_ep(config):
             "does-not-exist",
             "chiltepin-test-ursa",
             "1MB.from_mercury",
-            "1MB.to_ursa",
+            config["unique_dst"],
             timeout=120,
             polling_interval=10,
             client=config["client"],
@@ -125,7 +129,7 @@ def test_data_transfer_with_bad_dst_ep(config):
             "chiltepin-test-ursa",
             "does-not-exist",
             "1MB.from_mercury",
-            "1MB.to_ursa",
+            config["unique_dst"],
             timeout=120,
             polling_interval=10,
             client=config["client"],
@@ -138,7 +142,7 @@ def test_data_delete_with_bad_ep(config):
     ):
         data.delete(
             "does-not-exist",
-            "1MB.to_ursa",
+            config["unique_dst"],
             timeout=120,
             polling_interval=10,
             client=config["client"],

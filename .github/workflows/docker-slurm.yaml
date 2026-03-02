@@ -1,4 +1,7 @@
-name: ExascaleSandboxTests
+name: ChiltepinTests
+
+env:
+  LATEST_PYTHON_VERSION: '3.13'
 
 on:
   push:
@@ -21,9 +24,13 @@ jobs:
           ruff check
           ruff format --check --diff .
 
-  build-and-test-chiltepin-amd64:
+  test-chiltepin-amd64:
     runs-on: ubuntu2204-16c-64g-600ssd
     timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13']
     permissions:
       packages: write
       contents: read
@@ -47,6 +54,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           logout: false
       -
+        name: Clean up any existing containers from previous runs
+        run: |
+          # Stop and remove any containers from previous runs
+          cd docker
+          docker compose -f docker-compose.yml down --remove-orphans --volumes || true
+      -
         name: Prune pre-loaded GHA docker images
         run: |
           docker images
@@ -64,14 +77,27 @@ jobs:
           docker ps -a
           docker compose -f docker-compose.yml up -d
       -
+        name: Install Python ${{ matrix.python-version }} on all nodes
+        run: |
+          # Install on frontend
+          docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y software-properties-common"
+          docker exec frontend bash -c "sudo add-apt-repository -y ppa:deadsnakes/ppa"
+          docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y python${{ matrix.python-version }} python${{ matrix.python-version }}-venv python${{ matrix.python-version }}-dev"
+          # Install on all compute nodes
+          for node in node1 node2 node3 node4 node5; do
+            docker exec $node bash -c "sudo apt-get update && sudo apt-get install -y software-properties-common"
+            docker exec $node bash -c "sudo add-apt-repository -y ppa:deadsnakes/ppa"
+            docker exec $node bash -c "sudo apt-get update && sudo apt-get install -y python${{ matrix.python-version }} python${{ matrix.python-version }}-venv python${{ matrix.python-version }}-dev"
+          done
+      -
         name: Copy test files to work directory
         run: |
           docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
       -
         name: Install chiltepin package
         run: |
-          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
-          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e .[test]"
+          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi ; python${{ matrix.python-version }} -m venv .venv-py${{ matrix.python-version }}"
+          docker exec frontend bash -l -c "cd work ; source .venv-py${{ matrix.python-version }}/bin/activate ; pip install -e .[test]"
       -
         name: Run test suite with coverage
         id: pytest
@@ -79,7 +105,7 @@ jobs:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term-missing --cov-report=markdown:coverage.md --cov-report=xml --cov-report=html --cov-fail-under=0 --config=tests/configs/docker.yaml"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .venv-py${{ matrix.python-version }}/bin/activate; pytest -s -v --assert=plain --cov=src/chiltepin --cov-report=term-missing --cov-report=markdown:coverage.md --cov-report=xml --cov-report=html --cov-fail-under=0 --config=tests/configs/docker.yaml"
       -
         name: Copy coverage reports from container
         if: always()
@@ -93,7 +119,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-report-py${{ matrix.python-version }}
           path: |
             coverage.md
             coverage.xml
@@ -108,13 +134,14 @@ jobs:
           limit-access-to-actor: true
       -
         name: Shut down Slurm cluster containers
+        if: always()
         run: |
           cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          docker compose -f docker-compose.yml down
+          docker compose -f docker-compose.yml down --remove-orphans --volumes
 
-  build-and-test-chiltepin-arm64:
+  test-chiltepin-arm64:
     runs-on: LinuxARM64-16core-64G-600Gb
     timeout-minutes: 360
     permissions:
@@ -167,6 +194,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           logout: false
       -
+        name: Clean up any existing containers from previous runs
+        run: |
+          # Stop and remove any containers from previous runs
+          cd docker
+          docker compose -f docker-compose.yml down --remove-orphans --volumes || true
+      -
         name: Prune pre-loaded GHA docker images
         run: |
           docker images
@@ -184,21 +217,34 @@ jobs:
           docker ps -a
           docker compose -f docker-compose.yml up -d
       -
+        name: Install Python ${{ env.LATEST_PYTHON_VERSION }} on all nodes
+        run: |
+          # Install on frontend
+          docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y software-properties-common"
+          docker exec frontend bash -c "sudo add-apt-repository -y ppa:deadsnakes/ppa"
+          docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y python${{ env.LATEST_PYTHON_VERSION }} python${{ env.LATEST_PYTHON_VERSION }}-venv python${{ env.LATEST_PYTHON_VERSION }}-dev"
+          # Install on all compute nodes
+          for node in node1 node2 node3 node4 node5; do
+            docker exec $node bash -c "sudo apt-get update && sudo apt-get install -y software-properties-common"
+            docker exec $node bash -c "sudo add-apt-repository -y ppa:deadsnakes/ppa"
+            docker exec $node bash -c "sudo apt-get update && sudo apt-get install -y python${{ env.LATEST_PYTHON_VERSION }} python${{ env.LATEST_PYTHON_VERSION }}-venv python${{ env.LATEST_PYTHON_VERSION }}-dev"
+          done
+      -
         name: Copy test files to work directory
         run: |
           docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
       -
         name: Install chiltepin package
         run: |
-          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi; module load stack-python ; python -m venv .chiltepin"
-          docker exec frontend bash -l -c "cd work ; source .chiltepin/bin/activate ; pip install -e .[test]"
+          docker exec frontend bash -l -c "cd work ; module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core ; module load stack-gcc; module load stack-openmpi ; python${{ env.LATEST_PYTHON_VERSION }} -m venv .venv-py${{ env.LATEST_PYTHON_VERSION }}"
+          docker exec frontend bash -l -c "cd work ; source .venv-py${{ env.LATEST_PYTHON_VERSION }}/bin/activate ; pip install -e .[test]"
       -
         name: Run test suite
         env:
           GLOBUS_COMPUTE_CLIENT_ID: ${{ secrets.GC_CLIENT_ID }}
           GLOBUS_COMPUTE_CLIENT_SECRET: ${{ secrets.GC_CLIENT_SECRET }}
         run: |
-          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .chiltepin/bin/activate; pytest -s -v --assert=plain --config=tests/configs/docker.yaml"
+          docker exec -e GLOBUS_COMPUTE_CLIENT_ID="$GLOBUS_COMPUTE_CLIENT_ID" -e GLOBUS_COMPUTE_CLIENT_SECRET="$GLOBUS_COMPUTE_CLIENT_SECRET" frontend bash -l -c "cd work; source .venv-py${{ env.LATEST_PYTHON_VERSION }}/bin/activate; pytest -s -v --assert=plain --config=tests/configs/docker.yaml"
       -
         name: Debug session
         if: ${{ failure() }}
@@ -208,16 +254,17 @@ jobs:
           limit-access-to-actor: true
       -
         name: Shut down Slurm cluster containers
+        if: always()
         run: |
           cd docker
           export DOCKER_CLIENT_TIMEOUT=600
           export COMPOSE_HTTP_TIMEOUT=600
-          docker compose -f docker-compose.yml down
+          docker compose -f docker-compose.yml down --remove-orphans --volumes
 
   coverage-check:
     name: Coverage Check
     runs-on: ubuntu-latest
-    needs: [build-and-test-chiltepin-amd64]
+    needs: [test-chiltepin-amd64]
     if: always()
     permissions:
       pull-requests: write
@@ -230,7 +277,7 @@ jobs:
         name: Download coverage report
         uses: actions/download-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-report-py${{ env.LATEST_PYTHON_VERSION }}
           path: ./coverage
         continue-on-error: true
       -
