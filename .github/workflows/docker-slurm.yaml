@@ -84,15 +84,22 @@ jobs:
           docker ps -a
           docker compose -f docker-compose.yml up -d
       -
-        name: Copy test files to work directory
+        name: Install Python ${{ matrix.python-version }} on all nodes
         run: |
-          docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
-      -
-        name: Install Python ${{ matrix.python-version }}
-        run: |
+          # Install on frontend
           docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y software-properties-common"
           docker exec frontend bash -c "sudo add-apt-repository -y ppa:deadsnakes/ppa"
           docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y python${{ matrix.python-version }} python${{ matrix.python-version }}-venv python${{ matrix.python-version }}-dev"
+          # Install on all compute nodes
+          for node in node1 node2 node3 node4 node5; do
+            docker exec $node bash -c "sudo apt-get update && sudo apt-get install -y software-properties-common"
+            docker exec $node bash -c "sudo add-apt-repository -y ppa:deadsnakes/ppa"
+            docker exec $node bash -c "sudo apt-get update && sudo apt-get install -y python${{ matrix.python-version }} python${{ matrix.python-version }}-venv python${{ matrix.python-version }}-dev"
+          done
+      -
+        name: Copy test files to work directory
+        run: |
+          docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
       -
         name: Install chiltepin package
         run: |
@@ -223,15 +230,22 @@ jobs:
           docker ps -a
           docker compose -f docker-compose.yml up -d
       -
-        name: Copy test files to work directory
+        name: Install Python ${{ env.LATEST_PYTHON_VERSION }} on all nodes
         run: |
-          docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
-      -
-        name: Install Python ${{ env.LATEST_PYTHON_VERSION }}
-        run: |
+          # Install on frontend
           docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y software-properties-common"
           docker exec frontend bash -c "sudo add-apt-repository -y ppa:deadsnakes/ppa"
           docker exec frontend bash -c "sudo apt-get update && sudo apt-get install -y python${{ env.LATEST_PYTHON_VERSION }} python${{ env.LATEST_PYTHON_VERSION }}-venv python${{ env.LATEST_PYTHON_VERSION }}-dev"
+          # Install on all compute nodes
+          for node in node1 node2 node3 node4 node5; do
+            docker exec $node bash -c "sudo apt-get update && sudo apt-get install -y software-properties-common"
+            docker exec $node bash -c "sudo add-apt-repository -y ppa:deadsnakes/ppa"
+            docker exec $node bash -c "sudo apt-get update && sudo apt-get install -y python${{ env.LATEST_PYTHON_VERSION }} python${{ env.LATEST_PYTHON_VERSION }}-venv python${{ env.LATEST_PYTHON_VERSION }}-dev"
+          done
+      -
+        name: Copy test files to work directory
+        run: |
+          docker exec frontend bash -l -c "mkdir -p work; cd work ; cp -r ../chiltepin/* ."
       -
         name: Install chiltepin package
         run: |
@@ -276,7 +290,7 @@ jobs:
         name: Download coverage report
         uses: actions/download-artifact@v4
         with:
-          name: coverage-report-py3.11
+          name: coverage-report-py${{ env.LATEST_PYTHON_VERSION }}
           path: ./coverage
         continue-on-error: true
       -
