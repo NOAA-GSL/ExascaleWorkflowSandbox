@@ -1,9 +1,9 @@
 Chiltepin Documentation
 =======================
 
-.. image:: https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yaml/badge.svg
-   :target: https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yaml
-   :alt: ExascaleSandboxTests
+.. image:: https://github.com/NOAA-GSL/Chiltepin/actions/workflows/docker-slurm.yaml/badge.svg
+   :target: https://github.com/NOAA-GSL/Chiltepin/actions/workflows/docker-slurm.yaml
+   :alt: ChiltepinTests
 
 **Chiltepin** is a Python library for exploring federated workflow capabilities
 using Parsl and Globus Compute. It provides tools and demonstrations for

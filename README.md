@@ -1,5 +1,5 @@
-[![ExascaleSandboxTests](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yaml/badge.svg)](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yaml)
-[![Documentation](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docs.yaml/badge.svg)](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docs.yaml)
+[![ChiltepinTests](https://github.com/NOAA-GSL/Chiltepin/actions/workflows/docker-slurm.yaml/badge.svg)](https://github.com/NOAA-GSL/Chiltepin/actions/workflows/docker-slurm.yaml)
+[![Documentation](https://github.com/NOAA-GSL/Chiltepin/actions/workflows/docs.yaml/badge.svg)](https://github.com/NOAA-GSL/Chiltepin/actions/workflows/docs.yaml)
 
 ```
 This repository is a scientific product and is not official communication

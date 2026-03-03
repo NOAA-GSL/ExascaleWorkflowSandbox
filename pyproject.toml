@@ -37,10 +37,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/NOAA-GSL/ExascaleWorkflowSandbox"
-Documentation = "https://exascaleworkflowsandbox.readthedocs.io"
-Repository = "https://github.com/NOAA-GSL/ExascaleWorkflowSandbox"
-Issues = "https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/issues"
+Homepage = "https://github.com/NOAA-GSL/Chiltepin"
+Documentation = "https://chiltepin.readthedocs.io"
+Repository = "https://github.com/NOAA-GSL/Chiltepin"
+Issues = "https://github.com/NOAA-GSL/Chiltepin/issues"
 
 [project.optional-dependencies]
 test = [

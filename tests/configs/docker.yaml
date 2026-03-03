@@ -14,6 +14,7 @@ mpi:
     - "module use /opt/spack-stack/envs/unified-env/install/modulefiles/Core"
     - "module load stack-gcc"
     - "module load stack-openmpi"
+    - "module load stack-python"
     - "export CHILTEPIN_MPIF90=$MPIF90"
 service:
   mpi: False
