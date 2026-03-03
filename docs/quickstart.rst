@@ -1,18 +1,19 @@
 Quick Start
 ===========
 
-This guide walks you through a complete Chiltepin workflow, from setting up an endpoint to submitting tasks.
+This guide walks you through a complete Chiltepin workflow, from setting up an
+endpoint to submitting tasks.
 
 Overview
 --------
 
-Chiltepin is a collection of tools for exploring and testing technologies for 
-implementing exascale scientific workflows using Parsl and Globus Compute.
+Chiltepin is a collection of tools for implementing distributed exascale numerical
+weather prediction workflows using Parsl and Globus Compute.
 
 .. warning::
 
-   This collection of resources is not intended for production use, and is for
-   research purposes only.
+   This collection of resources is not intended for use in operational production
+   environments, and is for research purposes only.
 
 Prerequisites
 -------------
@@ -21,7 +22,7 @@ Before starting, ensure you have:
 
 1. Installed Chiltepin (see :doc:`installation`)
 2. Access to an HPC system (or use local execution for testing)
-3. A web browser for Globus authentication
+3. A `Globus account <https://www.globus.org/>`_ and a web browser for Globus authentication
 
 Complete Workflow Example
 --------------------------
@@ -31,18 +32,20 @@ This example demonstrates the full workflow: configure an endpoint, start it, an
 Step 1: Authenticate
 ^^^^^^^^^^^^^^^^^^^^
 
-First, log in to Globus services:
+First, log in to Globus services. This should be done on the machine where you want to runtasks:
 
 .. code-block:: bash
 
    $ chiltepin login
 
-This opens a browser for authentication. Follow the prompts to authorize Chiltepin.
+This opens a browser for authentication or, if one is not available, provides a URL to complete
+the authentication manually. Follow the prompts to authorize Chiltepin.
 
 Step 2: Configure an Endpoint
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Create a new Globus Compute endpoint:
+Create a new Globus Compute endpoint to which you will submit tasks. This should be done on the
+machine where you want to run tasks:
 
 .. code-block:: bash
 
@@ -116,47 +119,47 @@ Create ``my_workflow.py``:
    import chiltepin.configure
    from chiltepin.tasks import bash_task, python_task
    
-   # Load configuration
-   config_dict = chiltepin.configure.parse_file("my_config.yaml")
-   parsl_config = chiltepin.configure.load(
-       config_dict,
-       include=["local", "remote"],
-       run_dir="./runinfo"
-   )
-   parsl.load(parsl_config)
-   
    # Define tasks
-   @python_task(executors=["local"])
+   @python_task
    def hello_local():
        import platform
        return f"Hello from {platform.node()}"
    
-   @bash_task(executors=["remote"])
+   @bash_task
    def hello_remote():
-       return "hostname && echo 'Hello from remote endpoint!'"
+       return "hostname"
    
-   @python_task(executors=["remote"])
+   @python_task
    def compute_task(n):
        """Simple computation task"""
        result = sum(i**2 for i in range(n))
        return result
    
-   # Submit tasks
    if __name__ == "__main__":
-       # Run local task
-       local_future = hello_local()
-       print(f"Local: {local_future.result()}")
-       
-       # Run remote bash task
-       remote_future = hello_remote()
-       print(f"Remote: {remote_future.result()}")
-       
-       # Run multiple compute tasks
-       futures = [compute_task(i * 1000) for i in range(1, 5)]
-       results = [f.result() for f in futures]
-       print(f"Computation results: {results}")
-       
-       print("All tasks completed!")
+       # Load configuration
+       config_dict = chiltepin.configure.parse_file("my_config.yaml")
+       parsl_config = chiltepin.configure.load(
+           config_dict,
+           include=["local", "remote"],
+           run_dir="./runinfo"
+       )
+   
+       with parsl.load(parsl_config):
+           # Run local task
+           local_future = hello_local(executor="local")
+           
+           # Run remote bash task (returns exit code: 0 = success)
+           remote_future = hello_remote(executor="remote")
+           
+           # Run multiple compute tasks
+           futures = [compute_task(i * 1000, executor="remote") for i in range(1, 5)]
+           
+           # Get the results
+           print(f"Local: {local_future.result()}")
+           print(f"Remote exit code: {remote_future.result()}")
+           print(f"Computation results: {[f.result() for f in futures]}")
+           
+           print("All tasks completed!")
 
 Step 7: Run Your Workflow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -172,8 +175,7 @@ Expected output:
 .. code-block:: text
 
    Local: Hello from my-laptop.local
-   Remote: my-hpc-node001
-   Hello from remote endpoint!
+   Remote exit code: 0
    Computation results: [0, 1333333000, 10666664000, 35999995000]
    All tasks completed!
 
@@ -187,7 +189,7 @@ When finished:
    $ chiltepin endpoint stop my-endpoint
 
 .. note::
-   Endpoints automatically shut down after idle periods, so manual stopping is optional.
+   Endpoints automatically scale down resourcesafter idle periods, so manual stopping is optional.
 
 Local-Only Quickstart
 ---------------------
@@ -213,26 +215,26 @@ Simple Workflow (``simple_workflow.py``)
    import chiltepin.configure
    from chiltepin.tasks import bash_task, python_task
    
-   # Load configuration  
-   config_dict = chiltepin.configure.parse_file("local_config.yaml")
-   parsl_config = chiltepin.configure.load(config_dict, run_dir="./runinfo")
-   parsl.load(parsl_config)
-   
-   # Define and run tasks
+   # Define tasks
    @python_task
    def multiply(a, b):
        return a * b
    
    @bash_task
    def system_info():
-       return "uname -a"
+       return "echo 'Task completed successfully'"
    
    if __name__ == "__main__":
-       result = multiply(6, 7).result()
-       print(f"6 * 7 = {result}")
-       
-       info = system_info().result()
-       print(f"System: {info}")
+       # Load configuration  
+       config_dict = chiltepin.configure.parse_file("local_config.yaml")
+       parsl_config = chiltepin.configure.load(config_dict, run_dir="./runinfo")
+   
+       with parsl.load(parsl_config):
+           result = multiply(6, 7, executor="local").result()
+           print(f"6 * 7 = {result}")
+           
+           exit_code = system_info(executor="local").result()
+           print(f"Bash task exit code: {exit_code}")
 
 Run it:
 
@@ -274,31 +276,31 @@ MPI Workflow
    import chiltepin.configure
    from chiltepin.tasks import bash_task
    
-   config_dict = chiltepin.configure.parse_file("mpi_config.yaml")
-   parsl_config = chiltepin.configure.load(config_dict, run_dir="./runinfo")
-   parsl.load(parsl_config)
-   
-   @bash_task(executors=["mpi-executor"])
+   @bash_task
    def compile_mpi():
        return "$MPIF90 -o mpi_app mpi_app.f90"
    
-   @bash_task(executors=["mpi-executor"])
+   @bash_task
    def run_mpi(ranks=4):
        return f"srun -n {ranks} ./mpi_app"
    
    if __name__ == "__main__":
-       # Compile MPI application
-       compile_result = compile_mpi().result()
-       print(f"Compilation: {compile_result}")
+       config_dict = chiltepin.configure.parse_file("mpi_config.yaml")
+       parsl_config = chiltepin.configure.load(config_dict, run_dir="./runinfo")
        
-       # Run with different rank counts
-       results = []
-       for ranks in [4, 8, 16]:
-           future = run_mpi(ranks)
-           results.append(future.result())
-       
-       for i, result in enumerate(results, 1):
-           print(f"Run {i}: {result}")
+       with parsl.load(parsl_config):
+           # Compile MPI application (returns exit code)
+           compile_result = compile_mpi(executor="mpi-executor").result()
+           print(f"Compilation exit code: {compile_result}")
+           
+           # Run with different rank counts
+           results = []
+           for ranks in [4, 8, 16]:
+               future = run_mpi(ranks, executor="mpi-executor")
+               results.append(future.result())
+           
+           for i, result in enumerate(results, 1):
+               print(f"Run {i} exit code: {result}")
 
 Key Concepts
 ------------
@@ -318,16 +320,23 @@ Task Decorators
 Chiltepin provides task decorators:
 
 - ``@python_task``: Execute Python functions
-- ``@bash_task``: Execute shell commands
+- ``@bash_task``: Execute shell commands (return exit code)
 - ``@mpi_task``: Execute MPI applications
 
-Specify executors with the ``executors`` parameter:
+Specify executors when calling tasks using the ``executor`` parameter:
 
 .. code-block:: python
 
-   @python_task(executors=["remote"])
+   @python_task
    def my_task():
        return "Runs on remote executor"
+   
+   # Call with specific executor
+   result = my_task(executor="remote").result()
+
+.. note::
+   Bash tasks return the exit code (0 for success) rather than stdout.
+   Use ``stdout`` parameter if you need to capture output to a file.
 
 Configuration Loading
 ^^^^^^^^^^^^^^^^^^^^^

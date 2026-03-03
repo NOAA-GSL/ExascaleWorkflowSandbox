@@ -1,8 +1,8 @@
 Installation
 ============
 
-This software can be installed on Linux systems. macOS is not currently supported,
-but can be used on Macs via the Docker container (see :doc:`container`).
+This software can be installed on Linux systems. Windows and macOS are not currently supported,
+but can be used on these platforms via the Docker container (see :doc:`container`).
 
 Prerequisites
 -------------
@@ -59,8 +59,8 @@ Dependencies
 
 Chiltepin has the following core dependencies:
 
-* ``globus-compute-sdk`` (4.5.0)
-* ``globus-compute-endpoint`` (4.5.0)
+* ``globus-compute-sdk`` (>=4.5.0)
+* ``globus-compute-endpoint`` (>=4.5.0)
 * ``parsl`` (>=2026.1.5)
 
 These will be automatically installed when you install Chiltepin.
