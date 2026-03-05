@@ -49,7 +49,7 @@ Login
 
 This will:
 
-1. Open a browser window (or present a URL)for Globus authentication
+1. Open a browser window (or present a URL) for Globus authentication
 2. Save authentication tokens for future use
 
 .. note::
@@ -316,7 +316,7 @@ endpoint.
 .. code-block:: yaml
 
    my-executor-2:
-     endpoint: "uuid-here". # Same endpoint UUID as my-executor-1
+     endpoint: "uuid-here"  # Same endpoint UUID as my-executor-1
      provider: "slurm"
      partition: "service"
      cores_per_node: 1

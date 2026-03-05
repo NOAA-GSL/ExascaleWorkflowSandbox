@@ -25,9 +25,9 @@ research purposes only.
 
 # Installation
 
-This software can be installed on Linux systems.  MacOS is not currently
-supported.  It can be used, however, on Macs in a container.  See below for
-instructions for building and using the Docker container.
+This software can be installed on Linux systems. Native Windows and macOS are not currently
+supported, but Chiltepin can be used on these platforms via the Docker container (see below for
+instructions on building and using the Docker container).
 
 The recommended method for installation is to use a Python venv.
 
@@ -57,11 +57,11 @@ The test suite is run with `pytest` and requires an editable installation of the
 repository (achieved using the `pip install -e .` installation step from above)
 
 An additional step is required for successful completion of the Globus Compute tests. These
-tests require users to authenticate to globus before running the pytest command. This is done
-with the `globus-compute-endpoint login` command.
+tests require users to authenticate to Globus before running the pytest command. This is done
+with the `chiltepin login` command.
 
 ```
-globus-compute-endpoint login
+chiltepin login
 pytest --assert=plain --config=tests/configs/<platform>.yaml
 ```
 
@@ -109,5 +109,5 @@ pytest --assert=plain --config=tests/configs/docker.yaml
 NOTE: the `[test]` ensures that dependencies required for running the tests are installed.
 
 NOTE: Depending on how many cores your machine has and how many you've allocated to Docker,
-you may need to modify the `cores per node` setting in the configuration yaml file to match
+you may need to modify the ``cores_per_node`` setting in the configuration yaml file to match
 your machine's specifications to get all tests to pass.
