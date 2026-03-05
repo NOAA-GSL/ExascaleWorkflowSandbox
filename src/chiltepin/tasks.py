@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 from functools import wraps
 from inspect import Parameter, signature
 from typing import Callable

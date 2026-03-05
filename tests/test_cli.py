@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the chiltepin CLI.
 
 IMPORTANT: This test suite uses mocking to prevent ANY actual endpoint operations

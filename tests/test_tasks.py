@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for chiltepin.tasks module.
 
 This test suite validates that task decorators work correctly for both

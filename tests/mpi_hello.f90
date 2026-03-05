@@ -1,3 +1,5 @@
+! SPDX-License-Identifier: Apache-2.0
+
 program mpi_hello
 
   use iso_fortran_env, only : output_unit

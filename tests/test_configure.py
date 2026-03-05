@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for chiltepin.configure module.
 
 This test suite validates that YAML configurations produce the expected

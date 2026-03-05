@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 import globus_sdk.services.compute
 
 import chiltepin.endpoint as endpoint
