@@ -7,7 +7,7 @@ Chiltepin Documentation
 
 **Chiltepin** is a Python library for exploring federated workflow capabilities
 using Parsl and Globus Compute. It provides tools and demonstrations for
-implementing distributed numerical weather prediction workflows on HPC systems.
+implementing distributed scientific workflows on HPC systems.
 
 .. warning::
 
@@ -18,12 +18,12 @@ Overview
 --------
 
 This repository is a collection of tools and demonstrations used for
-implementing distributed exascale numerical weather prediction workflows. The
+implementing distributed exascale scientific workflows. The
 project focuses on:
 
 * **Workflow management** using Parsl
 * **Federated distributed computing** with Globus Compute
-* **HPC integration** of multiple on-prem and cloud-based systems
+* **HPC integration** of multiple on-prem and/or cloud-based systems
 * **Container-based testing** with Docker and Slurm
 
 Key Features

@@ -1,8 +1,8 @@
 Installation
 ============
 
-This software can be installed on Linux systems. Windows and macOS are not currently supported,
-but can be used on these platforms via the Docker container (see :doc:`container`).
+This software can be installed on Linux systems. Native Windows and macOS are not currently supported,
+but Chiltepin can be used on these platforms via the Docker container (see :doc:`container`).
 
 Prerequisites
 -------------

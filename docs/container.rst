@@ -1,8 +1,8 @@
 Docker Container
 ================
 
-Chiltepin provides a Docker container environment for building and running Parsl 
-and Chiltepin applications. The container uses Docker Compose to build a multi-node 
+Chiltepin provides a Docker container environment for building and running 
+Chiltepin applications. The container uses Docker Compose to build a multi-node 
 Slurm cluster that serves as a backend for running workflow applications.
 
 This is particularly useful for:
@@ -88,7 +88,8 @@ The Docker environment consists of:
 
 * **Frontend node**: Where you interact with the system and submit jobs
 * **Compute nodes**: Multiple Slurm compute nodes for running jobs
-* **Shared filesystem**: The repository is mounted from the host
+* **Master node**: The Slurm controller that manages job scheduling and resource allocation
+* **Shared volume**: A shared directory for data and code accessible by all nodes
 
 This simulates a real HPC cluster environment with job scheduling and multi-node execution.
 
@@ -116,8 +117,8 @@ Troubleshooting
    Check that Docker has sufficient resources allocated (CPU, memory, disk space).
 
 **Tests fail with resource errors:**
-   Reduce the ``cores_per_node`` or ``nodes_per_block`` values in the Docker 
-   configuration file.
+   Reduce the ``cores_per_node`` values in the Docker configuration file.
 
 **Cannot access mounted repository:**
-   Ensure Docker has permission to access the repository directory on your host system.
+   Ensure Docker has permission to access the repository directory on your host system. If not,
+   clone the repository directly inside the container and install Chiltepin there.

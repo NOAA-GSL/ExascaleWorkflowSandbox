@@ -1,17 +1,19 @@
 Endpoint Management
 ===================
 
-Chiltepin provides command-line tools for managing Globus Compute endpoint lifecycles. This page describes how to configure, start, stop, and manage endpoints.
+Chiltepin provides command-line tools for managing Globus Compute endpoint lifecycles. These tools are light
+wrappers around the existing Globus Compute CLI, adding convenience features that make it easier to manage
+endpoints for use with Chiltepin. This page describes how to configure, start, stop, and manage endpoints.
 
 Overview
 --------
 
-Globus Compute endpoints enable you to run tasks on remote compute resources. Chiltepin's CLI simplifies endpoint management by:
+Globus Compute endpoints enable you to run tasks on remote compute resources. Chiltepin's CLI simplifies
+endpoint management by:
 
-- Automatically configuring endpoints with appropriate templates
-- Managing authentication flows
-- Providing lifecycle management commands
-- Tracking endpoint status
+- Managing authentication flows for all required Globus services at the same time
+- Automatically configuring endpoints with appropriate templates matching Chiltepin's configuration options
+- Automatically starting endpoints in the background
 
 The ``chiltepin`` Command
 -------------------------
@@ -47,18 +49,8 @@ Login
 
 This will:
 
-1. Open a browser window for Globus authentication
-2. Prompt you to authorize the Chiltepin application
-3. Save authentication tokens for future use
-
-The login uses the default Chiltepin client ID. You can override this with environment variables:
-
-.. code-block:: bash
-
-   export GLOBUS_COMPUTE_CLIENT_ID="your-client-id"
-   export GLOBUS_COMPUTE_CLIENT_SECRET="your-client-secret"  # Optional
-   
-   chiltepin login
+1. Open a browser window (or present a URL)for Globus authentication
+2. Save authentication tokens for future use
 
 .. note::
    Login credentials are cached, so you typically only need to login once per system.
@@ -95,18 +87,10 @@ Create and configure a new endpoint:
 This will:
 
 1. Create a new endpoint configuration directory (``~/.globus_compute/my-endpoint/``)
-2. Generate a default configuration with user endpoint template support
+2. Generate a default endpoint configuration with a template compatible with Chiltepin's configuration options
 3. Set the endpoint display name
 4. Enable debug logging
-5. Capture the system PATH for the endpoint environment
-
-**Custom Configuration Directory**
-
-By default, endpoints are stored in ``~/.globus_compute/``. You can specify a custom location:
-
-.. code-block:: bash
-
-   $ chiltepin endpoint -c /path/to/config configure my-endpoint
+5. Configure the system PATH required for the endpoint environment
 
 **What Gets Created**
 
@@ -116,14 +100,29 @@ After configuration, you'll have:
 
    ~/.globus_compute/my-endpoint/
    ├── config.yaml                      # Main endpoint configuration
-   └── user_config_template.yaml.j2    # Jinja2 template for user configs
+   ├── user_config_template.yaml.j2     # Jinja2 template for user configs
+   └── user_environment.yaml            # PATH configuration for the endpoint process
 
 The ``config.yaml`` includes:
 
 - Display name matching your endpoint name
 - Debug mode enabled
-- User endpoint configuration template path
-- System PATH configuration
+
+The ``user_config_template.yaml.j2`` includes:
+
+- User endpoint configuration template with Jinja2 variables for Chiltepin configuration options
+
+The ``user_environment.yaml`` includes:
+
+- System PATH settings required for the endpoint process to find necessary executables
+
+**Custom Configuration Directory**
+
+By default, endpoints are stored in ``~/.globus_compute/``. You can specify a custom location:
+
+.. code-block:: bash
+
+   $ chiltepin endpoint -c /path/to/config configure my-endpoint
 
 List Endpoints
 ^^^^^^^^^^^^^^
@@ -134,6 +133,12 @@ View all configured endpoints:
 
    $ chiltepin endpoint list
 
+With custom configuration directory:
+
+.. code-block:: bash
+
+   $ chiltepin endpoint -c /path/to/config list
+
 Output format:
 
 .. code-block:: text
@@ -141,12 +146,6 @@ Output format:
    endpoint-name    endpoint-uuid                         status
    my-endpoint      12345678-1234-1234-1234-123456789abc  Running
    test-endpoint    87654321-4321-4321-4321-cba987654321  Stopped
-
-With custom configuration directory:
-
-.. code-block:: bash
-
-   $ chiltepin endpoint -c /path/to/config list
 
 Start an Endpoint
 ^^^^^^^^^^^^^^^^^
@@ -157,18 +156,18 @@ Start a configured endpoint:
 
    $ chiltepin endpoint start my-endpoint
 
+With custom configuration directory:
+
+.. code-block:: bash
+
+   $ chiltepin endpoint -c /path/to/config start my-endpoint
+
 The endpoint will:
 
 1. Register with Globus Compute services (first time only)
 2. Start accepting tasks
 3. Run in the background
 4. Automatically scale resources based on task demand
-
-**Starting with Custom Config**
-
-.. code-block:: bash
-
-   $ chiltepin endpoint -c /path/to/config start my-endpoint
 
 **What Happens at Startup**
 
@@ -189,15 +188,17 @@ Stop a running endpoint:
 
    $ chiltepin endpoint stop my-endpoint
 
+With custom configuration directory:
+
+.. code-block:: bash
+
+   $ chiltepin endpoint -c /path/to/config stop my-endpoint
+
 This will:
 
 1. Stop accepting new tasks
 2. Wait for running tasks to complete (graceful shutdown)
 3. Terminate the endpoint daemon
-
-.. code-block:: bash
-
-   $ chiltepin endpoint -c /path/to/config stop my-endpoint
 
 Delete an Endpoint
 ^^^^^^^^^^^^^^^^^^
@@ -208,14 +209,24 @@ Remove an endpoint configuration:
 
    $ chiltepin endpoint delete my-endpoint
 
+With custom configuration directory:
+
+.. code-block:: bash
+
+   $ chiltepin endpoint -c /path/to/config delete my-endpoint
+
 This will:
 
-1. Stop the endpoint (if running)
-2. Delete the endpoint configuration directory
-3. Remove all associated files
+1. Delete the endpoint configuration directory
+2. Remove all associated files
+3. Deregister the endpoint UUID from Globus Compute services
 
 .. warning::
-   This operation is permanent and cannot be undone. The endpoint UUID will be deregistered from Globus Compute services.
+   This operation is permanent and cannot be undone.
+
+.. note::
+   Deleting an endpoint does not stop it if it's currently running. You must stop the endpoint
+   first before deleting it.
 
 Endpoint Lifecycle
 ------------------
@@ -267,7 +278,7 @@ Globus Compute endpoints automatically scale based on task demand:
 
 - **Idle Shutdown**: Endpoints automatically stop after extended idle periods
 - **On-Demand Start**: Endpoints can be automatically restarted when new tasks arrive
-- **Resource Scaling**: Blocks (job submissions) scale between ``min_blocks`` and ``max_blocks``
+- **Resource Scaling**: Blocks (resource pools) scale between ``min_blocks`` and ``max_blocks``
 
 The endpoint configuration includes:
 
@@ -277,18 +288,23 @@ The endpoint configuration includes:
 User Endpoint Configuration
 ----------------------------
 
-When you use a Globus Compute executor in your Chiltepin configuration, the executor options are passed to the endpoint's user configuration template (``user_config_template.yaml.j2``).
+When you use an endpoint UUID in your Chiltepin configuration, the configuration options define 
+the properties of a resource pool to be allocated and used by that endpoint.  Multiple resource pools
+can be configured for the same endpoint UUID using different options for different purposes. This
+allows you to have a single endpoint for a particular HPC system.  That single endpoint can run different 
+types of tasks with different resource requirements.
 
-Template Variables
-^^^^^^^^^^^^^^^^^^
+Resource pool properties include:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Your configuration options become Jinja2 template variables:
+Your configuration options define the properties of a resource pool to be allocated and used by that
+endpoint.
 
 **Chiltepin Config**:
 
 .. code-block:: yaml
 
-   my-executor:
+   my-executor-1:
      endpoint: "uuid-here"
      mpi: True
      max_mpi_apps: 4
@@ -297,29 +313,14 @@ Your configuration options become Jinja2 template variables:
      cores_per_node: 128
      nodes_per_block: 8
 
-**Template Variables**:
+.. code-block:: yaml
 
-.. code-block:: jinja
-
-   {% if mpi %}
-   max_workers_per_block: {{ max_mpi_apps }}
-   {% endif %}
-   
-   partition: {{ partition }}
-
-This allows each task submission to dynamically configure the endpoint's execution environment.
-
-Advanced Configuration
-^^^^^^^^^^^^^^^^^^^^^^
-
-The user endpoint template (``~/.globus_compute/my-endpoint/user_config_template.yaml.j2``) can be customized for site-specific requirements:
-
-- Modify provider configurations
-- Add custom environment setup
-- Define scheduler options
-- Set resource limits
-
-See the `Globus Compute documentation <https://globus-compute.readthedocs.io/>`_ for advanced endpoint configuration.
+   my-executor-2:
+     endpoint: "uuid-here". # Same endpoint UUID as my-executor-1
+     provider: "slurm"
+     partition: "service"
+     cores_per_node: 1
+     nodes_per_block: 1
 
 Troubleshooting
 ---------------
@@ -355,18 +356,6 @@ If you encounter authentication errors:
    $ chiltepin logout
    $ chiltepin login
 
-Endpoint Won't Start
-^^^^^^^^^^^^^^^^^^^^
-
-Common causes:
-
-1. **Not logged in**: Run ``chiltepin login``
-2. **Port conflicts**: Another endpoint may be using the same port
-3. **Permission issues**: Check file permissions in ``~/.globus_compute/``
-4. **Invalid configuration**: Review ``~/.globus_compute/my-endpoint/config.yaml``
-
-Enable debug logging by ensuring ``debug: True`` in your endpoint config.
-
 Tasks Not Running
 ^^^^^^^^^^^^^^^^^
 
@@ -374,11 +363,8 @@ Verify:
 
 1. Endpoint is running: ``chiltepin endpoint list``
 2. Correct endpoint UUID in your configuration
-3. User configuration template is valid
-4. Resource limits (walltime, nodes) are appropriate
-5. Environment modules are available on the target system
-
-Check the endpoint logs and the Parsl runinfo directory for detailed error messages.
+3. Resource limits (walltime, nodes), endpoint resource pool job may be pending in the scheduler
+4. Check endpoint logs for error messages
 
 Python API
 ----------
