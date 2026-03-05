@@ -35,7 +35,7 @@ Key Features
 * Task decorators for seamless integration of Parsl and Globus Compute
 * Dynamic distributed task execution across heterogeneous resources
 * Docker container environment for development and testing
-* Comprehensive test suite with 100% coverage for core modules
+* Comprehensive test suite with high coverage for core modules
 
 Getting Started
 ---------------
