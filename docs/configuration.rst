@@ -1,12 +1,15 @@
 Configuration
 =============
 
-Chiltepin uses YAML configuration files to define compute resources and executors. This page documents the configuration format and available options.
+Chiltepin uses YAML configuration files to define compute resources for workflow execution. This page
+documents the configuration format and available options.
 
-Configuration File Structure
+Configuration Structure
 -----------------------------
 
-A Chiltepin configuration file defines one or more named executor configurations. Each executor can use either local resources, HPC schedulers (Slurm, PBS Pro), or Globus Compute endpoints.
+A Chiltepin configuration defines one or more named resources. Each resource can use
+either local resources, HPC resources acquired via schedulers (Slurm, PBS Pro), or Globus
+Compute endpoints for remote execution.
 
 Basic Structure
 ^^^^^^^^^^^^^^^
@@ -24,18 +27,18 @@ Basic Structure
      mpi: True
      # ... additional options
 
-Executor Types
+Resource Types
 --------------
 
-Chiltepin supports three types of executors:
+Chiltepin supports three types of resources:
 
-1. **Local Executors**: Run tasks on the local machine using HighThroughputExecutor
-2. **HPC Executors**: Submit jobs to HPC schedulers (Slurm, PBS Pro) using HighThroughputExecutor or MPIExecutor
-3. **Globus Compute Executors**: Submit tasks to remote Globus Compute endpoints
+1. **Local**: Run tasks on the local machine using Parsl's HighThroughputExecutor
+2. **HPC**: Submit tasks to local HPC schedulers (Slurm, PBS Pro) using Parsl's HighThroughputExecutor or MPIExecutor
+3. **Remote**: Submit tasks to remote Globus Compute endpoints using Parsl's GlobusComputeExecutor
 
-The executor type is determined automatically:
+The resource type is determined automatically:
 
-- If ``endpoint`` is specified → Globus Compute executor
+- If ``endpoint`` is specified → Globus Compute resource
 - If ``mpi: True`` → MPI executor (for HPC systems)
 - Otherwise → HighThroughput executor
 

@@ -32,7 +32,8 @@ This example demonstrates the full workflow: configure an endpoint, start it, an
 Step 1: Authenticate
 ^^^^^^^^^^^^^^^^^^^^
 
-First, log in to Globus services. This should be done on the machine where you want to runtasks:
+First, log in to Globus services. This should be done on the machine where you want to run
+tasks:
 
 .. code-block:: bash
 
@@ -189,7 +190,8 @@ When finished:
    $ chiltepin endpoint stop my-endpoint
 
 .. note::
-   Endpoints automatically scale down resourcesafter idle periods, so manual stopping is optional.
+   Endpoints automatically scale down resources after idle periods, so manual stopping is
+   optional.
 
 Local-Only Quickstart
 ---------------------

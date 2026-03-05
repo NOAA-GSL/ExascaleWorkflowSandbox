@@ -39,7 +39,7 @@ the command appropriate for your environment type (venv, conda, etc).
 # Running the test suite
 
 The test suite is run with `pytest` and requires an editable installation of the Chiltepin
-repository (achieved using the `pip install -e .` installation step from above)
+repository (achieved using the `pip install -e .[test]` installation step from above)
 
 An additional step is required for successful completion of the Globus Compute tests. These
 tests require users to authenticate to Globus before running the pytest command. This is done
