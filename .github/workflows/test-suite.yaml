@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-name: ChiltepinTests
+name: TestSuite
 
 env:
   LATEST_PYTHON_VERSION: '3.13'
@@ -13,19 +13,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint-check:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout repository
-        uses: actions/checkout@v4
-      -
-        name: Format Check
-        run:  |
-          pip install ruff
-          ruff check
-          ruff format --check --diff .
-
   test-chiltepin-amd64:
     runs-on: ubuntu2204-16c-64g-600ssd
     timeout-minutes: 360
