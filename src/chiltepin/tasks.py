@@ -29,11 +29,11 @@ Define a simple Python task::
 Define a bash task::
 
     from chiltepin.tasks import bash_task
-    
+
     @bash_task
     def list_files(directory):
         return f"ls -la {directory}"
-    
+
     # Returns exit code (0 = success)
     exit_code = list_files("/tmp", executor="compute").result()
 """
