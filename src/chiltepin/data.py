@@ -25,9 +25,11 @@ Stage, process, and cleanup data in a workflow::
     from chiltepin.tasks import python_task
 
     @python_task
-    def process_data(input_path):
-        # Process the data
-        return result
+    def process_data(transfer_done, input_path):
+        # Process the data (transfer_done ensures transfer completed)
+        with open(input_path, 'r') as f:
+            data = f.read()
+        return len(data)
 
     # Stage data to compute resource
     stage = transfer_task(
@@ -38,16 +40,19 @@ Stage, process, and cleanup data in a workflow::
         executor="local"
     )
 
-    # Process the staged data
-    result = process_data("/scratch/input.dat", executor="compute", dependencies=stage)
+    # Process the staged data (waits for stage by passing future)
+    result = process_data(stage, "/scratch/input.dat", executor="compute")
 
-    # Clean up
+    # Get result
+    output = result.result()
+
+    # Clean up after processing completes
     cleanup = delete_task(
         src_ep="hpc-scratch",
         src_path="/scratch/input.dat",
-        executor="local",
-        dependencies=result
+        executor="local"
     )
+    cleanup.result()
 """
 
 from typing import Optional

@@ -543,12 +543,12 @@ transfer and deletion tasks that can be incorporated into your workflows:
    result = process_file(transfer, "/scratch/input.dat", executor="compute")
 
    # Clean up after processing
-   # delete_task has a dependencies parameter for this use case
    cleanup = delete_task(
        src_ep="my-dest-endpoint",
        src_path="/scratch/input.dat",
        executor="local"
    )
+   cleanup.result()
 
 These tasks operate on Globus **Transfer endpoints** (which are different from
 Globus Compute endpoints used for execution). See :doc:`data` for comprehensive
