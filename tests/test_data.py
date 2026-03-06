@@ -56,7 +56,9 @@ def config(config_file):
     logger_handler()
 
 
-def test_data_transfer_task(config):
+def test_data_task_basic(config):
+    """Test basic transfer_task and delete_task functionality."""
+    # Transfer a file
     transfer_future = data.transfer_task(
         "chiltepin-test-mercury",
         "chiltepin-test-ursa",
@@ -67,12 +69,10 @@ def test_data_transfer_task(config):
         executor=["local"],
         client=config["client"],
     )
-    completed = transfer_future.result()
+    transfer_completed = transfer_future.result()
+    assert transfer_completed is True
 
-    assert completed is True
-
-
-def test_data_delete_task(config):
+    # Delete the transferred file
     delete_future = data.delete_task(
         "chiltepin-test-ursa",
         config["unique_dst"],
@@ -81,13 +81,115 @@ def test_data_delete_task(config):
         executor=["local"],
         client=config["client"],
     )
-    completed = delete_future.result()
+    delete_completed = delete_future.result()
+    assert delete_completed is True
 
-    assert completed is True
+
+def test_data_transfer_task_comprehensive(config):
+    """Test transfer_task dependency ordering with inputs parameter."""
+    import time
+
+    from chiltepin.tasks import python_task
+
+    @python_task
+    def slow_task():
+        """Task that takes 60 seconds (3x typical transfer time)."""
+        import time
+
+        time.sleep(60)
+        return "completed"
+
+    start_time = time.time()
+    slow = slow_task(executor=["local"])
+    dst = f"dependency_test_{uuid.uuid4()}.txt"
+    transfer_future = data.transfer_task(
+        "chiltepin-test-mercury",
+        "chiltepin-test-ursa",
+        "1MB.from_mercury",
+        dst,
+        timeout=120,
+        polling_interval=10,
+        executor=["local"],
+        client=config["client"],
+        inputs=[slow],
+    )
+
+    slow_result = slow.result()
+    transfer_result = transfer_future.result()
+    total_time = time.time() - start_time
+
+    assert slow_result == "completed"
+    assert transfer_result is True
+    assert total_time >= 60.0, (
+        f"Completed in {total_time:.1f}s, dependency may not have been respected (expected ≥60s)"
+    )
+
+    # Cleanup
+    data.delete_task(
+        "chiltepin-test-ursa",
+        dst,
+        timeout=120,
+        polling_interval=10,
+        executor=["local"],
+        client=config["client"],
+    ).result()
 
 
-def test_data_transfer(config):
-    completed = data.transfer(
+def test_data_delete_task_with_dependencies(config):
+    """Test delete_task dependency ordering with inputs parameter."""
+    import time
+
+    from chiltepin.tasks import python_task
+
+    # Transfer a file to delete
+    dst = f"delete_test_{uuid.uuid4()}.txt"
+    transfer_future = data.transfer_task(
+        "chiltepin-test-mercury",
+        "chiltepin-test-ursa",
+        "1MB.from_mercury",
+        dst,
+        timeout=120,
+        polling_interval=10,
+        executor=["local"],
+        client=config["client"],
+    )
+    transfer_future.result()
+
+    @python_task
+    def slow_processing():
+        """Simulate processing that takes 60 seconds (3x typical transfer time)."""
+        import time
+
+        time.sleep(60)
+        return "processed"
+
+    start_time = time.time()
+    process = slow_processing(executor=["local"])
+    delete_future = data.delete_task(
+        "chiltepin-test-ursa",
+        dst,
+        timeout=120,
+        polling_interval=10,
+        executor=["local"],
+        client=config["client"],
+        inputs=[process],
+    )
+
+    process_result = process.result()
+    delete_result = delete_future.result()
+    total_time = time.time() - start_time
+
+    assert process_result == "processed"
+    assert delete_result is True
+    assert total_time >= 60.0, (
+        f"Completed in {total_time:.1f}s, dependency may not have been respected (expected ≥60s)"
+    )
+
+
+def test_data_sync_basic(config):
+    """Test basic synchronous transfer and delete functionality."""
+    # Transfer a file (synchronous)
+    transfer_completed = data.transfer(
         "chiltepin-test-mercury",
         "chiltepin-test-ursa",
         "1MB.from_mercury",
@@ -95,17 +197,16 @@ def test_data_transfer(config):
         timeout=120,
         polling_interval=10,
     )
-    assert completed is True
+    assert transfer_completed is True
 
-
-def test_data_delete(config):
-    completed = data.delete(
+    # Delete the transferred file (synchronous)
+    delete_completed = data.delete(
         "chiltepin-test-ursa",
         config["unique_dst"],
         timeout=120,
         polling_interval=10,
     )
-    assert completed is True
+    assert delete_completed is True
 
 
 def test_data_transfer_with_bad_src_ep(config):

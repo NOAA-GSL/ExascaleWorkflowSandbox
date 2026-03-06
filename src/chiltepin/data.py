@@ -25,8 +25,8 @@ Stage, process, and cleanup data in a workflow::
     from chiltepin.tasks import python_task
 
     @python_task
-    def process_data(transfer_done, input_path):
-        # Process the data (transfer_done ensures transfer completed)
+    def process_data(input_path):
+        # Process the data
         with open(input_path, 'r') as f:
             data = f.read()
         return len(data)
@@ -40,19 +40,19 @@ Stage, process, and cleanup data in a workflow::
         executor="local"
     )
 
-    # Process the staged data (waits for stage by passing future)
-    result = process_data(stage, "/scratch/input.dat", executor="compute")
+    # Process the staged data (waits for stage via inputs parameter)
+    result = process_data("/scratch/input.dat", executor="compute", inputs=[stage])
 
-    # Get result
-    output = result.result()
-
-    # Clean up after processing completes
+    # Clean up after processing completes (waits for result via inputs)
     cleanup = delete_task(
         src_ep="hpc-scratch",
         src_path="/scratch/input.dat",
-        executor="local"
+        executor="local",
+        inputs=[result]
     )
-    cleanup.result()
+
+    # Get final result
+    output = result.result()
 """
 
 from typing import Optional
@@ -73,6 +73,7 @@ def transfer_task(
     polling_interval: int = 30,
     client: Optional[TransferClient] = None,
     recursive: bool = False,
+    inputs=(),
 ):
     """Transfer data asynchronously in a Parsl task
 
@@ -113,6 +114,11 @@ def transfer_task(
 
     recursive: bool
         Whether or not a recursive transfer should be performed
+
+    inputs: list, optional
+        List of Futures that this task depends on. The transfer will not start
+        until all input futures have completed. This allows non-blocking dependency
+        management without explicit .result() calls.
     """
     # Run the transfer (executes in remote Parsl worker)
     completed = transfer(  # pragma: no cover
@@ -136,6 +142,7 @@ def delete_task(
     polling_interval: int = 30,
     client: Optional[TransferClient] = None,
     recursive: bool = False,
+    inputs=(),
 ):
     """Delete data asynchronously in a Parsl task
 
@@ -169,6 +176,11 @@ def delete_task(
 
     recursive: bool
         Whether or not a recursive deletion should be performed
+
+    inputs: list, optional
+        List of Futures that this task depends on. The deletion will not start
+        until all input futures have completed. This allows non-blocking dependency
+        management without explicit .result() calls.
     """
     # Run the deletion (executes in remote Parsl worker)
     completed = delete(  # pragma: no cover

@@ -21,8 +21,11 @@ The data module provides two Chiltepin tasks for workflow data management:
 - **transfer_task**: Transfer files/directories between Globus Transfer endpoints
 - **delete_task**: Delete files/directories from Globus Transfer endpoints
 
-These are standard Chiltepin tasks that return futures and can be chained with other
-workflow tasks by passing futures as arguments or by calling ``.result()`` to wait.
+These are standard Chiltepin tasks that return futures. You can create dependencies by:
+
+- Using the ``inputs`` parameter to pass a list of futures (non-blocking)
+- Passing futures as function arguments (when the task signature supports it)
+- Calling ``.result()`` to wait synchronously (blocking)
 
 Data Transfer Task
 ------------------
@@ -93,6 +96,10 @@ Parameters
      - boolean
      - ``False``
      - Transfer directories recursively
+   * - ``inputs``
+     - list
+     - ``None``
+     - List of Futures to wait for before starting transfer (enables non-blocking dependencies)
    * - ``executor``
      - string
      - **Required**
@@ -199,6 +206,10 @@ Parameters
      - boolean
      - ``False``
      - Delete directories recursively
+   * - ``inputs``
+     - list
+     - ``None``
+     - List of Futures to wait for before starting deletion (enables non-blocking dependencies)
    * - ``executor``
      - string
      - **Required**
@@ -225,8 +236,8 @@ Delete entire directories:
 Workflow Integration
 --------------------
 
-Transfer and deletion tasks integrate seamlessly with Chiltepin workflows by
-passing futures as arguments or calling ``.result()`` to wait synchronously.
+Transfer and deletion tasks integrate seamlessly with Chiltepin workflows using the
+``inputs`` parameter for non-blocking dependencies.
 
 Stage, Process, Cleanup Pattern
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -241,13 +252,13 @@ A common pattern is to stage data, process it, then clean up:
    from chiltepin.data import transfer_task, delete_task
    
    @python_task
-   def analyze_data(transfer_complete, input_path):
-       # Process the data file (transfer_complete ensures transfer finished)
+   def analyze_data(input_path):
+       # Process the data file
        import pandas as pd
        df = pd.read_csv(input_path)
        result = df.mean().to_dict()
        return result
-   
+
    # Load configuration and start Parsl
    config_dict = chiltepin.configure.parse_file("config.yaml")
    parsl_config = chiltepin.configure.load(config_dict)
@@ -262,25 +273,27 @@ A common pattern is to stage data, process it, then clean up:
            executor="local"
        )
        
-       # Process the staged data (waits for transfer by passing future)
+       # Process the staged data (waits for transfer via inputs)
        analysis = analyze_data(
-           stage_in,  # Pass the transfer future as an argument
            "/scratch/project/dataset.csv",
-           executor="compute"
+           executor="compute",
+           inputs=[stage_in]  # Non-blocking dependency
        )
        
-       # Get results first
-       results = analysis.result()
-       
-       # Clean up staged data after processing completes
+       # Clean up staged data (waits for processing via inputs)
        cleanup = delete_task(
            src_ep="hpc-scratch",
            src_path="/scratch/project/dataset.csv",
-           executor="local"
+           executor="local",
+           inputs=[analysis]  # Non-blocking dependency
        )
-       cleanup.result()  # Ensure cleanup completes
        
+       # Get results (blocks until analysis completes)
+       results = analysis.result()
        print(f"Analysis results: {results}")
+
+       # Ensure cleanup completes before exiting
+       cleanup.result()
 
 Multiple File Transfers
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -304,7 +317,7 @@ Transfer multiple files in parallel:
            executor="local"
        )
        transfers.append(future)
-   
+
    # Wait for all transfers to complete
    for t in transfers:
        assert t.result(), "Transfer failed"
@@ -312,8 +325,8 @@ Transfer multiple files in parallel:
 Waiting for Multiple Tasks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To run a transfer or deletion after multiple tasks complete, wait for them
-synchronously:
+To run a transfer or deletion after multiple tasks complete, pass them via the
+``inputs`` parameter:
 
 .. code-block:: python
 
@@ -326,40 +339,36 @@ synchronously:
        with open("/scratch/config.json", "w") as f:
            f.write('{"param": 1}')
        return True
-   
+
    @python_task
    def generate_input():
        # Generate input file
        with open("/scratch/input.dat", "w") as f:
            f.write("data")
        return True
-   
+
    # Generate files in parallel
    config_ready = generate_config(executor="compute")
    input_ready = generate_input(executor="compute")
-   
-   # Wait for both files before transferring
-   # Since transfer_task doesn't take Futures as arguments,
-   # we need to wait synchronously
-   config_ready.result()
-   input_ready.result()
-   
+
+   # Wait for both files before transferring (non-blocking dependency)
    transfer = transfer_task(
        src_ep="hpc-scratch",
        dst_ep="my-laptop",
        src_path="/scratch/",
        dst_path="/results/",
        recursive=True,
-       executor="local"
+       executor="local",
+       inputs=[config_ready, input_ready]  # Multiple dependencies
    )
-   
+
    transfer.result()  # Wait for transfer
 
 Data Pipeline with Transfers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Build complete data pipelines. Since transfer/delete don't naturally accept
-futures as inputs, use ``.result()`` to wait for prior tasks:
+Build complete data pipelines using the ``inputs`` parameter for non-blocking
+dependencies:
 
 .. code-block:: python
 
@@ -371,14 +380,14 @@ futures as inputs, use ``.result()`` to wait for prior tasks:
        df_clean = df.dropna()
        df_clean.to_csv(output_path, index=False)
        return output_path
-   
+
    @python_task  
    def analyze(clean_data_path):
        # Analysis step
        import pandas as pd
        df = pd.read_csv(clean_data_path)
        return df.describe().to_dict()
-   
+
    # Stage raw data
    stage_raw = transfer_task(
        src_ep="my-laptop",
@@ -387,41 +396,45 @@ futures as inputs, use ``.result()`` to wait for prior tasks:
        dst_path="/scratch/raw.csv",
        executor="local"
    )
-   
-   # Wait for transfer, then preprocess
-   stage_raw.result()
+
+   # Preprocess (waits for transfer via inputs)
    preprocess_future = preprocess(
        "/scratch/raw.csv",
        "/scratch/clean.csv",
-       executor="compute"
+       executor="compute",
+       inputs=[stage_raw]  # Wait for transfer non-blocking
    )
-   
-   # Analyze depends on preprocess completing (returns output path)
+
+   # Analyze (waits for preprocess completing and passing output path)
    analysis_future = analyze(
        preprocess_future,  # Parsl waits for this future and passes the output path
        executor="compute"
    )
-   
-   # Get analysis results
-   results = analysis_future.result()
-   
-   # Stage results back (wait for analysis first)
+
+   # Stage results back (waits for analysis via inputs)
    stage_out = transfer_task(
        src_ep="hpc-scratch",
        dst_ep="my-laptop",
        src_path="/scratch/clean.csv",
        dst_path="/data/cleaned_output.csv",
-       executor="local"
+       executor="local",
+       inputs=[analysis_future]  # Wait for analysis non-blocking
    )
-   stage_out.result()
-   
-   # Cleanup remote files
+
+   # Cleanup remote files (waits for stage_out via inputs)
    cleanup = delete_task(
        src_ep="hpc-scratch",
        src_path="/scratch/",
        recursive=True,
-       executor="local"
+       executor="local",
+       inputs=[stage_out]  # Wait for stage out non-blocking
    )
+
+   # Get results when needed
+   results = analysis_future.result()
+   print(f"Analysis results: {results}")
+
+   # Ensure cleanup completes before exiting
    cleanup.result()
 
 Authentication
@@ -463,9 +476,9 @@ Best Practices
    and maintain.
 
 2. **Check Transfer Success**: Always check the result of transfer/delete tasks:
-   
+
    .. code-block:: python
-   
+
       success = transfer_future.result()
       assert success, "Transfer failed"
 
@@ -475,8 +488,9 @@ Best Practices
 4. **Set Appropriate Timeouts**: Large transfers may need longer timeouts. The default
    is 1 hour (3600 seconds).
 
-5. **Chain Tasks Properly**: Pass transfer/deletion futures as arguments to downstream
-   tasks, or call ``.result()`` to wait synchronously for tasks to complete.
+5. **Create Dependencies Properly**: Use the ``inputs`` parameter to create non-blocking
+   dependencies between tasks. Reserve ``.result()`` for when you actually need the data
+   or must wait synchronously.
 
 6. **Cleanup Staged Data**: Always delete temporary staged data to avoid filling up
    scratch space.
