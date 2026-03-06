@@ -1,6 +1,55 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from concurrent.futures import Future
+"""Data transfer and management for Chiltepin workflows.
+
+This module provides specialized tasks for transferring and deleting data between
+Globus data transfer endpoints. These tasks integrate seamlessly with Parsl workflows.
+
+Available Tasks
+---------------
+- :func:`transfer_task`: Transfer files/directories between Globus data endpoints
+- :func:`delete_task`: Delete files/directories from Globus data endpoints
+
+Available Functions
+-------------------
+- :func:`transfer`: Synchronous data transfer using Globus
+- :func:`delete`: Synchronous data deletion using Globus
+
+For comprehensive usage examples and best practices, see the :doc:`data` documentation.
+
+Examples
+--------
+Stage, process, and cleanup data in a workflow::
+
+    from chiltepin.data import transfer_task, delete_task
+    from chiltepin.tasks import python_task
+
+    @python_task
+    def process_data(input_path):
+        # Process the data
+        return result
+
+    # Stage data to compute resource
+    stage = transfer_task(
+        src_ep="my-laptop",
+        dst_ep="hpc-scratch",
+        src_path="/data/input.dat",
+        dst_path="/scratch/input.dat",
+        executor="local"
+    )
+
+    # Process the staged data
+    result = process_data("/scratch/input.dat", executor="compute", dependencies=stage)
+
+    # Clean up
+    cleanup = delete_task(
+        src_ep="hpc-scratch",
+        src_path="/scratch/input.dat",
+        executor="local",
+        dependencies=result
+    )
+"""
+
 from typing import Optional
 
 from globus_sdk import TransferClient
@@ -19,7 +68,6 @@ def transfer_task(
     polling_interval: int = 30,
     client: Optional[TransferClient] = None,
     recursive: bool = False,
-    dependencies: Optional[Future] = None,
 ):
     """Transfer data asynchronously in a Parsl task
 
@@ -60,11 +108,6 @@ def transfer_task(
 
     recursive: bool
         Whether or not a recursive transfer should be performed
-
-    dependencies: Future | None
-        Future to wait for completion before running the transfer task. If
-        None, the transfer will be run at the next available scheduling
-        opportunity
     """
     # Run the transfer (executes in remote Parsl worker)
     completed = transfer(  # pragma: no cover
@@ -88,7 +131,6 @@ def delete_task(
     polling_interval: int = 30,
     client: Optional[TransferClient] = None,
     recursive: bool = False,
-    dependencies: Optional[Future] = None,
 ):
     """Delete data asynchronously in a Parsl task
 
@@ -122,11 +164,6 @@ def delete_task(
 
     recursive: bool
         Whether or not a recursive deletion should be performed
-
-    dependencies: Future | None
-        Future to wait for completion before running the deletion task. If
-        None, the deletion will be run at the next available scheduling
-        opportunity
     """
     # Run the deletion (executes in remote Parsl worker)
     completed = delete(  # pragma: no cover

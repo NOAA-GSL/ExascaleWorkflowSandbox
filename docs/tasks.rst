@@ -159,7 +159,7 @@ Capturing Output
 ^^^^^^^^^^^^^^^^
 
 By default, bash tasks return the exit code. To capture stdout or stderr, use the
-``stdout`` and ``stderr`` parameters:
+``stdout`` and ``stderr`` parameters that are automatically added to bash tasks:
 
 .. code-block:: python
 
@@ -178,6 +178,11 @@ By default, bash tasks return the exit code. To capture stdout or stderr, use th
    with open("hostname_output.txt") as f:
        hostname = f.read().strip()
        print(f"Task ran on: {hostname}")
+
+.. note::
+   When running tasks on remote resources (via Globus Compute endpoints), output files
+   are created on the remote system, not on the local host. You'll need to use shared
+   filesystems, data staging, or file transfer mechanisms to access these files locally.
 
 You can also capture stderr for debugging:
 
@@ -348,6 +353,16 @@ object-oriented workflow design:
    processor = DataProcessor({'normalize': True, 'export_format': 'json'})
    data = processor.load_data("input.csv", executor="compute").result()
    transformed = processor.transform_data(data, executor="compute").result()
+   exit_code = processor.export_data("output.json", executor="compute").result()
+
+.. warning::
+   **Mutable Object State**: When using class methods as tasks, be aware that mutable
+   object state can lead to non-deterministic behavior in distributed systems. Each task
+   captures the object state at the time it's submitted. If the object's state is modified
+   between task submissions (e.g., updating ``self.config``), different tasks may see
+   different states, leading to unexpected results. For best reliability, use immutable
+   configuration or pass state explicitly as task arguments rather than relying on
+   mutable instance variables.
 
 Specifying Resources
 --------------------
@@ -496,6 +511,49 @@ where the task runs:
    When running on remote resources via Globus Compute, ensure files are accessible
    on the remote system. You may need to stage files or use shared filesystems.
 
+Data Transfer Between Endpoints
+""""""""""""""""""""""""""""""""
+
+For moving data between Globus Transfer endpoints, Chiltepin provides specialized data
+transfer and deletion tasks that can be incorporated into your workflows:
+
+.. code-block:: python
+
+   from chiltepin.data import transfer_task, delete_task
+   from chiltepin.tasks import python_task
+
+   @python_task
+   def process_file(transfer_complete, input_path):
+       # transfer_complete is a boolean we can check or ignore
+       # The important part is passing it creates a dependency
+       with open(input_path) as f:
+           data = f.read()
+       return len(data)
+
+   # Transfer data between Globus Transfer endpoints
+   transfer = transfer_task(
+       src_ep="my-source-endpoint",
+       dst_ep="my-dest-endpoint",
+       src_path="/data/input.dat",
+       dst_path="/scratch/input.dat",
+       executor="local"
+   )
+
+   # Process the transferred data (waits for transfer by passing its future)
+   result = process_file(transfer, "/scratch/input.dat", executor="compute")
+
+   # Clean up after processing
+   # delete_task has a dependencies parameter for this use case
+   cleanup = delete_task(
+       src_ep="my-dest-endpoint",
+       src_path="/scratch/input.dat",
+       executor="local"
+   )
+
+These tasks operate on Globus **Transfer endpoints** (which are different from
+Globus Compute endpoints used for execution). See :doc:`data` for comprehensive
+documentation on data transfer and deletion tasks.
+
 Passing Data Between Tasks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -534,8 +592,8 @@ Access environment variables in tasks:
        return os.environ.get('USER', 'unknown')
    
    @bash_task
-   def use_module():
-       return "module load gcc && gcc --version"
+   def get_user_bash():
+       return "echo ${USER:-unknown}"
 
 Task Dependencies
 ^^^^^^^^^^^^^^^^^
@@ -562,6 +620,29 @@ Create task dependencies by passing futures as arguments:
    future3 = step3(future2, executor="compute")  # Waits for future2
    
    final_result = future3.result()
+
+.. tip::
+   **Avoid premature .result() calls**: In this example, notice that ``.result()`` is only
+   called once at the very end. By passing futures directly as arguments instead of calling
+   ``.result()`` immediately, you allow Parsl to manage task dependencies automatically and
+   schedule tasks as soon as their dependencies complete. This maximizes parallelism.
+
+   **Bad practice** (blocks unnecessarily):
+
+   .. code-block:: python
+
+      result1 = step1(executor="compute").result()  # Blocks here
+      result2 = step2(result1, executor="compute").result()  # Blocks here
+      result3 = step3(result2, executor="compute").result()  # Blocks here
+
+   **Good practice** (maximizes parallelism):
+
+   .. code-block:: python
+
+      future1 = step1(executor="compute")
+      future2 = step2(future1, executor="compute")  # Scheduled, doesn't block
+      future3 = step3(future2, executor="compute")  # Scheduled, doesn't block
+      result = future3.result()  # Only block when you need the final result
 
 Timeout Handling
 ^^^^^^^^^^^^^^^^
@@ -626,15 +707,6 @@ Best Practices
 7. **Use descriptive task names**: Function names should clearly indicate what the
    task does for easier debugging.
 
-8. **Log important information**: Use print statements in tasks for debugging, output
-   appears in Parsl logs.
-
-9. **Test locally first**: Test tasks with ``executor="local"`` before running on
-   expensive HPC resources.
-
-10. **Document task requirements**: Add docstrings explaining required environment,
-    dependencies, and expected inputs/outputs.
-
 Common Patterns
 ---------------
 
@@ -678,9 +750,9 @@ Pipeline Processing
        return data ** 2
    
    # Create pipeline
-   data = stage1(5, executor="compute")
-   data = stage2(data, executor="compute")
-   result = stage3(data, executor="compute").result()  # ((5*2)+10)^2 = 400
+   data1 = stage1(5, executor="compute")
+   data2 = stage2(data1, executor="compute")
+   result = stage3(data2, executor="compute").result()  # ((5*2)+10)^2 = 400
 
 Parameter Sweep
 ^^^^^^^^^^^^^^^

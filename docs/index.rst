@@ -46,6 +46,7 @@ Getting Started
    installation
    quickstart
    tasks
+   data
    configuration
    endpoints
    testing
