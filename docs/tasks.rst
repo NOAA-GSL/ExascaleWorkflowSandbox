@@ -4,6 +4,14 @@ Tasks
 Chiltepin provides decorators to define workflow tasks that can be executed on
 configured resources. Tasks are the fundamental units of work in a Chiltepin workflow.
 
+.. note::
+   Chiltepin's task decorators are thin wrappers around Parsl's ``@python_app``,
+   ``@bash_app``, and ``@join_app`` decorators. Chiltepin adds two key capabilities:
+
+   1. **Method decoration**: Support for decorating class methods that reference ``self``
+   2. **Dynamic resource selection**: Ability to choose the execution resource at runtime
+      via the ``executor`` parameter
+
 Overview
 --------
 
