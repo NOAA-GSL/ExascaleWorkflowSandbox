@@ -1,5 +1,43 @@
 # SPDX-License-Identifier: Apache-2.0
 
+"""Task decorators for Chiltepin workflows.
+
+This module provides decorators for defining workflow tasks that can be executed
+on configured resources. Tasks are the fundamental units of work in Chiltepin workflows.
+
+Available Decorators
+--------------------
+- :func:`python_task`: Execute Python functions as workflow tasks
+- :func:`bash_task`: Execute shell commands as workflow tasks
+- :func:`join_task`: Coordinate multiple tasks without blocking workflow execution
+
+For comprehensive usage examples and best practices, see the :doc:`tasks` documentation.
+
+Examples
+--------
+Define a simple Python task::
+
+    from chiltepin.tasks import python_task
+
+    @python_task
+    def add_numbers(a, b):
+        return a + b
+
+    # Execute on a specific resource
+    result = add_numbers(5, 3, executor="compute").result()
+
+Define a bash task::
+
+    from chiltepin.tasks import bash_task
+    
+    @bash_task
+    def list_files(directory):
+        return f"ls -la {directory}"
+    
+    # Returns exit code (0 = success)
+    exit_code = list_files("/tmp", executor="compute").result()
+"""
+
 from functools import wraps
 from inspect import Parameter, signature
 from typing import Callable

@@ -45,6 +45,7 @@ Getting Started
 
    installation
    quickstart
+   tasks
    configuration
    endpoints
    testing

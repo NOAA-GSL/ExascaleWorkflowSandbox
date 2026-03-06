@@ -316,33 +316,33 @@ Resources define where and how tasks run:
 - **HPC**: Submits jobs to schedulers (Slurm, PBS Pro)
 - **Globus Compute**: Runs on remote endpoints
 
+See :doc:`configuration` for detailed resource configuration options.
+
 Task Decorators
 ^^^^^^^^^^^^^^^
 
-Chiltepin provides task decorators:
+Chiltepin provides three task decorators to define workflow tasks:
 
 - ``@python_task``: Execute Python functions
-- ``@bash_task``: Execute shell commands (return exit code)
-- ``@join_task``: Execute Python functions that call other tasks without blocking
+- ``@bash_task``: Execute shell commands (returns exit code)
+- ``@join_task``: Coordinate multiple tasks without blocking
 
-When calling tasks, use the ``executor`` parameter to specify which resource to use.
-The parameter name comes from Parsl's API, but it refers to the resource names you
-defined in your configuration file:
+When calling a task, use the ``executor`` parameter to specify which resource to use:
 
 .. code-block:: python
 
    @python_task
    def my_task():
-       return "Runs on remote resource"
+       return "result"
    
-   # Call task and specify which resource to use
-   result = my_task(executor="remote").result()
+   # Specify which resource to use
+   result = my_task(executor="compute").result()
 
 The ``executor`` value must match a resource name from your configuration file.
 
-.. note::
-   Bash tasks return the exit code (0 for success) rather than stdout.
-   Use ``stdout`` parameter if you need to capture output to a file.
+.. seealso::
+   For comprehensive documentation on defining and using tasks, including advanced
+   patterns, error handling, and best practices, see :doc:`tasks`.
 
 Configuration Loading
 ^^^^^^^^^^^^^^^^^^^^^
@@ -423,6 +423,7 @@ If jobs fail to start:
 Next Steps
 ----------
 
+* Comprehensive task documentation: :doc:`tasks`
 * Detailed configuration options: :doc:`configuration`
 * Endpoint management: :doc:`endpoints`
 * Run the test suite: :doc:`testing`
