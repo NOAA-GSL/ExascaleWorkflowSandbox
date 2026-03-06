@@ -71,7 +71,8 @@ remote resources:
 
 When an endpoint is specified, tasks are sent to the remote system via Globus Compute.
 All other configuration options (provider, mpi, etc.) are passed to the endpoint's
-configuration template to describe the resource pool on the remote system.
+configuration template (created automatically by Chiltepin when an endpoint is configured)
+to describe the resource pool on the remote system.
 
 MPI: Support for Parallel Applications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -197,7 +198,7 @@ When ``provider`` is ``"slurm"`` or ``"pbspro"``:
    * - ``partition``
      - string
      - None
-     - Scheduler partition/queue to use (Slurm only)
+     - Scheduler partition to use (Slurm only)
    * - ``queue``
      - string
      - None
@@ -249,11 +250,11 @@ When ``endpoint`` is specified:
    * - ``endpoint``
      - string
      - **Required**
-     - UUID of the Globus Compute endpoint (can use Jinja2 template variables)
+     - UUID of the Globus Compute endpoint
 
 .. note::
-   All other options (provider, mpi, cores_per_node, etc.) are passed to the endpoint's user
-   configuration template.
+   All other options (provider, mpi, cores_per_node, etc.) are passed to the endpoint's
+   configuration template that Chiltepin creates automatically when endpoints are configured.
 
 Example Configurations
 ----------------------
@@ -325,12 +326,10 @@ PBS Pro System
 Remote Resource via Globus Compute
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Using a remote resource with Jinja2 template variable:
-
 .. code-block:: yaml
 
    remote-mpi:
-     endpoint: "{{ my_endpoint_id }}"
+     endpoint: "12345678-1234-1234-1234-123456789abc"
      mpi: True
      max_mpi_apps: 4
      provider: "slurm"
@@ -343,18 +342,6 @@ Using a remote resource with Jinja2 template variable:
        - "module load cuda/11.8"
        - "module load openmpi/4.1-cuda"
 
-When using this configuration, replace the template variable:
-
-.. code-block:: python
-
-   from jinja2 import Template
-   
-   with open("config.yaml") as f:
-       template = Template(f.read())
-   
-   rendered = template.render(my_endpoint_id="12345678-1234-1234-1234-123456789abc")
-   config = yaml.safe_load(rendered)
-
 Multiple Resources
 ^^^^^^^^^^^^^^^^^^
 
@@ -366,49 +353,26 @@ Combine multiple resource types in one file:
    service:
      provider: "localhost"
      max_blocks: 1
+     max_workers_per_node: 3
    
-   # HPC compute tasks
+   # Local HPC compute tasks
    compute:
      provider: "slurm"
      cores_per_node: 64
+     nodes_per_block: 10
      partition: "standard"
      account: "myproject"
      walltime: "01:00:00"
    
    # Remote MPI tasks via Globus Compute
    remote-mpi:
-     endpoint: "{{ endpoint_uuid }}"
+     endpoint: "12345678-1234-1234-1234-123456789abc"
      mpi: True
      max_mpi_apps: 2
      provider: "slurm"
+     partition: "standard"
+     account: "myproject"
      nodes_per_block: 16
-
-Loading Configurations
-----------------------
-
-Parse and Load
-^^^^^^^^^^^^^^
-
-.. code-block:: python
-
-   import chiltepin.configure
-   import parsl
-   
-   # Parse YAML configuration file
-   config_dict = chiltepin.configure.parse_file("my_config.yaml")
-   
-   # Create Parsl configuration
-   parsl_config = chiltepin.configure.load(
-       config_dict,
-       include=["compute", "mpi"],  # Only load specific resources
-       run_dir="./runinfo"           # Directory for Parsl runtime files
-   )
-   
-   # Initialize Parsl with configuration
-   parsl.load(parsl_config)
-
-The ``include`` parameter lets you selectively load only specific resources from your
-configuration file. If omitted, all resources are loaded.
 
 Environment Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -445,16 +409,40 @@ tasks. This is commonly used for:
       resource2:
         environment: *common_env
 
+Loading Configurations
+----------------------
+
+Parse and Load
+^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+   import chiltepin.configure
+   import parsl
+
+   # Parse YAML configuration file
+   config_dict = chiltepin.configure.parse_file("my_config.yaml")
+   
+   # Create Parsl configuration
+   parsl_config = chiltepin.configure.load(
+       config_dict,
+       include=["compute", "mpi"],  # Only load specific resources
+       run_dir="./runinfo"           # Directory for Parsl runtime files
+   )
+
+   # Initialize Parsl with configuration
+   parsl.load(parsl_config)
+
+The ``include`` parameter lets you selectively load only specific resources from your
+configuration file. If omitted, all resources are loaded.
+
 Configuration Best Practices
 -----------------------------
 
 1. **Start Small**: Begin with short walltimes and small resource requests while testing
 2. **Use Anchors**: Share common configuration blocks (like ``environment``) using YAML anchors
-3. **Template Variables**: Use Jinja2 templates for endpoint UUIDs to keep configurations portable
-4. **Resource Limits**: Set appropriate ``min_blocks`` and ``max_blocks`` to control scaling
-5. **Test Locally**: Validate configurations with ``provider: "localhost"`` before using HPC resources
-6. **Environment Modules**: Always include necessary module loads in the ``environment`` section
-7. **MPI Variables**: Export MPI compiler variables (like ``$MPIF90``) in MPI resource environments
+3. **Resource Limits**: Set appropriate ``min_blocks`` and ``max_blocks`` to control scaling
+4. **Environment Modules**: Always include necessary module loads in the ``environment`` section
 
 See Also
 --------
