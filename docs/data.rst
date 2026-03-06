@@ -2,13 +2,13 @@ Data Transfer and Management
 ============================
 
 Chiltepin provides specialized tasks for transferring and deleting data between Globus
-data transfer endpoints. These tasks integrate seamlessly with Parsl workflows, allowing
+Transfer endpoints. These tasks integrate seamlessly with Chiltepin workflows, allowing
 you to stage data, process it, and clean up afterward.
 
 .. important::
-   **Data Endpoints vs Compute Endpoints**: Globus has two types of endpoints:
+   **Transfer Endpoints vs Compute Endpoints**: Globus has two types of endpoints:
    
-   - **Data Transfer Endpoints**: Used for moving and managing files (documented here)
+   - **Transfer Endpoints**: Used for moving and managing files (documented here)
    - **Compute Endpoints**: Used for executing tasks (see :doc:`endpoints`)
    
    These are configured and managed separately through the Globus service.
@@ -16,10 +16,10 @@ you to stage data, process it, and clean up afterward.
 Overview
 --------
 
-The data module provides two task decorators for workflow data management:
+The data module provides two Chiltepin tasks for workflow data management:
 
-- **transfer_task**: Transfer files/directories between Globus data endpoints
-- **delete_task**: Delete files/directories from Globus data endpoints
+- **transfer_task**: Transfer files/directories between Globus Transfer endpoints
+- **delete_task**: Delete files/directories from Globus Transfer endpoints
 
 These are standard Chiltepin tasks that return futures and can be chained with other
 workflow tasks by passing futures as arguments or by calling ``.result()`` to wait.
@@ -27,7 +27,7 @@ workflow tasks by passing futures as arguments or by calling ``.result()`` to wa
 Data Transfer Task
 ------------------
 
-The ``transfer_task`` function transfers data between two Globus data transfer endpoints.
+The ``transfer_task`` function transfers data between two Globus Transfer endpoints.
 
 Basic Usage
 ^^^^^^^^^^^
@@ -64,19 +64,19 @@ Parameters
    * - ``src_ep``
      - string
      - **Required**
-     - Source endpoint name or UUID
+     - Source Transfer endpoint name or UUID
    * - ``dst_ep``
      - string
      - **Required**
-     - Destination endpoint name or UUID
+     - Destination Transfer endpoint name or UUID
    * - ``src_path``
      - string
      - **Required**
-     - Path to file/directory on source endpoint
+     - Path to file/directory on source Transfer endpoint
    * - ``dst_path``
      - string
      - **Required**
-     - Path to file/directory on destination endpoint
+     - Path to file/directory on destination Transfer endpoint
    * - ``timeout``
      - integer
      - ``3600``
@@ -96,7 +96,7 @@ Parameters
    * - ``executor``
      - string
      - **Required**
-     - Resource name for running the transfer task
+     - Resource name for running the transfer task (must have internet access)
 
 Recursive Transfer
 ^^^^^^^^^^^^^^^^^^
@@ -143,7 +143,7 @@ You can specify endpoints by their display name or UUID:
 Data Deletion Task
 ------------------
 
-The ``delete_task`` function removes files or directories from a Globus data endpoint.
+The ``delete_task`` function removes files or directories from a Globus Transfer endpoint.
 
 Basic Usage
 ^^^^^^^^^^^
@@ -178,7 +178,7 @@ Parameters
    * - ``src_ep``
      - string
      - **Required**
-     - Endpoint name or UUID where data will be deleted
+     - Transfer endpoint name or UUID where data will be deleted
    * - ``src_path``
      - string
      - **Required**
@@ -202,7 +202,7 @@ Parameters
    * - ``executor``
      - string
      - **Required**
-     - Resource name for running the deletion task
+     - Resource name for running the deletion task (must have internet access)
 
 Recursive Deletion
 ^^^^^^^^^^^^^^^^^^
@@ -373,10 +373,10 @@ futures as inputs, use ``.result()`` to wait for prior tasks:
        return output_path
    
    @python_task  
-   def analyze(input_path):
+   def analyze(clean_data_path):
        # Analysis step
        import pandas as pd
-       df = pd.read_csv(input_path)
+       df = pd.read_csv(clean_data_path)
        return df.describe().to_dict()
    
    # Stage raw data
@@ -398,7 +398,7 @@ futures as inputs, use ``.result()`` to wait for prior tasks:
    
    # Analyze depends on preprocess completing (returns output path)
    analysis_future = analyze(
-       preprocess_future,  # Parsl waits for this future and passes result
+       preprocess_future,  # Parsl waits for this future and passes the output path
        executor="compute"
    )
    
@@ -423,9 +423,6 @@ futures as inputs, use ``.result()`` to wait for prior tasks:
        executor="local"
    )
    cleanup.result()
-   # Wait for cleanup
-   cleanup.result()
-   cleanup.result()
 
 Authentication
 --------------
@@ -446,7 +443,7 @@ transfers. The authentication persists across workflow runs until you log out.
 Setting Up Data Endpoints
 --------------------------
 
-To use data transfer tasks, you need access to Globus data transfer endpoints:
+To use data transfer tasks, you need access to Globus Transfer endpoints:
 
 1. **Personal Endpoints**: Install Globus Connect Personal on your laptop/workstation
    (`globus.org/globus-connect-personal <https://www.globus.org/globus-connect-personal>`_)
