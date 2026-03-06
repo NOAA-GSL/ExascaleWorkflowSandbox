@@ -89,7 +89,7 @@ Create ``my_config.yaml`` with your endpoint UUID:
 
 .. code-block:: yaml
 
-   # Local executor for small tasks
+   # Local resource for small tasks
    local:
      provider: "localhost"
      init_blocks: 1
@@ -146,14 +146,14 @@ Create ``my_workflow.py``:
        )
    
        with parsl.load(parsl_config):
-           # Run local task
+           # Run local task on "local" resource
            local_future = hello_local(executor="local")
            
-           # Run remote bash task (returns exit code: 0 = success)
+           # Run remote bash task on "remote" resource (returns exit code: 0 = success)
            remote_future = hello_remote(executor="remote")
            
-           # Run multiple compute tasks
-           futures = [compute_task(i * 1000, executor="remote") for i in range(1, 5)]
+           # Run multiple compute tasks on "remote" resource
+           futures = [compute_task(i, executor="remote") for i in range(1, 5)]
            
            # Get the results
            print(f"Local: {local_future.result()}")
@@ -177,7 +177,7 @@ Expected output:
 
    Local: Hello from my-laptop.local
    Remote exit code: 0
-   Computation results: [0, 1333333000, 10666664000, 35999995000]
+   Computation results: [0, 1, 5, 14]
    All tasks completed!
 
 Step 8: Stop the Endpoint
@@ -254,7 +254,7 @@ Configuration (``mpi_config.yaml``)
 
 .. code-block:: yaml
 
-   mpi-executor:
+   mpi-resource-name:
      endpoint: "your-endpoint-uuid"
      mpi: True
      max_mpi_apps: 2
@@ -291,14 +291,14 @@ MPI Workflow
        parsl_config = chiltepin.configure.load(config_dict, run_dir="./runinfo")
        
        with parsl.load(parsl_config):
-           # Compile MPI application (returns exit code)
-           compile_result = compile_mpi(executor="mpi-executor").result()
+           # Compile MPI application on the MPI resource (returns exit code)
+           compile_result = compile_mpi(executor="mpi-resource-name").result()
            print(f"Compilation exit code: {compile_result}")
            
-           # Run with different rank counts
+           # Run with different rank counts on the MPI resource
            results = []
            for ranks in [4, 8, 16]:
-               future = run_mpi(ranks, executor="mpi-executor")
+               future = run_mpi(ranks, executor="mpi-resource-name")
                results.append(future.result())
            
            for i, result in enumerate(results, 1):
@@ -307,10 +307,10 @@ MPI Workflow
 Key Concepts
 ------------
 
-Executors
+Resources
 ^^^^^^^^^
 
-Executors define where and how tasks run:
+Resources define where and how tasks run:
 
 - **Local**: Runs on the current machine
 - **HPC**: Submits jobs to schedulers (Slurm, PBS Pro)
@@ -323,18 +323,22 @@ Chiltepin provides task decorators:
 
 - ``@python_task``: Execute Python functions
 - ``@bash_task``: Execute shell commands (return exit code)
-- ``@mpi_task``: Execute MPI applications
+- ``@join_task``: Execute Python functions that call other tasks without blocking
 
-Specify executors when calling tasks using the ``executor`` parameter:
+When calling tasks, use the ``executor`` parameter to specify which resource to use.
+The parameter name comes from Parsl's API, but it refers to the resource names you
+defined in your configuration file:
 
 .. code-block:: python
 
    @python_task
    def my_task():
-       return "Runs on remote executor"
+       return "Runs on remote resource"
    
-   # Call with specific executor
+   # Call task and specify which resource to use
    result = my_task(executor="remote").result()
+
+The ``executor`` value must match a resource name from your configuration file.
 
 .. note::
    Bash tasks return the exit code (0 for success) rather than stdout.
@@ -343,18 +347,18 @@ Specify executors when calling tasks using the ``executor`` parameter:
 Configuration Loading
 ^^^^^^^^^^^^^^^^^^^^^
 
-The ``include`` parameter selects specific executors:
+The ``include`` parameter selects specific resources to load from the configuration:
 
 .. code-block:: python
 
-   # Load only specific executors
+   # Load only specific resources
    parsl_config = chiltepin.configure.load(
        config_dict,
-       include=["local", "compute"],  # Only these executors
+       include=["local", "compute"],  # Only these resources
        run_dir="./runinfo"
    )
 
-If ``include`` is omitted, all executors in the configuration are loaded.
+If ``include`` is omitted, all resources in the configuration are loaded.
 
 Directory Structure
 -------------------
@@ -368,8 +372,8 @@ After running workflows, you'll see:
    ├── my_workflow.py              # Workflow script
    └── runinfo/                    # Parsl runtime directory
        ├── 000/                     # Run directory
-       │   ├── local/               # Local executor files
-       │   ├── remote/              # Remote executor files
+       │   ├── local/               # Local resource files
+       │   ├── remote/              # Remote resource files
        │   └── submit_scripts/      # Job submission scripts
        └── parsl.log                # Parsl log file
 
@@ -413,8 +417,8 @@ If jobs fail to start:
 
 - Check partition/queue names
 - Verify account/project is valid  
-- Ensure walltime is sufficient
 - Confirm node/core requests are within limits
+- Machine may be busy and resource pool job may be pending or may be full
 
 Next Steps
 ----------

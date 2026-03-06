@@ -194,7 +194,7 @@ When ``provider`` is ``"slurm"`` or ``"pbspro"``:
    * - ``exclusive``
      - boolean
      - ``True``
-     - Request exclusive node allocation
+     - Request exclusive node allocation (Slurm only)
    * - ``partition``
      - string
      - None
