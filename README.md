@@ -19,7 +19,7 @@ The recommended method for installation is to use a Python venv.
 ```
 python -m venv .chiltepin
 source .chiltepin/bin/activate
-pip install -e .[test]
+pip install -e ".[test]"
 ```
 
 Alternatively, a conda environment (anaconda3, miniconda3, miniforge, etc.)
@@ -28,7 +28,7 @@ can be used.
 ```
 conda create -n "chiltepin" python=3.10
 source activate chiltepin
-pip install -e .[test]
+pip install -e ".[test]"
 ```
 
 NOTE: The `[test]` ensures that dependencies required for running the tests are installed.
@@ -39,7 +39,7 @@ the command appropriate for your environment type (venv, conda, etc).
 # Running the test suite
 
 The test suite is run with `pytest` and requires an editable installation of the Chiltepin
-repository (achieved using the `pip install -e .[test]` installation step from above)
+repository (achieved using the `pip install -e ".[test]"` installation step from above)
 
 An additional step is required for successful completion of the Globus Compute tests. These
 tests require users to authenticate to Globus before running the pytest command. This is done

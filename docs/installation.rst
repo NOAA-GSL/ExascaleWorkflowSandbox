@@ -60,7 +60,7 @@ Dependencies
 Chiltepin has the following core dependencies:
 
 * ``globus-compute-sdk`` (>=4.5.0,<4.7.0)
-* ``globus-compute-endpoint`` (>=4.5.0,<4.7.0>)
+* ``globus-compute-endpoint`` (>=4.5.0,<4.7.0)
 * ``parsl`` (>=2026.1.5)
 
 These will be automatically installed when you install Chiltepin.

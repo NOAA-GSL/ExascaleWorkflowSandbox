@@ -2,14 +2,14 @@ Testing
 =======
 
 The Chiltepin test suite uses pytest and requires an editable installation of the 
-package (achieved using the ``pip install -e .[test]`` installation step).
+package (achieved using the ``pip install -e ".[test]"`` installation step).
 
 Prerequisites
 -------------
 
 Before running tests, ensure you have:
 
-1. Installed Chiltepin with test dependencies: ``pip install -e .[test]``
+1. Installed Chiltepin with test dependencies: ``pip install -e ".[test]"``
 2. Authenticated with Globus (for Globus Compute and Globus Transfer tests)
 
 Globus Authentication

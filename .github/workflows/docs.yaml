@@ -24,7 +24,7 @@ jobs:
       -
         name: Install package and documentation dependencies
         run: |
-          pip install .[docs]
+          pip install ".[docs]"
       -
         name: Build documentation
         run: |
