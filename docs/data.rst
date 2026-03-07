@@ -96,10 +96,6 @@ Parameters
      - boolean
      - ``False``
      - Transfer directories recursively
-   * - ``inputs``
-     - list
-     - ``()``
-     - List of Futures to wait for before starting transfer (enables non-blocking dependencies)
    * - ``executor``
      - string
      - **Required**
@@ -206,10 +202,6 @@ Parameters
      - boolean
      - ``False``
      - Delete directories recursively
-   * - ``inputs``
-     - list
-     - ``()``
-     - List of Futures to wait for before starting deletion (enables non-blocking dependencies)
    * - ``executor``
      - string
      - **Required**

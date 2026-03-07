@@ -40,8 +40,8 @@ def parsl_config():
     local_config = {
         "test-local": {
             "provider": "localhost",
-            "cores_per_node": 1,
-            "max_workers_per_node": 1,
+            "cores_per_node": 2,
+            "max_workers_per_node": 2,
             "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
         }
     }
@@ -148,6 +148,51 @@ class TestPythonTaskStandalone:
         future = get_list(5, executor=["test-local"])
         result = future.result()
         assert result == [0, 1, 2, 3, 4]
+
+    def test_python_task_with_inputs_dependency(self, parsl_config):
+        """Test that python_task automatically supports inputs parameter for dependencies."""
+        import time
+
+        @python_task
+        def first_task():
+            import time
+
+            # Sleep to ensure we can detect if second starts early
+            time.sleep(2)
+            return time.time()
+
+        @python_task
+        def second_task():
+            import time
+
+            return time.time()
+
+        # Record when we start
+        start = time.time()
+
+        # Create first task
+        first = first_task(executor=["test-local"])
+
+        # Second task depends on first via inputs parameter (added by Parsl decorator)
+        # With 2 workers, second COULD start immediately if dependency wasn't enforced
+        second = second_task(executor=["test-local"], inputs=[first])
+
+        # Get completion timestamps
+        first_complete = first.result()
+        second_complete = second.result()
+
+        # Verify first completed before second started
+        # If dependency is enforced, second should complete at least 2 seconds after start
+        # (because it waits for first's 2-second sleep)
+        total_time = second_complete - start
+        assert total_time >= 2.0, (
+            f"Second task completed in {total_time:.1f}s, suggesting it didn't wait for first task (expected ≥2s)"
+        )
+
+        # Also verify first completed before second
+        assert first_complete <= second_complete, (
+            "First task should complete before second task"
+        )
 
     def test_python_task_with_dict_return(self, parsl_config):
         """Test python_task returning a dictionary."""

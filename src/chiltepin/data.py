@@ -55,10 +55,9 @@ Stage, process, and cleanup data in a workflow::
     output = result.result()
 """
 
-from typing import Optional, Sequence
+from typing import Optional
 
 from globus_sdk import TransferClient
-from parsl.dataflow.futures import AppFuture
 
 import chiltepin.endpoint as endpoint
 from chiltepin.tasks import python_task
@@ -74,7 +73,6 @@ def transfer_task(
     polling_interval: int = 30,
     client: Optional[TransferClient] = None,
     recursive: bool = False,
-    inputs: Sequence[AppFuture] = (),
 ):
     """Transfer data asynchronously in a Parsl task
 
@@ -115,11 +113,6 @@ def transfer_task(
 
     recursive: bool
         Whether or not a recursive transfer should be performed
-
-    inputs: tuple or list of Futures, optional
-        Sequence of Parsl AppFutures that this task depends on. The transfer will not start
-        until all input futures have completed. This allows non-blocking dependency
-        management without explicit .result() calls.
     """
     # Run the transfer (executes in remote Parsl worker)
     completed = transfer(  # pragma: no cover
@@ -143,7 +136,6 @@ def delete_task(
     polling_interval: int = 30,
     client: Optional[TransferClient] = None,
     recursive: bool = False,
-    inputs: Sequence[AppFuture] = (),
 ):
     """Delete data asynchronously in a Parsl task
 
@@ -177,11 +169,6 @@ def delete_task(
 
     recursive: bool
         Whether or not a recursive deletion should be performed
-
-    inputs: tuple or list of Futures, optional
-        Sequence of Parsl AppFutures that this task depends on. The deletion will not start
-        until all input futures have completed. This allows non-blocking dependency
-        management without explicit .result() calls.
     """
     # Run the deletion (executes in remote Parsl worker)
     completed = delete(  # pragma: no cover
