@@ -639,7 +639,7 @@ parameter. This is automatically supported by all Chiltepin task decorators
 
 .. code-block:: python
 
-   from chiltepin.data import transfer_task
+   from chiltepin.data import delete_task, transfer_task
    from chiltepin.tasks import python_task
 
    # Stage data to compute resource

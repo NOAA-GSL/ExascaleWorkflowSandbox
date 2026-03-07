@@ -108,7 +108,7 @@ def transfer_task(
 
     client: TransferClient | None
         Transfer client to use for submitting the transfers. If None, one
-        will be retreived via the login process. If a login has already been
+        will be retrieved via the login process. If a login has already been
         performed, no login flow prompts will be issued.
 
     recursive: bool
@@ -163,7 +163,7 @@ def delete_task(
 
     client: TransferClient | None
         Transfer client to use for submitting the deletion. If None, one
-        will be retreived via the login process. If a login has already been
+        will be retrieved via the login process. If a login has already been
         performed, no login flow prompts will be issued.  NOTE: Yes, deletion
         is done using a TransferClient.
 
@@ -225,7 +225,7 @@ def transfer(
 
     client: TransferClient | None
         Transfer client to use for submitting the transfers. If None, one
-        will be retreived via the login process. If a login has already been
+        will be retrieved via the login process. If a login has already been
         performed, no login flow prompts will be issued.
 
     recursive: bool
@@ -320,7 +320,7 @@ def delete(
 
     client: TransferClient | None
         Transfer client to use for submitting the deletion. If None, one
-        will be retreived via the login process. If a login has already been
+        will be retrieved via the login process. If a login has already been
         performed, no login flow prompts will be issued.  NOTE: Yes, deletion
         is done using a TransferClient.
 
