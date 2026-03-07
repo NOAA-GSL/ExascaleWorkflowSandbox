@@ -274,7 +274,7 @@ MPI Workflow
        return f"srun -n {ranks} ./mpi_app"
    
    if __name__ == "__main__":
-       with chiltepin.workflow("mpi_config.yaml", run_dir="./runinfo"):
+       with workflow("mpi_config.yaml", run_dir="./runinfo"):
            # Compile MPI application on the MPI resource (returns exit code)
            compile_result = compile_mpi(executor=["mpi-resource-name"]).result()
            print(f"Compilation exit code: {compile_result}")

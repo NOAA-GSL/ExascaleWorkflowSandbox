@@ -97,24 +97,28 @@ def workflow(
         level = log_level if log_level is not None else log_module.INFO
         logger_handler = parsl.set_file_logger(filename=log_file, level=level)
 
-    # Load configuration
-    parsl_config = configure.load(
-        config_dict,
-        include=include,
-        client=client,
-        run_dir=run_dir,
-    )
-
-    # Load Parsl with the configuration
-    dfk = parsl.load(parsl_config)
+    # Initialize dfk to None before attempting to load
+    dfk = None
 
     try:
+        # Load configuration
+        parsl_config = configure.load(
+            config_dict,
+            include=include,
+            client=client,
+            run_dir=run_dir,
+        )
+
+        # Load Parsl with the configuration
+        dfk = parsl.load(parsl_config)
+
         yield
     finally:
-        # Cleanup - match the pattern used in tests
-        dfk.cleanup()
-        dfk = None
-        parsl.clear()
+        # Cleanup only if dfk was successfully created
+        if dfk is not None:
+            dfk.cleanup()
+            dfk = None
+            parsl.clear()
         if logger_handler is not None:
             logger_handler()
 
