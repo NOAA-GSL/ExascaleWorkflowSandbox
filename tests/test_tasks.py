@@ -159,16 +159,14 @@ class TestPythonTaskStandalone:
 
             # Sleep to ensure we can detect if second starts early
             time.sleep(2)
-            return time.time()
+            return "first"
 
         @python_task
         def second_task():
-            import time
+            return "second"
 
-            return time.time()
-
-        # Record when we start
-        start = time.time()
+        # Time everything in pytest process using monotonic clock
+        start = time.monotonic()
 
         # Create first task
         first = first_task(executor=["test-local"])
@@ -177,22 +175,21 @@ class TestPythonTaskStandalone:
         # With 2 workers, second COULD start immediately if dependency wasn't enforced
         second = second_task(executor=["test-local"], inputs=[first])
 
-        # Get completion timestamps
-        first_complete = first.result()
-        second_complete = second.result()
+        # Wait for second to complete (which should wait for first due to inputs=[first])
+        # Calling second.result() first ensures we're measuring the actual wait time
+        second_result = second.result()
+        elapsed = time.monotonic() - start
 
-        # Verify first completed before second started
-        # If dependency is enforced, second should complete at least 2 seconds after start
-        # (because it waits for first's 2-second sleep)
-        total_time = second_complete - start
-        assert total_time >= 2.0, (
-            f"Second task completed in {total_time:.1f}s, suggesting it didn't wait for first task (expected ≥2s)"
+        # Verify dependency was enforced by checking elapsed time
+        # If inputs=[first] works, second can't complete until first finishes its 2s sleep
+        assert elapsed >= 2.0, (
+            f"Second task completed in {elapsed:.1f}s, suggesting it didn't wait for first task (expected ≥2s)"
         )
 
-        # Also verify first completed before second
-        assert first_complete <= second_complete, (
-            "First task should complete before second task"
-        )
+        # Verify first also completed successfully
+        first_result = first.result()
+        assert first_result == "first"
+        assert second_result == "second"
 
     def test_python_task_with_dict_return(self, parsl_config):
         """Test python_task returning a dictionary."""
