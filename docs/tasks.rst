@@ -12,6 +12,9 @@ configured resources. Tasks are the fundamental units of work in a Chiltepin wor
    2. **Dynamic resource selection**: Ability to choose the execution resource at runtime
       via the ``executor`` parameter
 
+   For more information about Parsl's execution model and features, see the
+   `Parsl documentation <https://parsl.readthedocs.io/>`_.
+
 Overview
 --------
 
@@ -598,7 +601,13 @@ Access environment variables in tasks:
 Task Dependencies
 ^^^^^^^^^^^^^^^^^
 
-Create task dependencies by passing futures as arguments:
+Create task dependencies to ensure tasks execute in the correct order. There are
+two primary methods for establishing dependencies between tasks.
+
+Passing Futures as Arguments
+"""""""""""""""""""""""""""""
+
+The most common approach is to pass a future from one task as an argument to another:
 
 .. code-block:: python
 
@@ -614,12 +623,88 @@ Create task dependencies by passing futures as arguments:
    def step3(input_data):
        return f"final_{input_data}"
    
-   # Chain tasks
+   # Chain tasks - data flows through futures
    future1 = step1(executor="compute")
    future2 = step2(future1, executor="compute")  # Waits for future1
    future3 = step3(future2, executor="compute")  # Waits for future2
    
    final_result = future3.result()
+
+Using the inputs Parameter
+"""""""""""""""""""""""""""
+
+For dependencies where you don't need to pass data between tasks, use the ``inputs``
+parameter. This is automatically supported by all Chiltepin task decorators
+(via Parsl's underlying implementation):
+
+.. code-block:: python
+
+   from chiltepin.data import transfer_task
+   from chiltepin.tasks import python_task
+
+   # Stage data to compute resource
+   stage = transfer_task(
+       src_ep="laptop",
+       dst_ep="hpc-scratch",
+       src_path="/data/input.dat",
+       dst_path="/scratch/input.dat",
+       executor="local"
+   )
+
+   # Process the data - waits for transfer without passing its result
+   @python_task
+   def process_data(filepath):
+       with open(filepath) as f:
+           return len(f.read())
+
+   result = process_data("/scratch/input.dat", executor="compute", inputs=[stage])
+
+   # Clean up - waits for processing to complete
+   cleanup = delete_task(
+       src_ep="hpc-scratch",
+       src_path="/scratch/input.dat",
+       executor="local",
+       inputs=[result]
+   )
+
+The ``inputs`` parameter accepts a list of futures that must complete before the task
+starts. This is particularly useful for:
+
+- Ensuring files are transferred before processing begins
+- Coordinating cleanup operations after processing completes
+- Creating dependencies when you don't need to pass data between tasks
+- Coordinating multiple independent prerequisites
+
+Multiple Dependencies
+"""""""""""""""""""""
+
+You can combine both approaches and specify multiple dependencies:
+
+.. code-block:: python
+
+   @python_task
+   def task_a():
+       return "data_a"
+
+   @python_task
+   def task_b():
+       return "data_b"
+
+   @python_task
+   def task_c():
+       # Just needs to wait, doesn't use the result
+       pass
+
+   @python_task
+   def combine(data1, data2):
+       return f"{data1}_{data2}"
+
+   a = task_a(executor="compute")
+   b = task_b(executor="compute")
+   c = task_c(executor="compute")
+
+   # Combine waits for a and b (via arguments) and c (via inputs)
+   result = combine(a, b, executor="compute", inputs=[c])
 
 .. tip::
    **Avoid premature .result() calls**: In this example, notice that ``.result()`` is only
