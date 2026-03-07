@@ -98,7 +98,7 @@ Parameters
      - Transfer directories recursively
    * - ``inputs``
      - list
-     - ``None``
+     - ``()``
      - List of Futures to wait for before starting transfer (enables non-blocking dependencies)
    * - ``executor``
      - string
@@ -208,7 +208,7 @@ Parameters
      - Delete directories recursively
    * - ``inputs``
      - list
-     - ``None``
+     - ``()``
      - List of Futures to wait for before starting deletion (enables non-blocking dependencies)
    * - ``executor``
      - string
