@@ -19,7 +19,7 @@ The recommended method for installation is to use a Python virtual environment:
 
    $ python -m venv .chiltepin
    $ source .chiltepin/bin/activate
-   $ pip install -e .[test]
+   $ pip install -e ".[test]"
 
 .. note::
 
@@ -34,7 +34,7 @@ Alternatively, you can use a conda environment (anaconda3, miniconda3, miniforge
 
    $ conda create -n "chiltepin" python=3.10
    $ conda activate chiltepin
-   $ pip install -e .[test]
+   $ pip install -e ".[test]"
 
 Activating the Environment
 ---------------------------

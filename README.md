@@ -19,7 +19,7 @@ and [Globus](https://www.globus.org/) services.
 **📚 Full documentation is available at [Read the Docs](https://exascaleworkflowsandbox.readthedocs.io/)**
 
 Key documentation sections:
-- [Installation Guide](https://exascaleworkflowsandbox.readthedocs.io/en/latest/installation.html) - Installing Chiltepin on Linux, macOS, Windows, and Docker
+- [Installation Guide](https://exascaleworkflowsandbox.readthedocs.io/en/latest/installation.html) - Installing Chiltepin on Linux and via Docker on macOS and Windows
 - [Quick Start](https://exascaleworkflowsandbox.readthedocs.io/en/latest/quickstart.html) - Your first Chiltepin workflow
 - [Tasks](https://exascaleworkflowsandbox.readthedocs.io/en/latest/tasks.html) - Python, Bash, and Join task decorators
 - [Configuration](https://exascaleworkflowsandbox.readthedocs.io/en/latest/configuration.html) - Configuring compute resources
