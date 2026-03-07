@@ -6,7 +6,6 @@ import pathlib
 import re
 from datetime import datetime as dt
 
-import parsl
 import pytest
 
 import chiltepin.configure

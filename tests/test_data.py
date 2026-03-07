@@ -5,7 +5,6 @@ import pathlib
 import uuid
 from unittest import mock
 
-import parsl
 import pytest
 
 import chiltepin.data as data

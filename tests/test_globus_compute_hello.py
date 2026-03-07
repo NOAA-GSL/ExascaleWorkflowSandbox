@@ -4,7 +4,6 @@ import logging
 import os.path
 import pathlib
 
-import parsl
 import pytest
 
 import chiltepin.configure
