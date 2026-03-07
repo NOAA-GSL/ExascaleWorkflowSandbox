@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 import logging
 import pathlib
 import uuid
@@ -54,7 +56,9 @@ def config(config_file):
     logger_handler()
 
 
-def test_data_transfer_task(config):
+def test_data_task_basic(config):
+    """Test basic transfer_task and delete_task functionality."""
+    # Transfer a file
     transfer_future = data.transfer_task(
         "chiltepin-test-mercury",
         "chiltepin-test-ursa",
@@ -65,12 +69,10 @@ def test_data_transfer_task(config):
         executor=["local"],
         client=config["client"],
     )
-    completed = transfer_future.result()
+    transfer_completed = transfer_future.result()
+    assert transfer_completed is True
 
-    assert completed is True
-
-
-def test_data_delete_task(config):
+    # Delete the transferred file
     delete_future = data.delete_task(
         "chiltepin-test-ursa",
         config["unique_dst"],
@@ -79,13 +81,14 @@ def test_data_delete_task(config):
         executor=["local"],
         client=config["client"],
     )
-    completed = delete_future.result()
+    delete_completed = delete_future.result()
+    assert delete_completed is True
 
-    assert completed is True
 
-
-def test_data_transfer(config):
-    completed = data.transfer(
+def test_data_sync_basic(config):
+    """Test basic synchronous transfer and delete functionality."""
+    # Transfer a file (synchronous)
+    transfer_completed = data.transfer(
         "chiltepin-test-mercury",
         "chiltepin-test-ursa",
         "1MB.from_mercury",
@@ -93,17 +96,16 @@ def test_data_transfer(config):
         timeout=120,
         polling_interval=10,
     )
-    assert completed is True
+    assert transfer_completed is True
 
-
-def test_data_delete(config):
-    completed = data.delete(
+    # Delete the transferred file (synchronous)
+    delete_completed = data.delete(
         "chiltepin-test-ursa",
         config["unique_dst"],
         timeout=120,
         polling_interval=10,
     )
-    assert completed is True
+    assert delete_completed is True
 
 
 def test_data_transfer_with_bad_src_ep(config):

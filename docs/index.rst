@@ -1,39 +1,41 @@
 Chiltepin Documentation
 =======================
 
-.. image:: https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yaml/badge.svg
-   :target: https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docker-slurm.yaml
+.. image:: https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/test-suite.yaml/badge.svg
+   :target: https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/test-suite.yaml
    :alt: ExascaleSandboxTests
 
 **Chiltepin** is a Python library for exploring federated workflow capabilities
 using Parsl and Globus Compute. It provides tools and demonstrations for
-implementing exascale scientific workflows on HPC systems.
+implementing distributed scientific workflows on HPC systems.
 
 .. warning::
 
    This project is for research and exploration purposes only. It is not
-   intended for production use.
+   intended for use in operational production environments.
 
 Overview
 --------
 
-This repository is a collection of tools and demonstrations used to explore and
-test various technologies for implementing exascale scientific workflows. The
+This repository is a collection of tools and demonstrations used for
+implementing distributed exascale scientific workflows. The
 project focuses on:
 
-* **Federated workflow management** using Parsl
-* **Distributed computing** with Globus Compute
-* **HPC integration** for multiple NOAA systems (Hera, Hercules, Ursa)
+* **Workflow management** using Parsl
+* **Federated distributed computing** with Globus Compute
+* **HPC integration** of multiple on-prem and/or cloud-based systems
 * **Container-based testing** with Docker and Slurm
 
 Key Features
 ------------
 
-* Configuration-based resource management for multiple HPC platforms
-* Support for both MPI and non-MPI workflows
+* Configuration-based resource management for both HPC platforms and laptops
+* Support for both MPI (HPC) and non-MPI (HTC) applications
 * Globus Compute endpoint management utilities
+* Task decorators for seamless integration of Parsl and Globus Compute
+* Dynamic distributed task execution across heterogeneous resources
 * Docker container environment for development and testing
-* Comprehensive test suite with 100% coverage for core modules
+* Comprehensive test suite with high coverage for core modules
 
 Getting Started
 ---------------
@@ -43,6 +45,10 @@ Getting Started
 
    installation
    quickstart
+   tasks
+   data
+   configuration
+   endpoints
    testing
    container
 

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 # Configuration file for the Sphinx documentation builder.
 
 from importlib.metadata import PackageNotFoundError
@@ -6,7 +7,7 @@ from importlib.metadata import version as get_version
 # -- Project information
 
 project = "Chiltepin"
-copyright = "2024-2026, Christopher W Harrop"
+copyright = "2024-2026, The Regents of the University of Colorado and contributors"
 author = "Christopher W Harrop"
 
 # Get version from the installed package

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for chiltepin.tasks module.
 
 This test suite validates that task decorators work correctly for both
@@ -38,8 +40,8 @@ def parsl_config():
     local_config = {
         "test-local": {
             "provider": "localhost",
-            "cores_per_node": 1,
-            "max_workers_per_node": 1,
+            "cores_per_node": 2,
+            "max_workers_per_node": 2,
             "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
         }
     }
@@ -146,6 +148,48 @@ class TestPythonTaskStandalone:
         future = get_list(5, executor=["test-local"])
         result = future.result()
         assert result == [0, 1, 2, 3, 4]
+
+    def test_python_task_with_inputs_dependency(self, parsl_config):
+        """Test that python_task automatically supports inputs parameter for dependencies."""
+        import time
+
+        @python_task
+        def first_task():
+            import time
+
+            # Sleep to ensure we can detect if second starts early
+            time.sleep(2)
+            return "first"
+
+        @python_task
+        def second_task():
+            return "second"
+
+        # Time everything in pytest process using monotonic clock
+        start = time.monotonic()
+
+        # Create first task
+        first = first_task(executor=["test-local"])
+
+        # Second task depends on first via inputs parameter (added by Parsl decorator)
+        # With 2 workers, second COULD start immediately if dependency wasn't enforced
+        second = second_task(executor=["test-local"], inputs=[first])
+
+        # Wait for second to complete (which should wait for first due to inputs=[first])
+        # Calling second.result() first ensures we're measuring the actual wait time
+        second_result = second.result()
+        elapsed = time.monotonic() - start
+
+        # Verify dependency was enforced by checking elapsed time
+        # If inputs=[first] works, second can't complete until first finishes its 2s sleep
+        assert elapsed >= 2.0, (
+            f"Second task completed in {elapsed:.1f}s, suggesting it didn't wait for first task (expected ≥2s)"
+        )
+
+        # Verify first also completed successfully
+        first_result = first.result()
+        assert first_result == "first"
+        assert second_result == "second"
 
     def test_python_task_with_dict_return(self, parsl_config):
         """Test python_task returning a dictionary."""

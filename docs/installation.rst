@@ -1,8 +1,8 @@
 Installation
 ============
 
-This software can be installed on Linux systems. macOS is not currently supported,
-but can be used on Macs via the Docker container (see :doc:`container`).
+This software can be installed on Linux systems. Native Windows and macOS are not currently supported,
+but Chiltepin can be used on these platforms via the Docker container (see :doc:`container`).
 
 Prerequisites
 -------------
@@ -19,7 +19,7 @@ The recommended method for installation is to use a Python virtual environment:
 
    $ python -m venv .chiltepin
    $ source .chiltepin/bin/activate
-   $ pip install -e .[test]
+   $ pip install -e ".[test]"
 
 .. note::
 
@@ -34,7 +34,7 @@ Alternatively, you can use a conda environment (anaconda3, miniconda3, miniforge
 
    $ conda create -n "chiltepin" python=3.10
    $ conda activate chiltepin
-   $ pip install -e .[test]
+   $ pip install -e ".[test]"
 
 Activating the Environment
 ---------------------------
@@ -59,8 +59,8 @@ Dependencies
 
 Chiltepin has the following core dependencies:
 
-* ``globus-compute-sdk`` (4.5.0)
-* ``globus-compute-endpoint`` (4.5.0)
+* ``globus-compute-sdk`` (>=4.5.0,<4.7.0)
+* ``globus-compute-endpoint`` (>=4.5.0,<4.7.0)
 * ``parsl`` (>=2026.1.5)
 
 These will be automatically installed when you install Chiltepin.

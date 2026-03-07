@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 mpi:
   mpi: True
   max_mpi_apps: 2

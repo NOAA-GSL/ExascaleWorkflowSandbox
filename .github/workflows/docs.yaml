@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 name: Documentation
 
 on:
@@ -8,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-docs:
     runs-on: ubuntu-latest
     steps:
       -
@@ -22,8 +24,7 @@ jobs:
       -
         name: Install package and documentation dependencies
         run: |
-          pip install .
-          pip install -r docs/requirements.txt
+          pip install ".[docs]"
       -
         name: Build documentation
         run: |
