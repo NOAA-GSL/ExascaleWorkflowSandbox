@@ -116,9 +116,9 @@ def test_data_transfer_task_comprehensive(config):
 
     # Verify transfer completes (should implicitly wait for slow task)
     transfer_result = transfer_future.result()
+    total_time = time.time() - start_time
     # Then verify slow task also completed
     slow_result = slow.result()
-    total_time = time.time() - start_time
 
     assert transfer_result is True
     assert slow_result == "completed"
@@ -179,9 +179,9 @@ def test_data_delete_task_with_dependencies(config):
 
     # Verify delete completes (should implicitly wait for processing)
     delete_result = delete_future.result()
+    total_time = time.time() - start_time
     # Then verify processing also completed
     process_result = process.result()
-    total_time = time.time() - start_time
 
     assert delete_result is True
     assert process_result == "processed"
