@@ -549,7 +549,8 @@ transfer and deletion tasks that can be incorporated into your workflows:
    cleanup = delete_task(
        src_ep="my-dest-endpoint",
        src_path="/scratch/input.dat",
-       executor="local"
+       executor="local",
+       inputs=[result]  # Waits for processing to complete
    )
    cleanup.result()
 
