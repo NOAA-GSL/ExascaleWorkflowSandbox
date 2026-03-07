@@ -1,98 +1,51 @@
 [![ExascaleSandboxTests](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/test-suite.yaml/badge.svg)](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/test-suite.yaml)
 [![Documentation](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docs.yaml/badge.svg)](https://github.com/NOAA-GSL/ExascaleWorkflowSandbox/actions/workflows/docs.yaml)
 
-# Overview
+# Chiltepin
+
+## Overview
 
 This repository is a collection of tools and demonstrations used to explore
 and test various technologies for implementing exascale scientific workflows.
 This collection of resources is not intended for production use, and is for
 research purposes only.
 
-# Installation
+Chiltepin provides Python decorators and utilities for building scientific workflows
+that can execute on distributed computing resources using [Parsl](https://parsl-project.org/)
+and [Globus](https://www.globus.org/) services.
 
-This software can be installed on Linux systems. Native Windows and macOS are not currently
-supported, but Chiltepin can be used on these platforms via the Docker container (see below for
-instructions on building and using the Docker container).
+## Documentation
 
-The recommended method for installation is to use a Python venv.
+**📚 Full documentation is available at [Read the Docs](https://exascaleworkflowsandbox.readthedocs.io/)**
 
-```
+Key documentation sections:
+- [Installation Guide](https://exascaleworkflowsandbox.readthedocs.io/en/latest/installation.html) - Installing Chiltepin on Linux, macOS, Windows, and Docker
+- [Quick Start](https://exascaleworkflowsandbox.readthedocs.io/en/latest/quickstart.html) - Your first Chiltepin workflow
+- [Tasks](https://exascaleworkflowsandbox.readthedocs.io/en/latest/tasks.html) - Python, Bash, and Join task decorators
+- [Configuration](https://exascaleworkflowsandbox.readthedocs.io/en/latest/configuration.html) - Configuring compute resources
+- [Endpoints](https://exascaleworkflowsandbox.readthedocs.io/en/latest/endpoints.html) - Managing Globus Compute endpoints
+- [Data Transfer](https://exascaleworkflowsandbox.readthedocs.io/en/latest/data.html) - Using Globus for data movement
+- [Testing Guide](https://exascaleworkflowsandbox.readthedocs.io/en/latest/testing.html) - Running the test suite
+
+## Quick Start
+
+Install Chiltepin in a Python virtual environment:
+
+```bash
 python -m venv .chiltepin
 source .chiltepin/bin/activate
-pip install -e ".[test]"
+pip install -e .
 ```
 
-Alternatively, a conda environment (anaconda3, miniconda3, miniforge, etc.)
-can be used.
+For detailed installation instructions including conda, Docker, and platform-specific guidance,
+see the [Installation Guide](https://exascaleworkflowsandbox.readthedocs.io/en/latest/installation.html).
 
-```
-conda create -n "chiltepin" python=3.10
-source activate chiltepin
-pip install -e ".[test]"
-```
+## Contributing
 
-NOTE: The `[test]` ensures that dependencies required for running the tests are installed.
+Contributions are welcome! For information on running tests and contributing to development,
+see the [Testing Guide](https://exascaleworkflowsandbox.readthedocs.io/en/latest/testing.html).
 
-Once installed, Chiltepin can be used simply by activating the environment using
-the command appropriate for your environment type (venv, conda, etc).
+## License
 
-# Running the test suite
+See [LICENSE](LICENSE) for details.
 
-The test suite is run with `pytest` and requires an editable installation of the Chiltepin
-repository (achieved using the `pip install -e ".[test]"` installation step from above)
-
-An additional step is required for successful completion of the Globus Compute tests. These
-tests require users to authenticate to Globus before running the pytest command. This is done
-with the `chiltepin login` command.
-
-```
-chiltepin login
-pytest --assert=plain --config=tests/configs/<platform>.yaml
-```
-
-Where `<platform>` is the specific platform where you are running the tests:
-
-1. `docker`  #  Platform used for the container
-2. `hercules`
-3. `hera`
-4. `ursa`
-
-For more detailed information during testing
-```
-pytest -s -vvv --assert=plain --config=tests/configs/<platform>.yaml
-```
-
-# Building and running the Chiltepin container
-
-Chiltepin provides a Docker container environment for building and running Parsl and Chiltepin
-applications. It makes use of docker compose to build a multi-node Slurm cluster for use as a
-backend for running the applications.  This repository is mounted from the host into the container's
-chiltepin directory.
-
-To build the container:
-
-```
-cd docker
-docker compose -f docker-compose.yml up -d
-```
-
-To use the container after it is built and up, log in with a bash shell:
-
-```
-docker exec -it frontend bash -l
-```
-
-Once in the container, you can install Chiltepin in editable mode (using the pip from the
-container environment), and run the tests
-
-```
-cd chiltepin
-pip install -e .[test]
-pytest --assert=plain --config=tests/configs/docker.yaml
-```
-
-NOTE: the `[test]` ensures that dependencies required for running the tests are installed.
-
-NOTE: Depending on how many cores your machine has and how many you've allocated to Docker,
-you may need to modify the ``cores_per_node`` setting in the configuration yaml file to match
-your machine's specifications to get all tests to pass.
