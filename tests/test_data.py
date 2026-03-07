@@ -8,9 +8,9 @@ from unittest import mock
 import parsl
 import pytest
 
-import chiltepin.configure
 import chiltepin.data as data
 import chiltepin.endpoint as endpoint
+from chiltepin import workflow
 
 
 # Set up fixture to initialize and cleanup Parsl
@@ -30,30 +30,18 @@ def config(config_file):
     clients = endpoint.login()
     transfer_client = clients["transfer"]
 
-    # Set Parsl logging to DEBUG and redirect to a file in the output directory
-    logger_handler = parsl.set_file_logger(
-        filename=str(output_dir / "test_data_parsl.log"),
-        level=logging.DEBUG,
-    )
-
-    # Load the default resource configuration
-    resources = chiltepin.configure.load(
-        {}, run_dir=str(output_dir / "test_data_runinfo")
-    )
-
-    # Load the resources in Parsl
-    dfk = parsl.load(resources)
-
     # Generate unique destination filename to avoid conflicts in concurrent tests
     unique_dst = f"1MB.to_ursa.{uuid.uuid4()}"
 
-    # Run the tests with the loaded resources
-    yield {"client": transfer_client, "unique_dst": unique_dst}
-
-    dfk.cleanup()
-    dfk = None
-    parsl.clear()
-    logger_handler()
+    # Use workflow context manager with default (empty) resource configuration
+    with workflow(
+        {},
+        run_dir=str(output_dir / "test_data_runinfo"),
+        log_file=str(output_dir / "test_data_parsl.log"),
+        log_level=logging.DEBUG,
+    ):
+        # Run the tests with the loaded resources
+        yield {"client": transfer_client, "unique_dst": unique_dst}
 
 
 def test_data_task_basic(config):

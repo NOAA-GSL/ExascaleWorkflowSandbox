@@ -66,13 +66,13 @@ After installation, you can run the test suite using the Docker-specific configu
 
 .. code-block:: console
 
-   (container) $ pytest --assert=plain --config=tests/configs/docker.yaml
+   (container) $ pytest --config=tests/configs/docker.yaml
 
 For more verbose output:
 
 .. code-block:: console
 
-   (container) $ pytest -s -vvv --assert=plain --config=tests/configs/docker.yaml
+   (container) $ pytest -s -vvv --config=tests/configs/docker.yaml
 
 Adjusting Core Count
 --------------------

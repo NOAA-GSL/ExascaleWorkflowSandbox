@@ -238,8 +238,7 @@ A common pattern is to stage data, process it, then clean up:
 
 .. code-block:: python
 
-   import parsl
-   import chiltepin.configure
+   from chiltepin import workflow
    from chiltepin.tasks import python_task
    from chiltepin.data import transfer_task, delete_task
    
@@ -251,24 +250,21 @@ A common pattern is to stage data, process it, then clean up:
        result = df.mean().to_dict()
        return result
 
-   # Load configuration and start Parsl
-   config_dict = chiltepin.configure.parse_file("config.yaml")
-   parsl_config = chiltepin.configure.load(config_dict)
-   
-   with parsl.load(parsl_config):
+   # Load configuration and start workflow
+   with workflow("config.yaml"):
        # Stage data to compute resource
        stage_in = transfer_task(
            src_ep="my-laptop",
            dst_ep="hpc-scratch",
            src_path="/Users/me/data/dataset.csv",
            dst_path="/scratch/project/dataset.csv",
-           executor="local"
+           executor=["local"]
        )
        
        # Process the staged data (waits for transfer via inputs)
        analysis = analyze_data(
            "/scratch/project/dataset.csv",
-           executor="compute",
+           executor=["compute"],
            inputs=[stage_in]  # Non-blocking dependency
        )
        
@@ -276,7 +272,7 @@ A common pattern is to stage data, process it, then clean up:
        cleanup = delete_task(
            src_ep="hpc-scratch",
            src_path="/scratch/project/dataset.csv",
-           executor="local",
+           executor=["local"],
            inputs=[analysis]  # Non-blocking dependency
        )
        

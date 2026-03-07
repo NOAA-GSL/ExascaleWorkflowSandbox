@@ -14,7 +14,7 @@ from typing import List
 import parsl
 import pytest
 
-import chiltepin.configure
+from chiltepin import workflow
 from chiltepin.tasks import bash_task, join_task, python_task
 
 
@@ -28,12 +28,6 @@ def parsl_config():
     output_dir = pwd / "test_output"
     output_dir.mkdir(exist_ok=True)
 
-    # Set Parsl logging to DEBUG and redirect to a file
-    logger_handler = parsl.set_file_logger(
-        filename=str(output_dir / "test_tasks_parsl.log"),
-        level=logging.DEBUG,
-    )
-
     # Configure local executor with PYTHONPATH that includes the project root
     # This allows Parsl workers to import test modules
     project_root = pwd.parent.resolve()
@@ -46,22 +40,14 @@ def parsl_config():
         }
     }
 
-    # Load configuration with the environment setup
-    resources = chiltepin.configure.load(
-        local_config, run_dir=str(output_dir / "test_tasks_runinfo")
-    )
-
-    # Load the resources in Parsl
-    dfk = parsl.load(resources)
-
-    # Run the tests
-    yield
-
-    # Cleanup
-    dfk.cleanup()
-    dfk = None
-    parsl.clear()
-    logger_handler()
+    # Use workflow context manager for Parsl lifecycle
+    with workflow(
+        local_config,
+        run_dir=str(output_dir / "test_tasks_runinfo"),
+        log_file=str(output_dir / "test_tasks_parsl.log"),
+        log_level=logging.DEBUG,
+    ):
+        yield
 
 
 # ===== Python Task Tests - Standalone Functions =====

@@ -116,8 +116,7 @@ Create ``my_workflow.py``:
 
 .. code-block:: python
 
-   import parsl
-   import chiltepin.configure
+   from chiltepin import workflow
    from chiltepin.tasks import bash_task, python_task
    
    # Define tasks
@@ -137,23 +136,16 @@ Create ``my_workflow.py``:
        return result
    
    if __name__ == "__main__":
-       # Load configuration
-       config_dict = chiltepin.configure.parse_file("my_config.yaml")
-       parsl_config = chiltepin.configure.load(
-           config_dict,
-           include=["local", "remote"],
-           run_dir="./runinfo"
-       )
-   
-       with parsl.load(parsl_config):
+       # Load configuration and run workflow
+       with chiltepin.workflow("my_config.yaml", include=["local", "remote"], run_dir="./runinfo"):
            # Run local task on "local" resource
-           local_future = hello_local(executor="local")
+           local_future = hello_local(executor=["local"])
            
            # Run remote bash task on "remote" resource (returns exit code: 0 = success)
-           remote_future = hello_remote(executor="remote")
+           remote_future = hello_remote(executor=["remote"])
            
            # Run multiple compute tasks on "remote" resource
-           futures = [compute_task(i, executor="remote") for i in range(1, 5)]
+           futures = [compute_task(i, executor=["remote"]) for i in range(1, 5)]
            
            # Get the results
            print(f"Local: {local_future.result()}")
@@ -213,8 +205,7 @@ Simple Workflow (``simple_workflow.py``)
 
 .. code-block:: python
 
-   import parsl
-   import chiltepin.configure
+   from chiltepin import workflow
    from chiltepin.tasks import bash_task, python_task
    
    # Define tasks
@@ -227,15 +218,12 @@ Simple Workflow (``simple_workflow.py``)
        return "echo 'Task completed successfully'"
    
    if __name__ == "__main__":
-       # Load configuration  
-       config_dict = chiltepin.configure.parse_file("local_config.yaml")
-       parsl_config = chiltepin.configure.load(config_dict, run_dir="./runinfo")
-   
-       with parsl.load(parsl_config):
-           result = multiply(6, 7, executor="local").result()
+       # Load configuration and run workflow
+       with chiltepin.workflow("local_config.yaml", run_dir="./runinfo"):
+           result = multiply(6, 7, executor=["local"]).result()
            print(f"6 * 7 = {result}")
            
-           exit_code = system_info(executor="local").result()
+           exit_code = system_info(executor=["local"]).result()
            print(f"Bash task exit code: {exit_code}")
 
 Run it:
@@ -274,8 +262,7 @@ MPI Workflow
 
 .. code-block:: python
 
-   import parsl
-   import chiltepin.configure
+   from chiltepin import workflow
    from chiltepin.tasks import bash_task
    
    @bash_task
@@ -287,18 +274,15 @@ MPI Workflow
        return f"srun -n {ranks} ./mpi_app"
    
    if __name__ == "__main__":
-       config_dict = chiltepin.configure.parse_file("mpi_config.yaml")
-       parsl_config = chiltepin.configure.load(config_dict, run_dir="./runinfo")
-       
-       with parsl.load(parsl_config):
+       with chiltepin.workflow("mpi_config.yaml", run_dir="./runinfo"):
            # Compile MPI application on the MPI resource (returns exit code)
-           compile_result = compile_mpi(executor="mpi-resource-name").result()
+           compile_result = compile_mpi(executor=["mpi-resource-name"]).result()
            print(f"Compilation exit code: {compile_result}")
            
            # Run with different rank counts on the MPI resource
            results = []
            for ranks in [4, 8, 16]:
-               future = run_mpi(ranks, executor="mpi-resource-name")
+               future = run_mpi(ranks, executor=["mpi-resource-name"])
                results.append(future.result())
            
            for i, result in enumerate(results, 1):
@@ -347,16 +331,46 @@ The ``executor`` value must match a resource name from your configuration file.
 Configuration Loading
 ^^^^^^^^^^^^^^^^^^^^^
 
-The ``include`` parameter selects specific resources to load from the configuration:
+The ``include`` parameter selects specific resources to load from the configuration.
+
+**Loading from a file:**
 
 .. code-block:: python
 
-   # Load only specific resources
-   parsl_config = chiltepin.configure.load(
-       config_dict,
+   # Load only specific resources from YAML file
+   with workflow(
+       "my_config.yaml",
        include=["local", "compute"],  # Only these resources
        run_dir="./runinfo"
-   )
+   ):
+       # Run tasks using selected resources
+       result = my_task(executor=["compute"]).result()
+
+**Loading from a dict:**
+
+.. code-block:: python
+
+   # Define configuration as a dictionary
+   config = {
+       "local": {
+           "provider": "localhost",
+           "cores_per_node": 4,
+       },
+       "compute": {
+           "provider": "slurm",
+           "partition": "compute",
+           "nodes_per_block": 1,
+       }
+   }
+
+   # Load only specific resources from dict
+   with workflow(
+       config,
+       include=["local", "compute"],  # Only these resources
+       run_dir="./runinfo"
+   ):
+       # Run tasks using selected resources
+       result = my_task(executor=["compute"]).result()
 
 If ``include`` is omitted, all resources in the configuration are loaded.
 
