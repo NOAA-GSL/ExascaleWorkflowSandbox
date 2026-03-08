@@ -37,17 +37,17 @@ Stage, process, and cleanup data in a workflow::
         dst_ep="hpc-scratch",
         src_path="/data/input.dat",
         dst_path="/scratch/input.dat",
-        executor="local"
+        executor=["local"]
     )
 
     # Process the staged data (waits for stage via inputs parameter)
-    result = process_data("/scratch/input.dat", executor="compute", inputs=[stage])
+    result = process_data("/scratch/input.dat", executor=["compute"], inputs=[stage])
 
     # Clean up after processing completes (waits for result via inputs)
     cleanup = delete_task(
         src_ep="hpc-scratch",
         src_path="/scratch/input.dat",
-        executor="local",
+        executor=["local"],
         inputs=[result]
     )
 

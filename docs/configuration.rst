@@ -415,26 +415,58 @@ Loading Configurations
 Parse and Load
 ^^^^^^^^^^^^^^
 
+**Loading from a file:**
+
 .. code-block:: python
 
-   import chiltepin.configure
-   import parsl
+   from chiltepin import workflow
 
-   # Parse YAML configuration file
-   config_dict = chiltepin.configure.parse_file("my_config.yaml")
-   
-   # Create Parsl configuration
-   parsl_config = chiltepin.configure.load(
-       config_dict,
+   # Load configuration from YAML file and run workflow
+   with workflow(
+       "my_config.yaml",
        include=["compute", "mpi"],  # Only load specific resources
        run_dir="./runinfo"           # Directory for Parsl runtime files
-   )
+   ):
+       # Run your tasks here
+       result = my_task(executor=["compute"]).result()
 
-   # Initialize Parsl with configuration
-   parsl.load(parsl_config)
+**Loading from a dict:**
+
+.. code-block:: python
+
+   from chiltepin import workflow
+
+   # Define configuration as a dictionary
+   config_dict = {
+       "compute": {
+           "provider": "slurm",
+           "account": "my-account",
+           "partition": "compute",
+           "nodes_per_block": 1,
+           "cores_per_node": 40,
+           "walltime": "01:00:00",
+       },
+       "mpi": {
+           "provider": "slurm",
+           "account": "my-account",
+           "partition": "compute",
+           "nodes_per_block": 2,
+           "launcher": "mpi",
+           "walltime": "02:00:00",
+       }
+   }
+
+   # Load configuration from dict and run workflow
+   with workflow(
+       config_dict,
+       include=["compute", "mpi"],  # Only load specific resources
+       run_dir="./runinfo"
+   ):
+       # Run your tasks here
+       result = my_task(executor=["compute"]).result()
 
 The ``include`` parameter lets you selectively load only specific resources from your
-configuration file. If omitted, all resources are loaded.
+configuration. If omitted, all resources are loaded.
 
 Configuration Best Practices
 -----------------------------

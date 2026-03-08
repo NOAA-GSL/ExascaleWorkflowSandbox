@@ -34,7 +34,7 @@ To run the full test suite:
 
 .. code-block:: console
 
-   $ pytest --assert=plain --config=tests/configs/<platform>.yaml
+   $ pytest --config=tests/configs/<platform>.yaml
 
 Where ``<platform>`` is one of:
 
@@ -53,7 +53,7 @@ For more detailed information during testing:
 
 .. code-block:: console
 
-   $ pytest -s -vvv --assert=plain --config=tests/configs/<platform>.yaml
+   $ pytest -s -vvv --config=tests/configs/<platform>.yaml
 
 Running Specific Tests
 ~~~~~~~~~~~~~~~~~~~~~~
