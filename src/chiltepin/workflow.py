@@ -6,6 +6,8 @@ This module provides context managers that wrap Parsl configuration and lifecycl
 management, eliminating the need for users to directly import or interact with Parsl.
 """
 
+import logging
+import sys
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
@@ -14,6 +16,9 @@ import parsl
 from globus_compute_sdk import Client
 
 from chiltepin import configure
+
+# Module-level logger for cleanup warnings
+_logger = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -114,25 +119,36 @@ def workflow(
 
         yield
     finally:
-        # Cleanup operations - each wrapped in try/except to ensure all are attempted
-        # even if some fail. Exceptions are chained together.
+        # Check if we're cleaning up during exception handling
+        # If so, don't mask the user's exception with cleanup exceptions
+        user_exception = sys.exc_info()[0] is not None
         cleanup_exception = None
 
-        # Cleanup DataFlowKernel if it was created
+        # Attempt all cleanup operations, catching exceptions
         if dfk is not None:
             try:
                 dfk.cleanup()
             except Exception as e:
-                cleanup_exception = e
+                if user_exception:
+                    _logger.warning(
+                        "Exception during dfk.cleanup() while handling user exception",
+                        exc_info=True,
+                    )
+                else:
+                    cleanup_exception = e
 
-        # Always call parsl.clear() regardless of dfk state
+        # Always call parsl.clear()
         try:
             parsl.clear()
         except Exception as e:
-            if cleanup_exception is None:
+            if user_exception:
+                _logger.warning(
+                    "Exception during parsl.clear() while handling user exception",
+                    exc_info=True,
+                )
+            elif cleanup_exception is None:
                 cleanup_exception = e
             else:
-                # Chain this exception to the previous one
                 e.__context__ = cleanup_exception
                 cleanup_exception = e
 
@@ -141,15 +157,19 @@ def workflow(
             try:
                 logger_handler()
             except Exception as e:
-                if cleanup_exception is None:
+                if user_exception:
+                    _logger.warning(
+                        "Exception during logger cleanup while handling user exception",
+                        exc_info=True,
+                    )
+                elif cleanup_exception is None:
                     cleanup_exception = e
                 else:
-                    # Chain this exception to the previous one
                     e.__context__ = cleanup_exception
                     cleanup_exception = e
 
-        # If any cleanup failed, raise the last exception (with others chained via __context__)
-        if cleanup_exception is not None:
+        # Only raise cleanup exceptions if there wasn't a user exception
+        if cleanup_exception is not None and not user_exception:
             raise cleanup_exception
 
 

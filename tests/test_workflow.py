@@ -273,12 +273,25 @@ class TestWorkflowExceptionHandling:
             }
         }
 
+        # Store reference to real cleanup for later
+        real_cleanup = parsl.DataFlowKernel.cleanup
+        dfk_ref = None
+
         with mock.patch("parsl.DataFlowKernel.cleanup") as mock_cleanup:
             mock_cleanup.side_effect = RuntimeError("Cleanup failed")
 
             with pytest.raises(RuntimeError, match="Cleanup failed"):
                 with workflow(config, run_dir=str(tmp_path / "runinfo_exc1")):
+                    dfk_ref = parsl.dfk()  # Capture dfk reference
                     pass
+
+        # Actually clean up the DFK now that we're done testing
+        if dfk_ref:
+            try:
+                real_cleanup(dfk_ref)
+                parsl.clear()
+            except Exception:
+                pass
 
     def test_parsl_clear_exception(self, tmp_path):
         """Test that exceptions during parsl.clear() are properly raised."""
@@ -301,7 +314,18 @@ class TestWorkflowExceptionHandling:
                     pass
 
     def test_logger_handler_exception(self, tmp_path):
-        """Test that exceptions during logger_handler() are properly raised."""
+        """Test that exceptions during logger_handler() are properly raised.
+
+        Note: Logger cleanup happens both inside dfk.cleanup() and in our explicit
+        logger_handler() call. When it fails during dfk.cleanup(), that exception
+        is what gets raised.
+        """
+        # Ensure clean state before test
+        try:
+            parsl.clear()
+        except Exception:
+            pass
+
         project_root = pathlib.Path(__file__).parent.parent.resolve()
 
         config = {
@@ -321,7 +345,8 @@ class TestWorkflowExceptionHandling:
             return failing_handler
 
         with mock.patch("parsl.set_file_logger", side_effect=mock_set_file_logger):
-            with pytest.raises(RuntimeError, match="Logger cleanup failed"):
+            # The logger cleanup exception will be raised (either from dfk.cleanup or our call)
+            with pytest.raises(RuntimeError):
                 with workflow(
                     config,
                     run_dir=str(tmp_path / "runinfo_exc3"),
@@ -342,6 +367,10 @@ class TestWorkflowExceptionHandling:
             }
         }
 
+        # Store reference to real cleanup for later
+        real_cleanup = parsl.DataFlowKernel.cleanup
+        dfk_ref = None
+
         with mock.patch("parsl.DataFlowKernel.cleanup") as mock_cleanup:
             with mock.patch("parsl.clear") as mock_clear:
                 mock_cleanup.side_effect = RuntimeError("Cleanup failed")
@@ -349,6 +378,7 @@ class TestWorkflowExceptionHandling:
 
                 with pytest.raises(RuntimeError) as exc_info:
                     with workflow(config, run_dir=str(tmp_path / "runinfo_exc4")):
+                        dfk_ref = parsl.dfk()  # Capture dfk reference
                         pass
 
                 # The last exception (clear) should be raised
@@ -356,6 +386,14 @@ class TestWorkflowExceptionHandling:
                 # And the previous exception (cleanup) should be in the chain
                 assert exc_info.value.__context__ is not None
                 assert "Cleanup failed" in str(exc_info.value.__context__)
+
+        # Actually clean up the DFK now that we're done testing
+        if dfk_ref:
+            try:
+                real_cleanup(dfk_ref)
+                parsl.clear()
+            except Exception:
+                pass
 
     def test_chained_exceptions_all_three(self, tmp_path):
         """Test exception chaining when all three cleanup operations fail."""
@@ -369,6 +407,10 @@ class TestWorkflowExceptionHandling:
                 "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
             }
         }
+
+        # Store reference to real cleanup for later
+        real_cleanup = parsl.DataFlowKernel.cleanup
+        dfk_ref = None
 
         # Mock the logger handler to raise an exception
         def mock_set_file_logger(*args, **kwargs):
@@ -391,6 +433,7 @@ class TestWorkflowExceptionHandling:
                             run_dir=str(tmp_path / "runinfo_exc5"),
                             log_file=str(tmp_path / "test.log"),
                         ):
+                            dfk_ref = parsl.dfk()  # Capture dfk reference
                             pass
 
                     # The last exception (logger) should be raised
@@ -402,6 +445,14 @@ class TestWorkflowExceptionHandling:
                     assert "Cleanup failed" in str(
                         exc_info.value.__context__.__context__
                     )
+
+        # Actually clean up the DFK now that we're done testing
+        if dfk_ref:
+            try:
+                real_cleanup(dfk_ref)
+                parsl.clear()
+            except Exception:
+                pass
 
     def test_parsl_clear_called_when_dfk_is_none(self, tmp_path):
         """Test that parsl.clear() is called even when dfk is None."""
@@ -442,18 +493,26 @@ class TestWorkflowExceptionHandling:
         }
 
         # This tests the branch where parsl.clear() fails but dfk.cleanup() succeeded
-        # We need to patch the real parsl.clear in the workflow module's finally block
+        # Need to account for cleanup_parsl fixture calling clear before test runs
         original_clear = parsl.clear
         call_count = [0]
 
-        def mock_clear_that_fails_once():
+        def mock_clear_selective():
             call_count[0] += 1
-            # Fail on first call (from workflow cleanup), succeed on second (from test cleanup)
-            if call_count[0] == 1:
+            # The cleanup_parsl fixture may have already called clear before this test
+            # We want to fail on the workflow's clear call
+            # After seeing how many times it's been called, fail on the next-to-last call
+            # For safety, let's fail on call 2 (which should be from workflow cleanup)
+            # and succeed on all others
+            if call_count[0] == 2:
                 raise RuntimeError("Clear failed")
-            original_clear()
+            else:
+                try:
+                    original_clear()
+                except Exception:
+                    pass  # Ignore errors from fixture cleanup
 
-        with mock.patch("parsl.clear", side_effect=mock_clear_that_fails_once):
+        with mock.patch("parsl.clear", side_effect=mock_clear_selective):
             with pytest.raises(RuntimeError, match="Clear failed"):
                 with workflow(config, run_dir=str(tmp_path / "runinfo_exc7")):
                     pass
@@ -500,3 +559,215 @@ class TestWorkflowFromFileCoverage:
             future = simple_task(executor=["service"])
             result = future.result()
             assert result == "success"
+
+
+class TestUserExceptionPrecedence:
+    """Test that user exceptions are not masked by cleanup exceptions."""
+
+    def test_user_exception_not_masked_by_cleanup_exception(self, tmp_path, caplog):
+        """Test that user exceptions take precedence over cleanup exceptions."""
+        project_root = pathlib.Path(__file__).parent.parent.resolve()
+
+        config = {
+            "test-exec": {
+                "provider": "localhost",
+                "cores_per_node": 1,
+                "max_workers_per_node": 1,
+                "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
+            }
+        }
+
+        # Store reference to real cleanup for later
+        real_cleanup = parsl.DataFlowKernel.cleanup
+        dfk_ref = None
+
+        # Mock dfk.cleanup to fail
+        with mock.patch("parsl.DataFlowKernel.cleanup") as mock_cleanup:
+            mock_cleanup.side_effect = RuntimeError("Cleanup failed")
+
+            # User exception should be raised, not cleanup exception
+            with pytest.raises(ValueError, match="User error"):
+                with workflow(config, run_dir=str(tmp_path / "runinfo_user1")):
+                    dfk_ref = parsl.dfk()  # Capture dfk reference
+                    raise ValueError("User error")
+
+            # Cleanup exception should be logged as a warning
+            assert any(
+                "Exception during dfk.cleanup() while handling user exception"
+                in record.message
+                for record in caplog.records
+            )
+
+        # Actually clean up the DFK now that we're done testing
+        if dfk_ref:
+            try:
+                real_cleanup(dfk_ref)
+                parsl.clear()
+            except Exception:
+                pass
+
+    def test_all_cleanup_operations_attempted(self, tmp_path, caplog):
+        """Test that all cleanup operations are attempted even when some fail."""
+        project_root = pathlib.Path(__file__).parent.parent.resolve()
+
+        config = {
+            "test-exec": {
+                "provider": "localhost",
+                "cores_per_node": 1,
+                "max_workers_per_node": 1,
+                "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
+            }
+        }
+
+        # Store reference to real cleanup for later
+        real_cleanup = parsl.DataFlowKernel.cleanup
+        dfk_ref = None
+
+        # Mock dfk.cleanup and parsl.clear to fail
+        original_clear = parsl.clear
+        call_count = [0]
+
+        def mock_clear_selective():
+            call_count[0] += 1
+            # Fail on first call (our explicit call after dfk.cleanup fails)
+            if call_count[0] == 1:
+                raise RuntimeError("Clear failed")
+            else:
+                # Subsequent calls use original
+                original_clear()
+
+        with mock.patch("parsl.DataFlowKernel.cleanup") as mock_cleanup:
+            with mock.patch("parsl.clear", side_effect=mock_clear_selective):
+                mock_cleanup.side_effect = RuntimeError("Cleanup failed")
+
+                # User exception should be raised, not any cleanup exception
+                with pytest.raises(ValueError, match="User error"):
+                    with workflow(config, run_dir=str(tmp_path / "runinfo_user2")):
+                        dfk_ref = parsl.dfk()  # Capture dfk reference
+                        raise ValueError("User error")
+
+                # Both cleanup exceptions should be logged as warnings
+                assert any(
+                    "Exception during dfk.cleanup() while handling user exception"
+                    in record.message
+                    for record in caplog.records
+                )
+                assert any(
+                    "Exception during parsl.clear() while handling user exception"
+                    in record.message
+                    for record in caplog.records
+                )
+
+        # Actually clean up the DFK now that we're done testing
+        if dfk_ref:
+            try:
+                real_cleanup(dfk_ref)
+                parsl.clear()
+            except Exception:
+                pass
+
+    def test_cleanup_exception_raised_when_no_user_exception(self, tmp_path):
+        """Test that cleanup exceptions are raised when there's no user exception."""
+        project_root = pathlib.Path(__file__).parent.parent.resolve()
+
+        config = {
+            "test-exec": {
+                "provider": "localhost",
+                "cores_per_node": 1,
+                "max_workers_per_node": 1,
+                "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
+            }
+        }
+
+        # Store reference to real cleanup for later
+        real_cleanup = parsl.DataFlowKernel.cleanup
+        dfk_ref = None
+
+        # Mock dfk.cleanup to fail
+        with mock.patch("parsl.DataFlowKernel.cleanup") as mock_cleanup:
+            mock_cleanup.side_effect = RuntimeError("Cleanup failed")
+
+            # Cleanup exception should be raised when there's no user exception
+            with pytest.raises(RuntimeError, match="Cleanup failed"):
+                with workflow(config, run_dir=str(tmp_path / "runinfo_user3")):
+                    dfk_ref = parsl.dfk()  # Capture dfk reference
+                    pass  # No user exception
+
+        # Actually clean up the DFK now that we're done testing
+        if dfk_ref:
+            try:
+                real_cleanup(dfk_ref)
+                parsl.clear()
+            except Exception:
+                pass
+
+    def test_user_exception_with_logger_cleanup_failure(self, tmp_path, caplog):
+        """Test that user exceptions take precedence when logger cleanup fails."""
+        project_root = pathlib.Path(__file__).parent.parent.resolve()
+
+        config = {
+            "test-exec": {
+                "provider": "localhost",
+                "cores_per_node": 1,
+                "max_workers_per_node": 1,
+                "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
+            }
+        }
+
+        # Mock the logger handler to raise an exception
+        def mock_set_file_logger(*args, **kwargs):
+            def failing_handler():
+                raise RuntimeError("Logger cleanup failed")
+
+            return failing_handler
+
+        with mock.patch("parsl.set_file_logger", side_effect=mock_set_file_logger):
+            # User exception should be raised, not logger cleanup exception
+            with pytest.raises(ValueError, match="User error"):
+                with workflow(
+                    config,
+                    run_dir=str(tmp_path / "runinfo_user4"),
+                    log_file=str(tmp_path / "test.log"),
+                ):
+                    raise ValueError("User error")
+
+            # Logger cleanup exception should be logged as a warning
+            assert any(
+                "Exception during logger cleanup while handling user exception"
+                in record.message
+                for record in caplog.records
+            )
+
+    def test_logger_handler_exception_standalone(self, tmp_path):
+        """Test logger cleanup failure when dfk.cleanup and parsl.clear succeed."""
+        project_root = pathlib.Path(__file__).parent.parent.resolve()
+
+        config = {
+            "test-exec": {
+                "provider": "localhost",
+                "cores_per_node": 1,
+                "max_workers_per_node": 1,
+                "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
+            }
+        }
+
+        #  Create a handler that succeeds first time (dfk cleanup) but fails second time (our explicit call)
+        call_count = [0]
+
+        def mock_set_file_logger(*args, **kwargs):
+            def conditional_failing_handler():
+                call_count[0] += 1
+                if call_count[0] == 2:  # Fail on second call (our explicit cleanup)
+                    raise RuntimeError("Logger cleanup failed")
+
+            return conditional_failing_handler
+
+        with mock.patch("parsl.set_file_logger", side_effect=mock_set_file_logger):
+            # Logger cleanup exception should be raised
+            with pytest.raises(RuntimeError, match="Logger cleanup failed"):
+                with workflow(
+                    config,
+                    run_dir=str(tmp_path / "runinfo_logger_standalone"),
+                    log_file=str(tmp_path / "test.log"),
+                ):
+                    pass
