@@ -589,7 +589,7 @@ class TestTaskEdgeCases:
             return 2
 
         f1 = task1(executor=["test-local"])
-        f2 = task2(executor="all")
+        f2 = task2(executor="all")  # Using "all" to test that it works as an alias for all executors
         assert f1.result() == 1
         assert f2.result() == 2
 

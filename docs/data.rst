@@ -45,7 +45,7 @@ Basic Usage
        dst_ep="hpc-scratch",
        src_path="/Users/me/data/input.dat",
        dst_path="/scratch/project/input.dat",
-       executor="local"
+       executor=["local"]
    )
    
    # Wait for transfer to complete
@@ -115,7 +115,7 @@ Transfer entire directories recursively:
        src_path="/Users/me/project/data/",
        dst_path="/scratch/project/data/",
        recursive=True,
-       executor="local"
+       executor=["local"]
    )
 
 Endpoint Names vs UUIDs
@@ -159,7 +159,7 @@ Basic Usage
    delete_future = delete_task(
        src_ep="hpc-scratch",
        src_path="/scratch/project/temp.dat",
-       executor="local"
+       executor=["local"]
    )
    
    # Wait for deletion to complete
@@ -219,7 +219,7 @@ Delete entire directories:
        src_ep="hpc-scratch",
        src_path="/scratch/project/temp_data/",
        recursive=True,
-       executor="local"
+       executor=["local"]
    )
 
 .. warning::
@@ -302,7 +302,7 @@ Transfer multiple files in parallel:
            dst_ep="hpc-scratch",
            src_path=f"/Users/me/data/{filename}",
            dst_path=f"/scratch/project/{filename}",
-           executor="local"
+           executor=["local"]
        )
        transfers.append(future)
 
@@ -336,8 +336,8 @@ To run a transfer or deletion after multiple tasks complete, pass them via the
        return True
 
    # Generate files in parallel
-   config_ready = generate_config(executor="compute")
-   input_ready = generate_input(executor="compute")
+   config_ready = generate_config(executor=["compute"])
+   input_ready = generate_input(executor=["compute"])
 
    # Wait for both files before transferring (non-blocking dependency)
    transfer = transfer_task(
@@ -346,7 +346,7 @@ To run a transfer or deletion after multiple tasks complete, pass them via the
        src_path="/scratch/",
        dst_path="/results/",
        recursive=True,
-       executor="local",
+       executor=["local"],
        inputs=[config_ready, input_ready]  # Multiple dependencies
    )
 
@@ -382,21 +382,21 @@ dependencies:
        dst_ep="hpc-scratch",
        src_path="/data/raw.csv",
        dst_path="/scratch/raw.csv",
-       executor="local"
+       executor=["local"]
    )
 
    # Preprocess (waits for transfer via inputs)
    preprocess_future = preprocess(
        "/scratch/raw.csv",
        "/scratch/clean.csv",
-       executor="compute",
+       executor=["compute"],
        inputs=[stage_raw]  # Wait for transfer non-blocking
    )
 
    # Analyze (waits for preprocess completing and passing output path)
    analysis_future = analyze(
        preprocess_future,  # Parsl waits for this future and passes the output path
-       executor="compute"
+       executor=["compute"]
    )
 
    # Stage results back (waits for analysis via inputs)
@@ -405,7 +405,7 @@ dependencies:
        dst_ep="my-laptop",
        src_path="/scratch/clean.csv",
        dst_path="/data/cleaned_output.csv",
-       executor="local",
+       executor=["local"],
        inputs=[analysis_future]  # Wait for analysis non-blocking
    )
 
@@ -414,7 +414,7 @@ dependencies:
        src_ep="hpc-scratch",
        src_path="/scratch/",
        recursive=True,
-       executor="local",
+       executor=["local"],
        inputs=[stage_out]  # Wait for stage out non-blocking
    )
 

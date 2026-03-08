@@ -137,7 +137,7 @@ Create ``my_workflow.py``:
    
    if __name__ == "__main__":
        # Load configuration and run workflow
-       with chiltepin.workflow("my_config.yaml", include=["local", "remote"], run_dir="./runinfo"):
+       with workflow("my_config.yaml", include=["local", "remote"], run_dir="./runinfo"):
            # Run local task on "local" resource
            local_future = hello_local(executor=["local"])
            
@@ -219,7 +219,7 @@ Simple Workflow (``simple_workflow.py``)
    
    if __name__ == "__main__":
        # Load configuration and run workflow
-       with chiltepin.workflow("local_config.yaml", run_dir="./runinfo"):
+       with workflow("local_config.yaml", run_dir="./runinfo"):
            result = multiply(6, 7, executor=["local"]).result()
            print(f"6 * 7 = {result}")
            
@@ -320,7 +320,7 @@ When calling a task, use the ``executor`` parameter to specify which resource to
        return "result"
    
    # Specify which resource to use
-   result = my_task(executor="compute").result()
+   result = my_task(executor=["compute"]).result()
 
 The ``executor`` value must match a resource name from your configuration file.
 

@@ -47,7 +47,7 @@ Basic Usage
        return "Hello from a Chiltepin task!"
    
    # Call the task and specify where to run it
-   future = hello_world(executor="my-resource")
+   future = hello_world(executor=["my-resource"])
    result = future.result()  # Wait for completion and get result
    print(result)  # "Hello from a Chiltepin task!"
 
@@ -63,11 +63,11 @@ Python tasks can accept both positional and keyword arguments:
        return (a + b) * multiply_by
    
    # Use positional arguments
-   future1 = add_numbers(5, 3, executor="compute")
+   future1 = add_numbers(5, 3, executor=["compute"])
    print(future1.result())  # 8
    
    # Use keyword arguments
-   future2 = add_numbers(5, 3, multiply_by=2, executor="compute")
+   future2 = add_numbers(5, 3, multiply_by=2, executor=["compute"])
    print(future2.result())  # 16
 
 Importing Modules
@@ -111,9 +111,9 @@ Python tasks can return any serializable Python object:
        import pandas as pd
        return pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
    
-   list_result = get_list(5, executor="local").result()
-   dict_result = get_dict("temperature", 72.5, executor="local").result()
-   df_result = get_dataframe(executor="compute").result()
+   list_result = get_list(5, executor=["local"]).result()
+   dict_result = get_dict("temperature", 72.5, executor=["local"]).result()
+   df_result = get_dataframe(executor=["compute"]).result()
 
 Bash Tasks
 ----------
@@ -133,7 +133,7 @@ Basic Usage
        return "echo 'Hello from bash!'"
    
    # Bash tasks return the exit code (0 = success)
-   future = echo_hello(executor="my-resource")
+   future = echo_hello(executor=["my-resource"])
    exit_code = future.result()
    print(exit_code)  # 0
 
@@ -152,7 +152,7 @@ Use function arguments to dynamically construct commands:
    def run_simulation(config_file, num_steps):
        return f"./my_simulator --config {config_file} --steps {num_steps}"
    
-   exit_code = process_file("data.txt", "sorted.txt", executor="compute").result()
+   exit_code = process_file("data.txt", "sorted.txt", executor=["compute"]).result()
 
 .. warning::
    Be careful with shell injection vulnerabilities. Validate and sanitize inputs
@@ -172,7 +172,7 @@ By default, bash tasks return the exit code. To capture stdout or stderr, use th
    
    # Capture stdout to a file
    future = get_hostname(
-       executor="compute",
+       executor=["compute"],
        stdout="hostname_output.txt"
    )
    exit_code = future.result()
@@ -196,7 +196,7 @@ You can also capture stderr for debugging:
        return "some_command_that_might_fail"
    
    future = risky_command(
-       executor="compute",
+       executor=["compute"],
        stdout="output.txt",
        stderr="errors.txt"
    )
@@ -245,9 +245,9 @@ Join tasks call other tasks and return futures:
    @join_task
    def process_list(values, factor):
        # Launch multiple tasks in parallel
-       futures = [multiply(v, factor, executor="compute") for v in values]
+       futures = [multiply(v, factor, executor=["compute"]) for v in values]
        # Aggregate results with another task
-       return add_values(*futures, executor="compute")
+       return add_values(*futures, executor=["compute"])
    
    # Process [1, 2, 3] with factor 2: (1*2) + (2*2) + (3*2) = 12
    result = process_list([1, 2, 3], 2).result()
@@ -277,9 +277,9 @@ Example - Processing Multiple Files:
    @join_task
    def process_all_files(file_list):
        # Process all files in parallel
-       futures = [process_file(f, executor="compute") for f in file_list]
+       futures = [process_file(f, executor=["compute"]) for f in file_list]
        # Check if all succeeded
-       return check_all_success(futures, executor="local")
+       return check_all_success(futures, executor=["local"])
    
    files = ["data1.txt", "data2.txt", "data3.txt"]
    success = process_all_files(files).result()
@@ -307,15 +307,15 @@ Join tasks can coordinate both python and bash tasks:
    @join_task
    def compile_and_run(input_file):
        # First compile
-       compile_future = compile_code(executor="compute")
+       compile_future = compile_code(executor=["compute"])
        compile_future.result()  # Wait for compilation
        
        # Then run
-       run_future = run_app(input_file, executor="compute", stdout="output.txt")
+       run_future = run_app(input_file, executor=["compute"], stdout="output.txt")
        run_future.result()  # Wait for execution
        
        # Parse results
-       return parse_results("output.txt", executor="local")
+       return parse_results("output.txt", executor=["local"])
    
    result = compile_and_run("input.dat").result()
 
@@ -354,9 +354,9 @@ object-oriented workflow design:
    
    # Create instance and use tasks
    processor = DataProcessor({'normalize': True, 'export_format': 'json'})
-   data = processor.load_data("input.csv", executor="compute").result()
-   transformed = processor.transform_data(data, executor="compute").result()
-   exit_code = processor.export_data("output.json", executor="compute").result()
+   data = processor.load_data("input.csv", executor=["compute"]).result()
+   transformed = processor.transform_data(data, executor=["compute"]).result()
+   exit_code = processor.export_data("output.json", executor=["compute"]).result()
 
 .. warning::
    **Mutable Object State**: When using class methods as tasks, be aware that mutable
@@ -389,7 +389,7 @@ Specify a single resource by name:
        return "result"
    
    # Run on the "compute" resource from your config
-   future = my_task(executor="compute")
+   future = my_task(executor=["compute"])
 
 Multiple Resources
 ^^^^^^^^^^^^^^^^^^
@@ -433,7 +433,7 @@ Call ``.result()`` to wait for task completion and retrieve the result:
        time.sleep(2)
        return 42
    
-   future = compute_value(executor="compute")
+   future = compute_value(executor=["compute"])
    print("Task submitted, doing other work...")
    
    # This blocks until the task completes
@@ -447,7 +447,7 @@ Check if a task is done without blocking:
 
 .. code-block:: python
 
-   future = compute_value(executor="compute")
+   future = compute_value(executor=["compute"])
    
    if future.done():
        print("Task completed!")
@@ -463,7 +463,7 @@ Wait for multiple tasks efficiently:
 .. code-block:: python
 
    # Launch multiple tasks
-   futures = [compute_value(executor="compute") for _ in range(10)]
+   futures = [compute_value(executor=["compute"]) for _ in range(10)]
    
    # Wait for all to complete
    results = [f.result() for f in futures]
@@ -480,7 +480,7 @@ Exceptions raised in tasks are re-raised when calling ``.result()``:
    def failing_task():
        raise ValueError("Something went wrong!")
    
-   future = failing_task(executor="compute")
+   future = failing_task(executor=["compute"])
    
    try:
        result = future.result()
@@ -539,17 +539,17 @@ transfer and deletion tasks that can be incorporated into your workflows:
        dst_ep="my-dest-endpoint",
        src_path="/data/input.dat",
        dst_path="/scratch/input.dat",
-       executor="local"
+       executor=["local"]
    )
 
    # Process the transferred data (waits for transfer by passing its future)
-   result = process_file(transfer, "/scratch/input.dat", executor="compute")
+   result = process_file(transfer, "/scratch/input.dat", executor=["compute"])
 
    # Clean up after processing
    cleanup = delete_task(
        src_ep="my-dest-endpoint",
        src_path="/scratch/input.dat",
-       executor="local",
+       executor=["local"],
        inputs=[result]  # Waits for processing to complete
    )
    cleanup.result()
@@ -574,8 +574,8 @@ Pass data directly through futures:
        return sum(data)
    
    # Data flows through futures
-   data_future = generate_data(100, executor="compute")
-   sum_future = sum_data(data_future, executor="compute")
+   data_future = generate_data(100, executor=["compute"])
+   sum_future = sum_data(data_future, executor=["compute"])
    result = sum_future.result()
 
 For large data, consider files or data staging strategies.
@@ -625,9 +625,9 @@ The most common approach is to pass a future from one task as an argument to ano
        return f"final_{input_data}"
    
    # Chain tasks - data flows through futures
-   future1 = step1(executor="compute")
-   future2 = step2(future1, executor="compute")  # Waits for future1
-   future3 = step3(future2, executor="compute")  # Waits for future2
+   future1 = step1(executor=["compute"])
+   future2 = step2(future1, executor=["compute"])  # Waits for future1
+   future3 = step3(future2, executor=["compute"])  # Waits for future2
    
    final_result = future3.result()
 
@@ -649,7 +649,7 @@ parameter. This is automatically supported by all Chiltepin task decorators
        dst_ep="hpc-scratch",
        src_path="/data/input.dat",
        dst_path="/scratch/input.dat",
-       executor="local"
+       executor=["local"]
    )
 
    # Process the data - waits for transfer without passing its result
@@ -658,13 +658,13 @@ parameter. This is automatically supported by all Chiltepin task decorators
        with open(filepath) as f:
            return len(f.read())
 
-   result = process_data("/scratch/input.dat", executor="compute", inputs=[stage])
+   result = process_data("/scratch/input.dat", executor=["compute"], inputs=[stage])
 
    # Clean up - waits for processing to complete
    cleanup = delete_task(
        src_ep="hpc-scratch",
        src_path="/scratch/input.dat",
-       executor="local",
+       executor=["local"],
        inputs=[result]
    )
 
@@ -700,12 +700,12 @@ You can combine both approaches and specify multiple dependencies:
    def combine(data1, data2):
        return f"{data1}_{data2}"
 
-   a = task_a(executor="compute")
-   b = task_b(executor="compute")
-   c = task_c(executor="compute")
+   a = task_a(executor=["compute"])
+   b = task_b(executor=["compute"])
+   c = task_c(executor=["compute"])
 
    # Combine waits for a and b (via arguments) and c (via inputs)
-   result = combine(a, b, executor="compute", inputs=[c])
+   result = combine(a, b, executor=["compute"], inputs=[c])
 
 .. tip::
    **Avoid premature .result() calls**: In this example, notice that ``.result()`` is only
@@ -717,17 +717,17 @@ You can combine both approaches and specify multiple dependencies:
 
    .. code-block:: python
 
-      result1 = step1(executor="compute").result()  # Blocks here
-      result2 = step2(result1, executor="compute").result()  # Blocks here
-      result3 = step3(result2, executor="compute").result()  # Blocks here
+      result1 = step1(executor=["compute"]).result()  # Blocks here
+      result2 = step2(result1, executor=["compute"]).result()  # Blocks here
+      result3 = step3(result2, executor=["compute"]).result()  # Blocks here
 
    **Good practice** (maximizes parallelism):
 
    .. code-block:: python
 
-      future1 = step1(executor="compute")
-      future2 = step2(future1, executor="compute")  # Scheduled, doesn't block
-      future3 = step3(future2, executor="compute")  # Scheduled, doesn't block
+      future1 = step1(executor=["compute"])
+      future2 = step2(future1, executor=["compute"])  # Scheduled, doesn't block
+      future3 = step3(future2, executor=["compute"])  # Scheduled, doesn't block
       result = future3.result()  # Only block when you need the final result
 
 Timeout Handling
@@ -745,7 +745,7 @@ Handle long-running tasks with timeouts:
        time.sleep(100)
        return "done"
    
-   future = long_task(executor="compute")
+   future = long_task(executor=["compute"])
    
    try:
        result = future.result(timeout=10)  # Wait max 10 seconds
@@ -812,9 +812,9 @@ Map-Reduce
    @join_task
    def map_reduce(items):
        # Map phase
-       futures = [map_task(item, executor="compute") for item in items]
+       futures = [map_task(item, executor=["compute"]) for item in items]
        # Reduce phase
-       return reduce_task(futures, executor="compute")
+       return reduce_task(futures, executor=["compute"])
    
    result = map_reduce([1, 2, 3, 4, 5]).result()  # 55
 
@@ -836,9 +836,9 @@ Pipeline Processing
        return data ** 2
    
    # Create pipeline
-   data1 = stage1(5, executor="compute")
-   data2 = stage2(data1, executor="compute")
-   result = stage3(data2, executor="compute").result()  # ((5*2)+10)^2 = 400
+   data1 = stage1(5, executor=["compute"])
+   data2 = stage2(data1, executor=["compute"])
+   result = stage3(data2, executor=["compute"]).result()  # ((5*2)+10)^2 = 400
 
 Parameter Sweep
 ^^^^^^^^^^^^^^^
@@ -855,7 +855,7 @@ Parameter Sweep
    futures = []
    for p1 in [1, 2, 3]:
        for p2 in [10, 20, 30]:
-           future = run_experiment(p1, p2, executor="compute")
+           future = run_experiment(p1, p2, executor=["compute"])
            futures.append(future)
    
    # Collect all results

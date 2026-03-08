@@ -114,13 +114,35 @@ def workflow(
 
         yield
     finally:
-        # Cleanup only if dfk was successfully created
+        # Cleanup operations - each wrapped in try/except to ensure all are attempted
+        # even if some fail
+        cleanup_errors = []
+
+        # Cleanup DataFlowKernel
         if dfk is not None:
-            dfk.cleanup()
-            dfk = None
-            parsl.clear()
+            try:
+                dfk.cleanup()
+            except Exception as e:
+                cleanup_errors.append(f"dfk.cleanup() failed: {e}")
+
+            try:
+                parsl.clear()
+            except Exception as e:
+                cleanup_errors.append(f"parsl.clear() failed: {e}")
+
+        # Cleanup logger handler
         if logger_handler is not None:
-            logger_handler()
+            try:
+                logger_handler()
+            except Exception as e:
+                cleanup_errors.append(f"logger_handler() failed: {e}")
+
+        # If any cleanup operations failed, raise an exception with all errors
+        if cleanup_errors:
+            error_msg = "Errors during workflow cleanup:\n" + "\n".join(
+                f"  - {err}" for err in cleanup_errors
+            )
+            raise RuntimeError(error_msg)
 
 
 # Convenience aliases for clarity
