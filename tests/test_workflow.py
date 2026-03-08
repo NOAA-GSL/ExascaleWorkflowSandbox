@@ -492,30 +492,50 @@ class TestWorkflowExceptionHandling:
             }
         }
 
-        # This tests the branch where parsl.clear() fails but dfk.cleanup() succeeded
-        # Need to account for cleanup_parsl fixture calling clear before test runs
+        # This tests the branch where parsl.clear() fails but dfk.cleanup() succeeds
+        # Explicitly ensure dfk.cleanup() succeeds so cleanup_exception stays None
         original_clear = parsl.clear
+        dfk_ref = None
+
+        def mock_cleanup_success(self):
+            """Mock dfk.cleanup() to succeed without doing anything."""
+            # Don't actually clean up - we'll do it manually after
+
         call_count = [0]
 
         def mock_clear_selective():
             call_count[0] += 1
-            # The cleanup_parsl fixture may have already called clear before this test
-            # We want to fail on the workflow's clear call
-            # After seeing how many times it's been called, fail on the next-to-last call
-            # For safety, let's fail on call 2 (which should be from workflow cleanup)
-            # and succeed on all others
             if call_count[0] == 2:
+                # Second call (from workflow) - make it fail
                 raise RuntimeError("Clear failed")
             else:
+                # First and subsequent calls should succeed
                 try:
                     original_clear()
                 except Exception:
-                    pass  # Ignore errors from fixture cleanup
-
-        with mock.patch("parsl.clear", side_effect=mock_clear_selective):
-            with pytest.raises(RuntimeError, match="Clear failed"):
-                with workflow(config, run_dir=str(tmp_path / "runinfo_exc7")):
                     pass
+
+        with mock.patch.object(parsl.DataFlowKernel, "cleanup", mock_cleanup_success):
+            with mock.patch("parsl.clear", side_effect=mock_clear_selective):
+                # Explicitly make the first call to parsl.clear() to "use up" count==1
+                try:
+                    parsl.clear()
+                except Exception:
+                    pass
+
+                # Now the workflow's call will be count==2 and will raise
+                with pytest.raises(RuntimeError, match="Clear failed"):
+                    with workflow(config, run_dir=str(tmp_path / "runinfo_exc7")):
+                        dfk_ref = parsl.dfk()  # Capture for manual cleanup
+                        pass
+
+        # Manually clean up since we mocked cleanup
+        if dfk_ref:
+            try:
+                parsl.DataFlowKernel.cleanup(dfk_ref)
+                parsl.clear()
+            except Exception:
+                pass
 
 
 @pytest.fixture
