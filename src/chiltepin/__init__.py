@@ -21,10 +21,13 @@ def __getattr__(name):
     actually use the workflow context managers.
     """
     if name in __all__:
-        from chiltepin.workflow import workflow, workflow_from_dict, workflow_from_file
+        from chiltepin.workflow import (  # noqa: F401
+            workflow,
+            workflow_from_dict,
+            workflow_from_file,
+        )
 
         globals()[name] = locals()[name]
         return locals()[name]
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
