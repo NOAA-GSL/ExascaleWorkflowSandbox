@@ -89,8 +89,8 @@ Create ``my_config.yaml`` with your endpoint UUID:
 
 .. code-block:: yaml
 
-   # Local resource for small tasks
-   local:
+   # Laptop/workstation resource for small tasks
+   laptop:
      provider: "localhost"
      init_blocks: 1
      max_blocks: 1
@@ -137,9 +137,9 @@ Create ``my_workflow.py``:
    
    if __name__ == "__main__":
        # Load configuration and run workflow
-       with workflow("my_config.yaml", include=["local", "remote"], run_dir="./runinfo"):
-           # Run local task on "local" resource
-           local_future = hello_local(executor=["local"])
+       with workflow("my_config.yaml", include=["laptop", "remote"], run_dir="./runinfo"):
+           # Run local task on "laptop" resource
+           local_future = hello_local(executor=["laptop"])
            
            # Run remote bash task on "remote" resource (returns exit code: 0 = success)
            remote_future = hello_remote(executor=["remote"])
@@ -195,7 +195,7 @@ Configuration File (``local_config.yaml``)
 
 .. code-block:: yaml
 
-   local:
+   laptop:
      provider: "localhost"
      init_blocks: 1
      max_blocks: 1
@@ -220,10 +220,10 @@ Simple Workflow (``simple_workflow.py``)
    if __name__ == "__main__":
        # Load configuration and run workflow
        with workflow("local_config.yaml", run_dir="./runinfo"):
-           result = multiply(6, 7, executor=["local"]).result()
+           result = multiply(6, 7, executor=["laptop"]).result()
            print(f"6 * 7 = {result}")
            
-           exit_code = system_info(executor=["local"]).result()
+           exit_code = system_info(executor=["laptop"]).result()
            print(f"Bash task exit code: {exit_code}")
 
 Run it:
@@ -340,7 +340,7 @@ The ``include`` parameter selects specific resources to load from the configurat
    # Load only specific resources from YAML file
    with workflow(
        "my_config.yaml",
-       include=["local", "compute"],  # Only these resources
+       include=["laptop", "compute"],  # Only these resources
        run_dir="./runinfo"
    ):
        # Run tasks using selected resources
@@ -352,7 +352,7 @@ The ``include`` parameter selects specific resources to load from the configurat
 
    # Define configuration as a dictionary
    config = {
-       "local": {
+       "laptop": {
            "provider": "localhost",
            "cores_per_node": 4,
        },
@@ -366,7 +366,7 @@ The ``include`` parameter selects specific resources to load from the configurat
    # Load only specific resources from dict
    with workflow(
        config,
-       include=["local", "compute"],  # Only these resources
+       include=["laptop", "compute"],  # Only these resources
        run_dir="./runinfo"
    ):
        # Run tasks using selected resources

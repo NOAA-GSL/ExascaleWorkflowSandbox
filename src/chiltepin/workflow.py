@@ -70,9 +70,9 @@ def workflow(
 
     From a configuration dictionary:
 
-    >>> config = {"local": {"provider": "localhost", "cores_per_node": 4}}
+    >>> config = {"laptop": {"provider": "localhost", "cores_per_node": 4}}
     >>> with workflow(config):
-    ...     result = my_task(executor=["local"])
+    ...     result = my_task(executor=["laptop"])
     ...     print(result.result())
 
     With logging and selective resources:
@@ -115,34 +115,42 @@ def workflow(
         yield
     finally:
         # Cleanup operations - each wrapped in try/except to ensure all are attempted
-        # even if some fail
-        cleanup_errors = []
+        # even if some fail. Exceptions are chained together.
+        cleanup_exception = None
 
-        # Cleanup DataFlowKernel
+        # Cleanup DataFlowKernel if it was created
         if dfk is not None:
             try:
                 dfk.cleanup()
             except Exception as e:
-                cleanup_errors.append(f"dfk.cleanup() failed: {e}")
+                cleanup_exception = e
 
-            try:
-                parsl.clear()
-            except Exception as e:
-                cleanup_errors.append(f"parsl.clear() failed: {e}")
+        # Always call parsl.clear() regardless of dfk state
+        try:
+            parsl.clear()
+        except Exception as e:
+            if cleanup_exception is None:
+                cleanup_exception = e
+            else:
+                # Chain this exception to the previous one
+                e.__context__ = cleanup_exception
+                cleanup_exception = e
 
         # Cleanup logger handler
         if logger_handler is not None:
             try:
                 logger_handler()
             except Exception as e:
-                cleanup_errors.append(f"logger_handler() failed: {e}")
+                if cleanup_exception is None:
+                    cleanup_exception = e
+                else:
+                    # Chain this exception to the previous one
+                    e.__context__ = cleanup_exception
+                    cleanup_exception = e
 
-        # If any cleanup operations failed, raise an exception with all errors
-        if cleanup_errors:
-            error_msg = "Errors during workflow cleanup:\n" + "\n".join(
-                f"  - {err}" for err in cleanup_errors
-            )
-            raise RuntimeError(error_msg)
+        # If any cleanup failed, raise the last exception (with others chained via __context__)
+        if cleanup_exception is not None:
+            raise cleanup_exception
 
 
 # Convenience aliases for clarity
@@ -206,9 +214,9 @@ def workflow_from_dict(
     >>> def my_task():
     ...     return 42
     >>>
-    >>> config = {"local": {"provider": "localhost"}}
+    >>> config = {"laptop": {"provider": "localhost"}}
     >>> with workflow_from_dict(config):
-    ...     result = my_task(executor=["local"])
+    ...     result = my_task(executor=["laptop"])
     ...     print(result.result())
     """
     with workflow(config_dict, **kwargs):

@@ -8,6 +8,7 @@ with Parsl.
 """
 
 import pathlib
+from unittest import mock
 
 import parsl
 import pytest
@@ -254,3 +255,248 @@ class TestWorkflowCleanup:
         with workflow(config, run_dir=str(tmp_path / "runinfo10")):
             future = add_numbers(7, 8, executor=["test-exec"])
             assert future.result() == 15
+
+
+class TestWorkflowExceptionHandling:
+    """Test exception handling during workflow cleanup."""
+
+    def test_dfk_cleanup_exception(self, tmp_path):
+        """Test that exceptions during dfk.cleanup() are properly raised."""
+        project_root = pathlib.Path(__file__).parent.parent.resolve()
+
+        config = {
+            "test-exec": {
+                "provider": "localhost",
+                "cores_per_node": 1,
+                "max_workers_per_node": 1,
+                "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
+            }
+        }
+
+        with mock.patch("parsl.DataFlowKernel.cleanup") as mock_cleanup:
+            mock_cleanup.side_effect = RuntimeError("Cleanup failed")
+
+            with pytest.raises(RuntimeError, match="Cleanup failed"):
+                with workflow(config, run_dir=str(tmp_path / "runinfo_exc1")):
+                    pass
+
+    def test_parsl_clear_exception(self, tmp_path):
+        """Test that exceptions during parsl.clear() are properly raised."""
+        project_root = pathlib.Path(__file__).parent.parent.resolve()
+
+        config = {
+            "test-exec": {
+                "provider": "localhost",
+                "cores_per_node": 1,
+                "max_workers_per_node": 1,
+                "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
+            }
+        }
+
+        with mock.patch("parsl.clear") as mock_clear:
+            mock_clear.side_effect = RuntimeError("Clear failed")
+
+            with pytest.raises(RuntimeError, match="Clear failed"):
+                with workflow(config, run_dir=str(tmp_path / "runinfo_exc2")):
+                    pass
+
+    def test_logger_handler_exception(self, tmp_path):
+        """Test that exceptions during logger_handler() are properly raised."""
+        project_root = pathlib.Path(__file__).parent.parent.resolve()
+
+        config = {
+            "test-exec": {
+                "provider": "localhost",
+                "cores_per_node": 1,
+                "max_workers_per_node": 1,
+                "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
+            }
+        }
+
+        # Mock the logger handler to raise an exception
+        def mock_set_file_logger(*args, **kwargs):
+            def failing_handler():
+                raise RuntimeError("Logger cleanup failed")
+
+            return failing_handler
+
+        with mock.patch("parsl.set_file_logger", side_effect=mock_set_file_logger):
+            with pytest.raises(RuntimeError, match="Logger cleanup failed"):
+                with workflow(
+                    config,
+                    run_dir=str(tmp_path / "runinfo_exc3"),
+                    log_file=str(tmp_path / "test.log"),
+                ):
+                    pass
+
+    def test_chained_exceptions_cleanup_then_clear(self, tmp_path):
+        """Test exception chaining when dfk.cleanup() and parsl.clear() both fail."""
+        project_root = pathlib.Path(__file__).parent.parent.resolve()
+
+        config = {
+            "test-exec": {
+                "provider": "localhost",
+                "cores_per_node": 1,
+                "max_workers_per_node": 1,
+                "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
+            }
+        }
+
+        with mock.patch("parsl.DataFlowKernel.cleanup") as mock_cleanup:
+            with mock.patch("parsl.clear") as mock_clear:
+                mock_cleanup.side_effect = RuntimeError("Cleanup failed")
+                mock_clear.side_effect = RuntimeError("Clear failed")
+
+                with pytest.raises(RuntimeError) as exc_info:
+                    with workflow(config, run_dir=str(tmp_path / "runinfo_exc4")):
+                        pass
+
+                # The last exception (clear) should be raised
+                assert "Clear failed" in str(exc_info.value)
+                # And the previous exception (cleanup) should be in the chain
+                assert exc_info.value.__context__ is not None
+                assert "Cleanup failed" in str(exc_info.value.__context__)
+
+    def test_chained_exceptions_all_three(self, tmp_path):
+        """Test exception chaining when all three cleanup operations fail."""
+        project_root = pathlib.Path(__file__).parent.parent.resolve()
+
+        config = {
+            "test-exec": {
+                "provider": "localhost",
+                "cores_per_node": 1,
+                "max_workers_per_node": 1,
+                "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
+            }
+        }
+
+        # Mock the logger handler to raise an exception
+        def mock_set_file_logger(*args, **kwargs):
+            def failing_handler():
+                raise RuntimeError("Logger cleanup failed")
+
+            return failing_handler
+
+        with mock.patch("parsl.DataFlowKernel.cleanup") as mock_cleanup:
+            with mock.patch("parsl.clear") as mock_clear:
+                with mock.patch(
+                    "parsl.set_file_logger", side_effect=mock_set_file_logger
+                ):
+                    mock_cleanup.side_effect = RuntimeError("Cleanup failed")
+                    mock_clear.side_effect = RuntimeError("Clear failed")
+
+                    with pytest.raises(RuntimeError) as exc_info:
+                        with workflow(
+                            config,
+                            run_dir=str(tmp_path / "runinfo_exc5"),
+                            log_file=str(tmp_path / "test.log"),
+                        ):
+                            pass
+
+                    # The last exception (logger) should be raised
+                    assert "Logger cleanup failed" in str(exc_info.value)
+                    # Check the exception chain
+                    assert exc_info.value.__context__ is not None
+                    assert "Clear failed" in str(exc_info.value.__context__)
+                    assert exc_info.value.__context__.__context__ is not None
+                    assert "Cleanup failed" in str(
+                        exc_info.value.__context__.__context__
+                    )
+
+    def test_parsl_clear_called_when_dfk_is_none(self, tmp_path):
+        """Test that parsl.clear() is called even when dfk is None."""
+        project_root = pathlib.Path(__file__).parent.parent.resolve()
+
+        config = {
+            "test-exec": {
+                "provider": "localhost",
+                "cores_per_node": 1,
+                "max_workers_per_node": 1,
+                "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
+            }
+        }
+
+        # Mock parsl.load to fail, so dfk stays None
+        with mock.patch("parsl.load") as mock_load:
+            with mock.patch("parsl.clear") as mock_clear:
+                mock_load.side_effect = RuntimeError("Load failed")
+
+                with pytest.raises(RuntimeError, match="Load failed"):
+                    with workflow(config, run_dir=str(tmp_path / "runinfo_exc6")):
+                        pass
+
+                # parsl.clear() should still be called even though dfk is None
+                mock_clear.assert_called_once()
+
+    def test_parsl_clear_exception_without_cleanup_exception(self, tmp_path):
+        """Test parsl.clear() exception when dfk.cleanup() succeeds."""
+        project_root = pathlib.Path(__file__).parent.parent.resolve()
+
+        config = {
+            "test-exec": {
+                "provider": "localhost",
+                "cores_per_node": 1,
+                "max_workers_per_node": 1,
+                "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
+            }
+        }
+
+        # This tests the branch where parsl.clear() fails but dfk.cleanup() succeeded
+        # We need to patch the real parsl.clear in the workflow module's finally block
+        original_clear = parsl.clear
+        call_count = [0]
+
+        def mock_clear_that_fails_once():
+            call_count[0] += 1
+            # Fail on first call (from workflow cleanup), succeed on second (from test cleanup)
+            if call_count[0] == 1:
+                raise RuntimeError("Clear failed")
+            original_clear()
+
+        with mock.patch("parsl.clear", side_effect=mock_clear_that_fails_once):
+            with pytest.raises(RuntimeError, match="Clear failed"):
+                with workflow(config, run_dir=str(tmp_path / "runinfo_exc7")):
+                    pass
+
+
+@pytest.fixture
+def config_file_fixture(tmp_path):
+    """Create a temporary config file for testing file-based workflows."""
+    import yaml
+
+    project_root = pathlib.Path(__file__).parent.parent.resolve()
+
+    config = {
+        "service": {
+            "provider": "localhost",
+            "cores_per_node": 1,
+            "max_workers_per_node": 1,
+            "environment": [f"export PYTHONPATH=${{PYTHONPATH}}:{project_root}"],
+        }
+    }
+
+    config_file = tmp_path / "test_config.yaml"
+    with open(config_file, "w") as f:
+        yaml.dump(config, f)
+
+    return str(config_file)
+
+
+class TestWorkflowFromFileCoverage:
+    """Tests specifically for workflow_from_file function coverage."""
+
+    def test_workflow_from_file_with_local_fixture(self, config_file_fixture, tmp_path):
+        """Test workflow_from_file with a local config file fixture."""
+
+        @python_task
+        def simple_task():
+            return "success"
+
+        with workflow_from_file(
+            config_file_fixture,
+            include=["service"],
+            run_dir=str(tmp_path / "runinfo_file"),
+        ):
+            future = simple_task(executor=["service"])
+            result = future.result()
+            assert result == "success"
