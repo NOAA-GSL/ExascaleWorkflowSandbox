@@ -64,6 +64,32 @@ class TestParseFile:
         finally:
             pathlib.Path(tmp_path).unlink()
 
+    def test_parse_empty_yaml(self):
+        """Test parsing an empty YAML file returns an empty dict."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as tmp:
+            # Write nothing (empty file)
+            tmp_path = tmp.name
+
+        try:
+            result = configure.parse_file(tmp_path)
+            assert result == {}
+            assert isinstance(result, dict)
+        finally:
+            pathlib.Path(tmp_path).unlink()
+
+    def test_parse_yaml_comments_only(self):
+        """Test parsing a YAML file with only comments returns an empty dict."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as tmp:
+            tmp.write("# This is just a comment\n# Another comment\n")
+            tmp_path = tmp.name
+
+        try:
+            result = configure.parse_file(tmp_path)
+            assert result == {}
+            assert isinstance(result, dict)
+        finally:
+            pathlib.Path(tmp_path).unlink()
+
 
 class TestCreateProvider:
     """Test create_provider() function for all provider types."""
@@ -611,6 +637,129 @@ class TestLoad:
             ex for ex in config.executors if isinstance(ex, GlobusComputeExecutor)
         ]
         assert len(gc_executors) == 1
+
+    def test_load_overrides_default_local(self):
+        """Test that user-defined 'local' resource overrides the default."""
+        resources = {
+            "local": {
+                "provider": "localhost",
+                "cores_per_worker": 4,
+                "max_workers_per_node": 8,
+            }
+        }
+        config = configure.load(resources)
+
+        # Should have only 1 executor (user's local, not default + user's)
+        assert len(config.executors) == 1
+        assert config.executors[0].label == "local"
+        # Verify it's the user's config (4 cores per worker, not default 1)
+        assert config.executors[0].cores_per_worker == 4
+        assert config.executors[0].max_workers_per_node == 8
+
+    def test_load_local_in_include_overrides_default(self):
+        """Test that including 'local' in config overrides default even with include filter."""
+        resources = {
+            "local": {
+                "provider": "localhost",
+                "cores_per_worker": 2,
+            },
+            "compute": {
+                "provider": "slurm",
+                "partition": "compute",
+            },
+        }
+        config = configure.load(resources, include=["local"])
+
+        # Should have only user's local (not default)
+        assert len(config.executors) == 1
+        assert config.executors[0].label == "local"
+        assert config.executors[0].cores_per_worker == 2
+
+    def test_load_include_without_local_uses_local_override(self):
+        """Test that user's local is used even when not in include list."""
+        resources = {
+            "local": {
+                "provider": "localhost",
+                "cores_per_worker": 4,
+            },
+            "compute": {
+                "provider": "slurm",
+                "partition": "compute",
+            },
+        }
+        # Include only compute, not local
+        config = configure.load(resources, include=["compute"])
+
+        # Should have user's local + compute (user's local always used when defined)
+        assert len(config.executors) == 2
+        labels = [ex.label for ex in config.executors]
+        assert "local" in labels
+        assert "compute" in labels
+
+        # Verify it's the user's local (4 cores per worker, not default 1)
+        local_ex = [ex for ex in config.executors if ex.label == "local"][0]
+        assert local_ex.cores_per_worker == 4
+
+    def test_load_include_no_user_local_gets_default(self):
+        """Test that default local is used when user doesn't define one."""
+        resources = {
+            "compute": {
+                "provider": "slurm",
+                "partition": "compute",
+            },
+            "mpi": {
+                "provider": "slurm",
+                "mpi": True,
+            },
+        }
+        # Include only compute (no local defined by user)
+        config = configure.load(resources, include=["compute"])
+
+        # Should have default local + compute
+        assert len(config.executors) == 2
+        labels = [ex.label for ex in config.executors]
+        assert "local" in labels
+        assert "compute" in labels
+
+        # Verify it's the default local (1 core per worker)
+        local_ex = [ex for ex in config.executors if ex.label == "local"][0]
+        assert local_ex.cores_per_worker == 1
+
+    def test_load_duplicate_in_include_is_harmless(self):
+        """Test that duplicate resource names in include list are harmless."""
+        resources = {
+            "compute": {"provider": "slurm", "partition": "compute"},
+            "mpi": {"provider": "slurm", "mpi": True},
+        }
+
+        # Duplicates in include list should just be ignored
+        config = configure.load(resources, include=["compute", "mpi", "compute"])
+
+        # Should have local + compute + mpi (compute only loaded once despite being in list twice)
+        assert len(config.executors) == 3
+        labels = [ex.label for ex in config.executors]
+        assert "local" in labels
+        assert "compute" in labels
+        assert "mpi" in labels
+
+    def test_load_include_local_without_defining_it(self):
+        """Test that including 'local' works even if user didn't define it in config."""
+        resources = {
+            "compute": {"provider": "slurm", "partition": "compute"},
+        }
+
+        # Including "local" in the list should work even though it's not in config
+        config = configure.load(resources, include=["local", "compute"])
+
+        # Should have default local + compute
+        assert len(config.executors) == 2
+        labels = [ex.label for ex in config.executors]
+        assert "local" in labels
+        assert "compute" in labels
+
+        # Verify it's the default local (1 core per worker)
+        local_ex = [ex for ex in config.executors if ex.label == "local"][0]
+        assert local_ex.cores_per_worker == 1
 
 
 class TestIntegrationScenarios:

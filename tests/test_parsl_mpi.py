@@ -7,10 +7,10 @@ import pathlib
 import re
 from datetime import datetime as dt
 
-import parsl
 import pytest
 
 import chiltepin.configure
+from chiltepin import run_workflow
 from chiltepin.tasks import bash_task
 
 
@@ -33,29 +33,16 @@ def config(config_file):
         f"export PYTHONPATH=${{PYTHONPATH}}:{pwd.parent.resolve()}"
     )
 
-    # Set Parsl logging to DEBUG and redirect to a file in the output directory
-    logger_handler = parsl.set_file_logger(
-        filename=str(output_dir / "test_parsl_mpi_parsl.log"),
-        level=logging.DEBUG,
-    )
-
-    resources = chiltepin.configure.load(
+    # Use workflow context manager for Parsl lifecycle
+    with run_workflow(
         yaml_config,
         include=["compute", "mpi"],
         run_dir=str(output_dir / "test_parsl_mpi_runinfo"),
-    )
-
-    # Load the resources in Parsl
-    dfk = parsl.load(resources)
-
-    # Run the tests with the loaded resources
-    yield {"output_dir": output_dir}
-
-    # Cleanup Parsl after tests are done
-    dfk.cleanup()
-    dfk = None
-    parsl.clear()
-    logger_handler()
+        log_file=str(output_dir / "test_parsl_mpi_parsl.log"),
+        log_level=logging.DEBUG,
+    ):
+        # Run the tests with the loaded resources
+        yield {"output_dir": output_dir}
 
 
 def test_parsl_hello_mpi(config):

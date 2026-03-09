@@ -41,7 +41,8 @@ def parse_file(filename: str) -> Dict[str, Any]:
         except yaml.YAMLError as e:
             print("Invalid yaml configuration")
             raise (e)
-    return yaml_config
+    # yaml.safe_load returns None for empty files; return empty dict instead
+    return yaml_config if yaml_config is not None else {}
 
 
 def create_provider(config: Dict[str, Any]) -> ExecutionProvider:
@@ -381,41 +382,58 @@ def load(
     # Get project root directory for setting PYTHONPATH
     project_base = Path(__file__).parent.parent.parent.resolve()
 
-    # Define a default HTEX Executor with a local provider
-    # This includes adding project root directory to PYTHONPATH
-    executors = [
-        HighThroughputExecutor(
-            label="local",
-            worker_debug=True,
-            cores_per_worker=1,
-            max_workers_per_node=1,
-            provider=LocalProvider(
-                init_blocks=0,
-                max_blocks=1,
-                worker_init=f"export PYTHONPATH=${{PYTHONPATH}}:{project_base}",
-            ),
-        )
-    ]
-
-    # Add an Executor for each resource
+    # Determine which resources to load
     if include is None:
         resources = config
     else:
-        # Validate that all requested resources exist
-        missing = [key for key in include if key not in config]
+        # Validate that all requested resources exist (except "local" which is always available)
+        missing = [key for key in include if key != "local" and key not in config]
         if missing:
             raise RuntimeError(
                 f"Resources specified in include list not found in config: {missing}"
             )
-        resources = {key: config[key] for key in include}
-    for resource_name, resource_config in resources.items():
+        resources = {key: config[key] for key in include if key in config}
+
+    # Create executors list
+    executors = []
+
+    # Add "local" executor - use user's definition if provided, otherwise use default
+    # This happens regardless of the include filter
+    if "local" in config:
+        # User defined their own "local", use it as the default
         executors.append(
             create_executor(
-                resource_name,
-                resource_config,
+                "local",
+                config["local"],
                 client,
             ),
         )
+    else:
+        # Use built-in default "local"
+        executors.append(
+            HighThroughputExecutor(
+                label="local",
+                worker_debug=True,
+                cores_per_worker=1,
+                max_workers_per_node=1,
+                provider=LocalProvider(
+                    init_blocks=0,
+                    max_blocks=1,
+                    worker_init=f"export PYTHONPATH=${{PYTHONPATH}}:{project_base}",
+                ),
+            )
+        )
+
+    # Add an Executor for each resource (skip "local" since we already added it)
+    for resource_name, resource_config in resources.items():
+        if resource_name != "local":
+            executors.append(
+                create_executor(
+                    resource_name,
+                    resource_config,
+                    client,
+                ),
+            )
 
     config_kwargs = {"executors": executors}
     if run_dir is not None:

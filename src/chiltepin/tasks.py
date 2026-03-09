@@ -24,7 +24,7 @@ Define a simple Python task::
         return a + b
 
     # Execute on a specific resource
-    result = add_numbers(5, 3, executor="compute").result()
+    result = add_numbers(5, 3, executor=["compute"]).result()
 
 Define a bash task::
 
@@ -35,7 +35,7 @@ Define a bash task::
         return f"ls -la {directory}"
 
     # Returns exit code (0 = success)
-    exit_code = list_files("/tmp", executor="compute").result()
+    exit_code = list_files("/tmp", executor=["compute"]).result()
 """
 
 from functools import wraps

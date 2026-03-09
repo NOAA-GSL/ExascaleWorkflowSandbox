@@ -17,6 +17,45 @@ Resources can be:
 The configuration file defines named resources, where each resource represents a pool
 of nodes and/or cores on which tasks can be executed.
 
+Default "local" Resource
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Chiltepin automatically provides a default resource named **"local"** that is always
+available, even if you don't define any resources in your configuration file. This
+default resource:
+
+- Uses the current machine (localhost provider)
+- Has 1 core per worker and 1 maximum worker
+- Starts with 0 blocks and can scale up to 1 block
+- Is useful for testing and light computational tasks
+
+You can use this default resource without any configuration:
+
+.. code-block:: python
+
+   from chiltepin import run_workflow
+   from chiltepin.tasks import python_task
+
+   @python_task
+   def my_task():
+       return "Hello from local!"
+
+   # Works even with an empty config
+   with run_workflow({}):
+       result = my_task(executor=["local"]).result()
+
+You can override the default "local" resource by defining your own resource with
+that name in your configuration file. This is useful if you need different settings
+for local execution:
+
+.. code-block:: yaml
+
+   local:
+     provider: "localhost"
+     max_blocks: 2
+     max_workers_per_node: 4
+     cores_per_worker: 2
+
 Basic Structure
 ---------------
 
@@ -415,26 +454,70 @@ Loading Configurations
 Parse and Load
 ^^^^^^^^^^^^^^
 
+**Loading from a file:**
+
 .. code-block:: python
 
-   import chiltepin.configure
-   import parsl
+   from chiltepin import run_workflow
 
-   # Parse YAML configuration file
-   config_dict = chiltepin.configure.parse_file("my_config.yaml")
-   
-   # Create Parsl configuration
-   parsl_config = chiltepin.configure.load(
-       config_dict,
+   # Load configuration from YAML file and run workflow
+   with run_workflow(
+       "my_config.yaml",
        include=["compute", "mpi"],  # Only load specific resources
        run_dir="./runinfo"           # Directory for Parsl runtime files
-   )
+   ):
+       # Run your tasks here
+       result = my_task(executor=["compute"]).result()
 
-   # Initialize Parsl with configuration
-   parsl.load(parsl_config)
+**Loading from a dict:**
+
+.. code-block:: python
+
+   from chiltepin import run_workflow
+
+   # Define configuration as a dictionary
+   config_dict = {
+       "compute": {
+           "provider": "slurm",
+           "account": "my-account",
+           "partition": "compute",
+           "nodes_per_block": 1,
+           "cores_per_node": 40,
+           "walltime": "01:00:00",
+       },
+       "mpi": {
+           "provider": "slurm",
+           "account": "my-account",
+           "partition": "compute",
+           "nodes_per_block": 2,
+           "launcher": "mpi",
+           "walltime": "02:00:00",
+       }
+   }
+
+   # Load configuration from dict and run workflow
+   with run_workflow(
+       config_dict,
+       include=["compute", "mpi"],  # Only load specific resources
+       run_dir="./runinfo"
+   ):
+       # Run your tasks here
+       result = my_task(executor=["compute"]).result()
 
 The ``include`` parameter lets you selectively load only specific resources from your
-configuration file. If omitted, all resources are loaded.
+configuration. If omitted, all resources are loaded.
+
+.. note::
+   The default **"local"** resource is always available, regardless of the ``include``
+   parameter. You do not need to add "local" to the include list to use it. This ensures
+   you always have a fallback resource available for tasks.
+
+   .. code-block:: python
+
+      # "local" is available even though not in include list
+      with run_workflow("config.yaml", include=["compute"]):
+          local_result = my_task(executor=["local"]).result()  # Works!
+          compute_result = my_task(executor=["compute"]).result()  # Works!
 
 Configuration Best Practices
 -----------------------------
