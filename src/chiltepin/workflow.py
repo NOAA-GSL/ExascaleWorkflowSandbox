@@ -22,7 +22,7 @@ _logger = logging.getLogger(__name__)
 
 
 @contextmanager
-def workflow(
+def run_workflow(
     config: Union[str, Path, Dict[str, Any]],
     *,
     include: Optional[List[str]] = None,
@@ -62,28 +62,28 @@ def workflow(
     --------
     From a configuration file:
 
-    >>> from chiltepin import workflow
+    >>> from chiltepin import run_workflow
     >>> from chiltepin.tasks import python_task
     >>>
     >>> @python_task
     >>> def my_task():
     ...     return "Hello from workflow!"
     >>>
-    >>> with workflow("config.yaml"):
+    >>> with run_workflow("config.yaml"):
     ...     result = my_task(executor=["compute"])
     ...     print(result.result())
 
     From a configuration dictionary:
 
     >>> config = {"laptop": {"provider": "localhost", "cores_per_node": 4}}
-    >>> with workflow(config):
+    >>> with run_workflow(config):
     ...     result = my_task(executor=["laptop"])
     ...     print(result.result())
 
     With logging and selective resources:
 
     >>> import logging
-    >>> with workflow("config.yaml", include=["compute"],
+    >>> with run_workflow("config.yaml", include=["compute"],
     ...               log_file="workflow.log", log_level=logging.DEBUG):
     ...     # only "compute" resource is available
     ...     result = my_task(executor=["compute"])
@@ -123,6 +123,7 @@ def workflow(
         # If so, don't mask the user's exception with cleanup exceptions
         user_exception = sys.exc_info()[0] is not None
         cleanup_exception = None
+        cleanup_tb = None  # Preserve original traceback
 
         # Attempt all cleanup operations, catching exceptions
         if dfk is not None:
@@ -136,6 +137,7 @@ def workflow(
                     )
                 else:
                     cleanup_exception = e
+                    cleanup_tb = sys.exc_info()[2]
 
         # Always call parsl.clear()
         try:
@@ -148,9 +150,11 @@ def workflow(
                 )
             elif cleanup_exception is None:
                 cleanup_exception = e
+                cleanup_tb = sys.exc_info()[2]
             else:
-                e.__context__ = cleanup_exception
+                e.__cause__ = cleanup_exception
                 cleanup_exception = e
+                cleanup_tb = sys.exc_info()[2]
 
         # Cleanup logger handler
         if logger_handler is not None:
@@ -164,24 +168,27 @@ def workflow(
                     )
                 elif cleanup_exception is None:
                     cleanup_exception = e
+                    cleanup_tb = sys.exc_info()[2]
                 else:
-                    e.__context__ = cleanup_exception
+                    e.__cause__ = cleanup_exception
                     cleanup_exception = e
+                    cleanup_tb = sys.exc_info()[2]
 
         # Only raise cleanup exceptions if there wasn't a user exception
+        # Preserve the original traceback so the error location is clear
         if cleanup_exception is not None and not user_exception:
-            raise cleanup_exception
+            raise cleanup_exception.with_traceback(cleanup_tb)
 
 
 # Convenience aliases for clarity
 @contextmanager
-def workflow_from_file(
+def run_workflow_from_file(
     config_file: Union[str, Path],
     **kwargs,
 ):
     """Context manager for workflows using a YAML configuration file.
 
-    This is an alias for workflow() that makes it explicit that a file
+    This is an alias for run_workflow() that makes it explicit that a file
     path is expected.
 
     Parameters
@@ -189,33 +196,33 @@ def workflow_from_file(
     config_file : str or Path
         Path to YAML configuration file
     **kwargs
-        Additional arguments passed to workflow()
+        Additional arguments passed to run_workflow()
 
     Examples
     --------
-    >>> from chiltepin import workflow_from_file
+    >>> from chiltepin import run_workflow_from_file
     >>> from chiltepin.tasks import python_task
     >>>
     >>> @python_task
     >>> def my_task():
     ...     return 42
     >>>
-    >>> with workflow_from_file("my_config.yaml", include=["compute"]):
+    >>> with run_workflow_from_file("my_config.yaml", include=["compute"]):
     ...     result = my_task(executor=["compute"])
     ...     print(result.result())
     """
-    with workflow(config_file, **kwargs):
+    with run_workflow(config_file, **kwargs):
         yield
 
 
 @contextmanager
-def workflow_from_dict(
+def run_workflow_from_dict(
     config_dict: Dict[str, Any],
     **kwargs,
 ):
     """Context manager for workflows using a configuration dictionary.
 
-    This is an alias for workflow() that makes it explicit that a dict
+    This is an alias for run_workflow() that makes it explicit that a dict
     is expected.
 
     Parameters
@@ -223,11 +230,11 @@ def workflow_from_dict(
     config_dict : dict
         Configuration dictionary
     **kwargs
-        Additional arguments passed to workflow()
+        Additional arguments passed to run_workflow()
 
     Examples
     --------
-    >>> from chiltepin import workflow_from_dict
+    >>> from chiltepin import run_workflow_from_dict
     >>> from chiltepin.tasks import python_task
     >>>
     >>> @python_task
@@ -235,16 +242,16 @@ def workflow_from_dict(
     ...     return 42
     >>>
     >>> config = {"laptop": {"provider": "localhost"}}
-    >>> with workflow_from_dict(config):
+    >>> with run_workflow_from_dict(config):
     ...     result = my_task(executor=["laptop"])
     ...     print(result.result())
     """
-    with workflow(config_dict, **kwargs):
+    with run_workflow(config_dict, **kwargs):
         yield
 
 
 __all__ = [
-    "workflow",
-    "workflow_from_file",
-    "workflow_from_dict",
+    "run_workflow",
+    "run_workflow_from_file",
+    "run_workflow_from_dict",
 ]

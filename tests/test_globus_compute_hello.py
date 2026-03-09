@@ -8,7 +8,7 @@ import pytest
 
 import chiltepin.configure
 import chiltepin.endpoint as endpoint
-from chiltepin import workflow
+from chiltepin import run_workflow
 from chiltepin.tasks import bash_task, python_task
 
 
@@ -59,7 +59,7 @@ def config(config_file):
     yaml_config["gc-service"]["endpoint"] = f"{endpoint_id}"
 
     # Use workflow context manager for Parsl lifecycle
-    with workflow(
+    with run_workflow(
         yaml_config,
         include=["gc-service"],
         client=compute_client,

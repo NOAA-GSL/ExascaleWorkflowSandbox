@@ -419,10 +419,10 @@ Parse and Load
 
 .. code-block:: python
 
-   from chiltepin import workflow
+   from chiltepin import run_workflow
 
    # Load configuration from YAML file and run workflow
-   with workflow(
+   with run_workflow(
        "my_config.yaml",
        include=["compute", "mpi"],  # Only load specific resources
        run_dir="./runinfo"           # Directory for Parsl runtime files
@@ -434,7 +434,7 @@ Parse and Load
 
 .. code-block:: python
 
-   from chiltepin import workflow
+   from chiltepin import run_workflow
 
    # Define configuration as a dictionary
    config_dict = {
@@ -457,7 +457,7 @@ Parse and Load
    }
 
    # Load configuration from dict and run workflow
-   with workflow(
+   with run_workflow(
        config_dict,
        include=["compute", "mpi"],  # Only load specific resources
        run_dir="./runinfo"

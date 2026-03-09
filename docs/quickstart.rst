@@ -116,7 +116,7 @@ Create ``my_workflow.py``:
 
 .. code-block:: python
 
-   from chiltepin import workflow
+   from chiltepin import run_workflow
    from chiltepin.tasks import bash_task, python_task
    
    # Define tasks
@@ -137,7 +137,7 @@ Create ``my_workflow.py``:
    
    if __name__ == "__main__":
        # Load configuration and run workflow
-       with workflow("my_config.yaml", include=["laptop", "remote"], run_dir="./runinfo"):
+       with run_workflow("my_config.yaml", include=["laptop", "remote"], run_dir="./runinfo"):
            # Run local task on "laptop" resource
            local_future = hello_local(executor=["laptop"])
            
@@ -205,7 +205,7 @@ Simple Workflow (``simple_workflow.py``)
 
 .. code-block:: python
 
-   from chiltepin import workflow
+   from chiltepin import run_workflow
    from chiltepin.tasks import bash_task, python_task
    
    # Define tasks
@@ -219,7 +219,7 @@ Simple Workflow (``simple_workflow.py``)
    
    if __name__ == "__main__":
        # Load configuration and run workflow
-       with workflow("local_config.yaml", run_dir="./runinfo"):
+       with run_workflow("local_config.yaml", run_dir="./runinfo"):
            result = multiply(6, 7, executor=["laptop"]).result()
            print(f"6 * 7 = {result}")
            
@@ -262,7 +262,7 @@ MPI Workflow
 
 .. code-block:: python
 
-   from chiltepin import workflow
+   from chiltepin import run_workflow
    from chiltepin.tasks import bash_task
    
    @bash_task
@@ -274,7 +274,7 @@ MPI Workflow
        return f"srun -n {ranks} ./mpi_app"
    
    if __name__ == "__main__":
-       with workflow("mpi_config.yaml", run_dir="./runinfo"):
+       with run_workflow("mpi_config.yaml", run_dir="./runinfo"):
            # Compile MPI application on the MPI resource (returns exit code)
            compile_result = compile_mpi(executor=["mpi-resource-name"]).result()
            print(f"Compilation exit code: {compile_result}")
@@ -338,7 +338,7 @@ The ``include`` parameter selects specific resources to load from the configurat
 .. code-block:: python
 
    # Load only specific resources from YAML file
-   with workflow(
+   with run_workflow(
        "my_config.yaml",
        include=["laptop", "compute"],  # Only these resources
        run_dir="./runinfo"
@@ -364,7 +364,7 @@ The ``include`` parameter selects specific resources to load from the configurat
    }
 
    # Load only specific resources from dict
-   with workflow(
+   with run_workflow(
        config,
        include=["laptop", "compute"],  # Only these resources
        run_dir="./runinfo"

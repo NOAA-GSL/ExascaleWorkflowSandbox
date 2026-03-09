@@ -11,6 +11,13 @@ Configuration Module
    :members:
    :show-inheritance:
 
+Workflow Module
+---------------
+
+.. automodule:: chiltepin.workflow
+   :members:
+   :show-inheritance:
+
 Endpoint Management Module
 ---------------------------
 

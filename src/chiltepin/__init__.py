@@ -7,9 +7,9 @@ on distributed computing resources using Parsl and Globus services.
 """
 
 __all__ = [
-    "workflow",
-    "workflow_from_file",
-    "workflow_from_dict",
+    "run_workflow",
+    "run_workflow_from_file",
+    "run_workflow_from_dict",
 ]
 
 
@@ -22,9 +22,9 @@ def __getattr__(name):
     """
     if name in __all__:
         from chiltepin.workflow import (  # noqa: F401
-            workflow,
-            workflow_from_dict,
-            workflow_from_file,
+            run_workflow,
+            run_workflow_from_dict,
+            run_workflow_from_file,
         )
 
         globals()[name] = locals()[name]

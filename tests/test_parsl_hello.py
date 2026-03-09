@@ -7,7 +7,7 @@ import pathlib
 import pytest
 
 import chiltepin.configure
-from chiltepin import workflow
+from chiltepin import run_workflow
 from chiltepin.tasks import bash_task, python_task
 
 
@@ -27,7 +27,7 @@ def config(config_file):
     )
 
     # Use workflow context manager for Parsl lifecycle
-    with workflow(
+    with run_workflow(
         yaml_config,
         include=["service"],
         run_dir=str(output_dir / "test_parsl_hello_runinfo"),
