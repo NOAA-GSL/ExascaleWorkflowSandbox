@@ -675,7 +675,7 @@ class TestLoad:
         assert config.executors[0].label == "local"
         assert config.executors[0].cores_per_worker == 2
 
-    def test_load_include_without_local_uses_default(self):
+    def test_load_include_without_local_uses_local_override(self):
         """Test that user's local is used even when not in include list."""
         resources = {
             "local": {
