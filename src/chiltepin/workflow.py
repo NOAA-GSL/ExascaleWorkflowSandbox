@@ -42,6 +42,8 @@ def run_workflow(
         Either a path to a YAML configuration file or a configuration dictionary
     include : list of str, optional
         List of resource labels to load. If None, all resources are loaded.
+        Note: The default "local" resource is always available, regardless of
+        this parameter.
     run_dir : str, optional
         Directory for Parsl runtime files. If None, uses Parsl's default.
     client : globus_compute_sdk.Client, optional
@@ -85,8 +87,10 @@ def run_workflow(
     >>> import logging
     >>> with run_workflow("config.yaml", include=["compute"],
     ...               log_file="workflow.log", log_level=logging.DEBUG):
-    ...     # only "compute" resource is available
+    ...     # "compute" resource from config is available
     ...     result = my_task(executor=["compute"])
+    ...     # "local" resource is also always available
+    ...     local_result = my_task(executor=["local"])
     """
     # Parse config if it's a file path
     if isinstance(config, (str, Path)):
@@ -209,6 +213,8 @@ def run_workflow_from_file(
     >>>
     >>> with run_workflow_from_file("my_config.yaml", include=["compute"]):
     ...     result = my_task(executor=["compute"])
+    ...     # "local" resource is also always available
+    ...     local_result = my_task(executor=["local"])
     ...     print(result.result())
     """
     with run_workflow(config_file, **kwargs):
@@ -244,6 +250,8 @@ def run_workflow_from_dict(
     >>> config = {"laptop": {"provider": "localhost"}}
     >>> with run_workflow_from_dict(config):
     ...     result = my_task(executor=["laptop"])
+    ...     # "local" resource is also always available
+    ...     local_result = my_task(executor=["local"])
     ...     print(result.result())
     """
     with run_workflow(config_dict, **kwargs):

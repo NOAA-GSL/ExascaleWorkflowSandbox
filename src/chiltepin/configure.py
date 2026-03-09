@@ -382,23 +382,7 @@ def load(
     # Get project root directory for setting PYTHONPATH
     project_base = Path(__file__).parent.parent.parent.resolve()
 
-    # Define a default HTEX Executor with a local provider
-    # This includes adding project root directory to PYTHONPATH
-    executors = [
-        HighThroughputExecutor(
-            label="local",
-            worker_debug=True,
-            cores_per_worker=1,
-            max_workers_per_node=1,
-            provider=LocalProvider(
-                init_blocks=0,
-                max_blocks=1,
-                worker_init=f"export PYTHONPATH=${{PYTHONPATH}}:{project_base}",
-            ),
-        )
-    ]
-
-    # Add an Executor for each resource
+    # Determine which resources to load
     if include is None:
         resources = config
     else:
@@ -409,6 +393,27 @@ def load(
                 f"Resources specified in include list not found in config: {missing}"
             )
         resources = {key: config[key] for key in include}
+
+    # Create executors list, starting with default "local" if not overridden
+    executors = []
+
+    # Only add default "local" executor if user hasn't defined their own
+    if "local" not in resources:
+        executors.append(
+            HighThroughputExecutor(
+                label="local",
+                worker_debug=True,
+                cores_per_worker=1,
+                max_workers_per_node=1,
+                provider=LocalProvider(
+                    init_blocks=0,
+                    max_blocks=1,
+                    worker_init=f"export PYTHONPATH=${{PYTHONPATH}}:{project_base}",
+                ),
+            )
+        )
+
+    # Add an Executor for each resource
     for resource_name, resource_config in resources.items():
         executors.append(
             create_executor(

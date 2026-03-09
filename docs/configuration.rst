@@ -17,6 +17,45 @@ Resources can be:
 The configuration file defines named resources, where each resource represents a pool
 of nodes and/or cores on which tasks can be executed.
 
+Default "local" Resource
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Chiltepin automatically provides a default resource named **"local"** that is always
+available, even if you don't define any resources in your configuration file. This
+default resource:
+
+- Uses the current machine (localhost provider)
+- Has 1 core per worker and 1 maximum worker
+- Starts with 0 blocks and can scale up to 1 block
+- Is useful for testing and light computational tasks
+
+You can use this default resource without any configuration:
+
+.. code-block:: python
+
+   from chiltepin import run_workflow
+   from chiltepin.tasks import python_task
+
+   @python_task
+   def my_task():
+       return "Hello from local!"
+
+   # Works even with an empty config
+   with run_workflow({}):
+       result = my_task(executor=["local"]).result()
+
+You can override the default "local" resource by defining your own resource with
+that name in your configuration file. This is useful if you need different settings
+for local execution:
+
+.. code-block:: yaml
+
+   local:
+     provider: "localhost"
+     max_blocks: 2
+     max_workers_per_node: 4
+     cores_per_worker: 2
+
 Basic Structure
 ---------------
 
@@ -467,6 +506,18 @@ Parse and Load
 
 The ``include`` parameter lets you selectively load only specific resources from your
 configuration. If omitted, all resources are loaded.
+
+.. note::
+   The default **"local"** resource is always available, regardless of the ``include``
+   parameter. You do not need to add "local" to the include list to use it. This ensures
+   you always have a fallback resource available for tasks.
+
+   .. code-block:: python
+
+      # "local" is available even though not in include list
+      with run_workflow("config.yaml", include=["compute"]):
+          local_result = my_task(executor=["local"]).result()  # Works!
+          compute_result = my_task(executor=["compute"]).result()  # Works!
 
 Configuration Best Practices
 -----------------------------
