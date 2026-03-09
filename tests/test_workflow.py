@@ -657,7 +657,7 @@ class TestUserExceptionPrecedence:
             # Cleanup exception should be logged as a warning
             assert any(
                 "Exception during dfk.cleanup() while handling user exception"
-                in record.message
+                in record.getMessage()
                 for record in caplog.records
             )
 
@@ -712,12 +712,12 @@ class TestUserExceptionPrecedence:
                 # Both cleanup exceptions should be logged as warnings
                 assert any(
                     "Exception during dfk.cleanup() while handling user exception"
-                    in record.message
+                    in record.getMessage()
                     for record in caplog.records
                 )
                 assert any(
                     "Exception during parsl.clear() while handling user exception"
-                    in record.message
+                    in record.getMessage()
                     for record in caplog.records
                 )
 
@@ -797,7 +797,7 @@ class TestUserExceptionPrecedence:
             # Logger cleanup exception should be logged as a warning
             assert any(
                 "Exception during logger cleanup while handling user exception"
-                in record.message
+                in record.getMessage()
                 for record in caplog.records
             )
 
