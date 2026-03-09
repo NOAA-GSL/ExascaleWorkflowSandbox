@@ -8,6 +8,7 @@ with Parsl.
 """
 
 import pathlib
+import warnings
 from unittest import mock
 
 import parsl
@@ -40,10 +41,31 @@ def cleanup_parsl():
     try:
         dfk = parsl.dfk()
         if dfk:
-            dfk.cleanup()
-            parsl.clear()
-    except Exception:
-        pass  # No DFK loaded, which is fine
+            try:
+                dfk.cleanup()
+            except Exception as e:
+                warnings.warn(
+                    f"DFK cleanup failed in pre-test fixture cleanup: {e}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+            try:
+                parsl.clear()
+            except Exception as e:
+                warnings.warn(
+                    f"parsl.clear() failed in pre-test fixture cleanup: {e}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+    except Exception as e:
+        # Expected: "Must first load config" when no DFK loaded
+        # Unexpected: Other errors
+        if "Must first load config" not in str(e) and "No DataFlowKernel" not in str(e):
+            warnings.warn(
+                f"Unexpected error in pre-test cleanup: {e}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
     yield
 
@@ -51,10 +73,33 @@ def cleanup_parsl():
     try:
         dfk = parsl.dfk()
         if dfk:
-            dfk.cleanup()
-            parsl.clear()
-    except Exception:
-        pass
+            try:
+                dfk.cleanup()
+            except Exception as e:
+                # Don't warn about double-cleanup attempts (expected in some tests)
+                if "already been cleaned-up" not in str(e):
+                    warnings.warn(
+                        f"DFK cleanup failed in post-test fixture cleanup: {e}",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+            try:
+                parsl.clear()
+            except Exception as e:
+                warnings.warn(
+                    f"parsl.clear() failed in post-test fixture cleanup: {e}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+    except Exception as e:
+        # Expected: "Must first load config" when no DFK loaded
+        # Unexpected: Other errors
+        if "Must first load config" not in str(e) and "No DataFlowKernel" not in str(e):
+            warnings.warn(
+                f"Unexpected error in post-test cleanup: {e}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
 
 class TestWorkflowContextManager:
