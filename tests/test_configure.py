@@ -64,6 +64,32 @@ class TestParseFile:
         finally:
             pathlib.Path(tmp_path).unlink()
 
+    def test_parse_empty_yaml(self):
+        """Test parsing an empty YAML file returns an empty dict."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as tmp:
+            # Write nothing (empty file)
+            tmp_path = tmp.name
+
+        try:
+            result = configure.parse_file(tmp_path)
+            assert result == {}
+            assert isinstance(result, dict)
+        finally:
+            pathlib.Path(tmp_path).unlink()
+
+    def test_parse_yaml_comments_only(self):
+        """Test parsing a YAML file with only comments returns an empty dict."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as tmp:
+            tmp.write("# This is just a comment\n# Another comment\n")
+            tmp_path = tmp.name
+
+        try:
+            result = configure.parse_file(tmp_path)
+            assert result == {}
+            assert isinstance(result, dict)
+        finally:
+            pathlib.Path(tmp_path).unlink()
+
 
 class TestCreateProvider:
     """Test create_provider() function for all provider types."""

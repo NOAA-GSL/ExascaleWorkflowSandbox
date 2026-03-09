@@ -41,7 +41,8 @@ def parse_file(filename: str) -> Dict[str, Any]:
         except yaml.YAMLError as e:
             print("Invalid yaml configuration")
             raise (e)
-    return yaml_config
+    # yaml.safe_load returns None for empty files; return empty dict instead
+    return yaml_config if yaml_config is not None else {}
 
 
 def create_provider(config: Dict[str, Any]) -> ExecutionProvider:

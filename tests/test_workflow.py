@@ -12,6 +12,7 @@ import warnings
 from unittest import mock
 
 import parsl
+import parsl.errors
 import pytest
 import yaml
 
@@ -33,73 +34,58 @@ def add_pythonpath_to_config(config_dict, resource_name):
     return config_dict
 
 
+def _cleanup_parsl_state(phase, ignore_already_cleaned=False):
+    """Helper function to cleanup Parsl DFK state.
+
+    Args:
+        phase: Description of when cleanup is happening (e.g., "pre-test", "post-test")
+        ignore_already_cleaned: If True, suppress warnings about already cleaned DFK
+    """
+    try:
+        dfk = parsl.dfk()
+        if dfk:
+            try:
+                dfk.cleanup()
+            except Exception as e:
+                # Don't warn about double-cleanup attempts if requested
+                if ignore_already_cleaned and "already been cleaned-up" in str(e):
+                    return
+                warnings.warn(
+                    f"DFK cleanup failed in {phase} fixture cleanup: {e}",
+                    RuntimeWarning,
+                    stacklevel=3,
+                )
+            try:
+                parsl.clear()
+            except Exception as e:
+                warnings.warn(
+                    f"parsl.clear() failed in {phase} fixture cleanup: {e}",
+                    RuntimeWarning,
+                    stacklevel=3,
+                )
+    except parsl.errors.NoDataFlowKernelError:
+        # Expected when no DFK loaded
+        pass
+    except Exception as e:
+        # Unexpected errors
+        warnings.warn(
+            f"Unexpected error in {phase} cleanup: {e}",
+            RuntimeWarning,
+            stacklevel=3,
+        )
+
+
 # Cleanup any existing Parsl state before tests
 @pytest.fixture(scope="function", autouse=True)
 def cleanup_parsl():
     """Ensure Parsl is cleaned up before and after each test."""
     # Cleanup before test
-    try:
-        dfk = parsl.dfk()
-        if dfk:
-            try:
-                dfk.cleanup()
-            except Exception as e:
-                warnings.warn(
-                    f"DFK cleanup failed in pre-test fixture cleanup: {e}",
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
-            try:
-                parsl.clear()
-            except Exception as e:
-                warnings.warn(
-                    f"parsl.clear() failed in pre-test fixture cleanup: {e}",
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
-    except Exception as e:
-        # Expected: "Must first load config" when no DFK loaded
-        # Unexpected: Other errors
-        if "Must first load config" not in str(e) and "No DataFlowKernel" not in str(e):
-            warnings.warn(
-                f"Unexpected error in pre-test cleanup: {e}",
-                RuntimeWarning,
-                stacklevel=2,
-            )
+    _cleanup_parsl_state("pre-test")
 
     yield
 
     # Cleanup after test
-    try:
-        dfk = parsl.dfk()
-        if dfk:
-            try:
-                dfk.cleanup()
-            except Exception as e:
-                # Don't warn about double-cleanup attempts (expected in some tests)
-                if "already been cleaned-up" not in str(e):
-                    warnings.warn(
-                        f"DFK cleanup failed in post-test fixture cleanup: {e}",
-                        RuntimeWarning,
-                        stacklevel=2,
-                    )
-            try:
-                parsl.clear()
-            except Exception as e:
-                warnings.warn(
-                    f"parsl.clear() failed in post-test fixture cleanup: {e}",
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
-    except Exception as e:
-        # Expected: "Must first load config" when no DFK loaded
-        # Unexpected: Other errors
-        if "Must first load config" not in str(e) and "No DataFlowKernel" not in str(e):
-            warnings.warn(
-                f"Unexpected error in post-test cleanup: {e}",
-                RuntimeWarning,
-                stacklevel=2,
-            )
+    _cleanup_parsl_state("post-test", ignore_already_cleaned=True)
 
 
 class TestWorkflowContextManager:
