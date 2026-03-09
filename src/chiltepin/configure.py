@@ -386,19 +386,30 @@ def load(
     if include is None:
         resources = config
     else:
-        # Validate that all requested resources exist
-        missing = [key for key in include if key not in config]
+        # Validate that all requested resources exist (except "local" which is always available)
+        missing = [key for key in include if key != "local" and key not in config]
         if missing:
             raise RuntimeError(
                 f"Resources specified in include list not found in config: {missing}"
             )
-        resources = {key: config[key] for key in include}
+        resources = {key: config[key] for key in include if key in config}
 
-    # Create executors list, starting with default "local" if not overridden
+    # Create executors list
     executors = []
 
-    # Only add default "local" executor if user hasn't defined their own
-    if "local" not in resources:
+    # Add "local" executor - use user's definition if provided, otherwise use default
+    # This happens regardless of the include filter
+    if "local" in config:
+        # User defined their own "local", use it as the default
+        executors.append(
+            create_executor(
+                "local",
+                config["local"],
+                client,
+            ),
+        )
+    else:
+        # Use built-in default "local"
         executors.append(
             HighThroughputExecutor(
                 label="local",
@@ -413,15 +424,16 @@ def load(
             )
         )
 
-    # Add an Executor for each resource
+    # Add an Executor for each resource (skip "local" since we already added it)
     for resource_name, resource_config in resources.items():
-        executors.append(
-            create_executor(
-                resource_name,
-                resource_config,
-                client,
-            ),
-        )
+        if resource_name != "local":
+            executors.append(
+                create_executor(
+                    resource_name,
+                    resource_config,
+                    client,
+                ),
+            )
 
     config_kwargs = {"executors": executors}
     if run_dir is not None:

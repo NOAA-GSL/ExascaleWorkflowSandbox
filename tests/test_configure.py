@@ -676,7 +676,7 @@ class TestLoad:
         assert config.executors[0].cores_per_worker == 2
 
     def test_load_include_without_local_uses_default(self):
-        """Test that default local is available when not in include list."""
+        """Test that user's local is used even when not in include list."""
         resources = {
             "local": {
                 "provider": "localhost",
@@ -690,13 +690,38 @@ class TestLoad:
         # Include only compute, not local
         config = configure.load(resources, include=["compute"])
 
-        # Should have default local + compute (user's local not loaded)
+        # Should have user's local + compute (user's local always used when defined)
         assert len(config.executors) == 2
         labels = [ex.label for ex in config.executors]
         assert "local" in labels
         assert "compute" in labels
 
-        # Verify it's the default local (1 core per worker, not user's 4)
+        # Verify it's the user's local (4 cores per worker, not default 1)
+        local_ex = [ex for ex in config.executors if ex.label == "local"][0]
+        assert local_ex.cores_per_worker == 4
+
+    def test_load_include_no_user_local_gets_default(self):
+        """Test that default local is used when user doesn't define one."""
+        resources = {
+            "compute": {
+                "provider": "slurm",
+                "partition": "compute",
+            },
+            "mpi": {
+                "provider": "slurm",
+                "mpi": True,
+            },
+        }
+        # Include only compute (no local defined by user)
+        config = configure.load(resources, include=["compute"])
+
+        # Should have default local + compute
+        assert len(config.executors) == 2
+        labels = [ex.label for ex in config.executors]
+        assert "local" in labels
+        assert "compute" in labels
+
+        # Verify it's the default local (1 core per worker)
         local_ex = [ex for ex in config.executors if ex.label == "local"][0]
         assert local_ex.cores_per_worker == 1
 
@@ -716,6 +741,25 @@ class TestLoad:
         assert "local" in labels
         assert "compute" in labels
         assert "mpi" in labels
+
+    def test_load_include_local_without_defining_it(self):
+        """Test that including 'local' works even if user didn't define it in config."""
+        resources = {
+            "compute": {"provider": "slurm", "partition": "compute"},
+        }
+
+        # Including "local" in the list should work even though it's not in config
+        config = configure.load(resources, include=["local", "compute"])
+
+        # Should have default local + compute
+        assert len(config.executors) == 2
+        labels = [ex.label for ex in config.executors]
+        assert "local" in labels
+        assert "compute" in labels
+
+        # Verify it's the default local (1 core per worker)
+        local_ex = [ex for ex in config.executors if ex.label == "local"][0]
+        assert local_ex.cores_per_worker == 1
 
 
 class TestIntegrationScenarios:
